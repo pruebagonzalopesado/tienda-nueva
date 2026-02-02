@@ -275,12 +275,7 @@ async function updateCartSlideQuantity(index, newQuantity) {
                 .catch(err => console.warn('[updateCartSlideQuantity] Error ajustando stock:', err));
             }
 
-            // Guardar en BD si hay usuario logueado
-            if (typeof guardarCarritoEnBD === 'function') {
-                await guardarCarritoEnBD();
-            }
-
-            // Actualizar UI
+            // Actualizar UI (carrito solo en localStorage)
             renderCartSlide();
             updateCartCount();
         } catch (err) {
@@ -293,11 +288,6 @@ async function updateCartSlideQuantity(index, newQuantity) {
         window.carrito = cart;
         renderCartSlide();
         updateCartCount();
-        
-        // Guardar en BD si hay usuario logueado
-        if (typeof guardarCarritoEnBD === 'function') {
-            guardarCarritoEnBD();
-        }
     }
 }
 
@@ -345,10 +335,8 @@ async function removeFromCartSlide(index) {
         .catch(err => console.warn('[removeFromCartSlide] Error restaurando stock:', err));
     }
 
-    // Guardar en BD si hay usuario logueado - ESPERAR a que se complete
-    if (typeof guardarCarritoEnBD === 'function') {
-        await guardarCarritoEnBD();
-    }
+    // Guardar en localStorage (carrito NO se guarda en BD)
+    console.log('[removeFromCartSlide] Carrito actualizado en localStorage, no se sincroniza con BD');
 
     // Actualizar contador: buscar en Header
     const cartCountEl = document.getElementById('cart-count');

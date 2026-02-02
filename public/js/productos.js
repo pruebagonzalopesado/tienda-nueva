@@ -306,11 +306,7 @@ function agregarAlCarritoProductos(event, item) {
         updateCartCount();
     }
 
-    // Guardar en BD si hay usuario logueado
-    if (window.guardarCarritoEnBDAux && typeof window.guardarCarritoEnBDAux === 'function') {
-        console.log('Guardando carrito en BD');
-        window.guardarCarritoEnBDAux(carrito);
-    }
+    // ❌ Carrito NO se guarda en BD - solo en localStorage
 
     // Recalcular totales si la función existe
     if (typeof window.calcularTotales === 'function') {

@@ -228,10 +228,7 @@ async function verificarExpirationCarrito() {
         }
         // ⚠️ Llamadas a funciones de expiración removidas - ahora gestionadas por PublicLayout.astro
 
-        // Sincronizar con BD si hay usuario
-        if (typeof guardarCarritoEnBD === 'function') {
-            await guardarCarritoEnBD();
-        }
+        // ❌ Carrito NO se sincroniza con BD - solo se usa localStorage
 
         // Disparar evento de actualización
         window.dispatchEvent(new CustomEvent('carritoActualizado', { 
@@ -354,62 +351,21 @@ window.cargarCarrito = cargarCarrito;
 
 // Función global para sincronizar carrito después de login (fusiona UNA sola vez al hacer login)
 window.sincronizarCarritoConBD = async function () {
-    console.log('Sincronizando carrito con BD después de login...');
-
-    // Leer carrito local ANTES de que cargarCarrito lo sobrescriba
-    const carritoLocalAntes = JSON.parse(localStorage.getItem('carrito') || '[]');
-
-    // Cargar carrito de BD directamente
-    const userId = getCurrentUserId();
-    if (!userId || !window.supabaseClient) {
-        console.log('No hay usuario, solo usando localStorage');
-        return;
-    }
-
-    const { data: carritoBD, error } = await window.supabaseClient
-        .from('carrito')
-        .select('*')
-        .eq('user_id', userId);
-
-    if (error) {
-        console.error('Error cargando carrito de BD:', error);
-        return;
-    }
-
-    const carritoBDItems = (carritoBD || []).map(item => ({
-        id: item.product_id,
-        nombre: item.nombre,
-        precio: parseFloat(item.precio),
-        cantidad: item.cantidad,
-        imagen: item.imagen || ''
-    }));
-
-    // Si hay items en local pero NO en BD, guardar local en BD
-    if (carritoLocalAntes.length > 0 && carritoBDItems.length === 0) {
-        console.log('Login: guardando carrito local en BD');
-        carrito = carritoLocalAntes;
-        await guardarCarritoEnBD();
-    }
-    // Si hay items en ambos, fusionar (solo esta vez)
-    else if (carritoLocalAntes.length > 0 && carritoBDItems.length > 0) {
-        console.log('Login: fusionando carritos');
-        carrito = fusionarCarritos(carritoLocalAntes, carritoBDItems);
-        await guardarCarritoEnBD();
-    }
-    // Si solo hay en BD, usar BD
-    else {
-        carrito = carritoBDItems;
-    }
-
+    console.log('Sincronización de carrito con BD DESHABILITADA - usando solo localStorage');
+    
+    // Solo cargar de localStorage, sin tocar BD
+    const carritoLocal = JSON.parse(localStorage.getItem('carrito') || '[]');
+    window.carrito = carritoLocal;
+    carrito = window.carrito;
+    
     localStorage.setItem('carrito', JSON.stringify(carrito));
     renderizarCarrito();
     calcularTotales();
 };
-
 // Función global para guardar carrito antes de logout
 window.guardarCarritoAntesDeLogout = async function () {
-    console.log('Guardando carrito antes de logout...');
-    await guardarCarritoEnBD();
+    console.log('Carrito NO se guarda en BD - solo se usa localStorage');
+    // No hacer nada, el carrito se mantiene en localStorage
 };
 
 // Renderizar tabla del carrito
