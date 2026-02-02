@@ -1,0 +1,301 @@
+---
+import Header from "../components/ui/Header.astro";
+import Footer from "../components/ui/Footer.astro";
+
+interface Props {
+	title: string;
+	description?: string;
+}
+
+const {
+	title,
+	description = "Joyería Galiana - Descubre nuestra colección exclusiva de joyas de oro, plata y diamantes. Anillos, collares, pendientes y pulseras de lujo.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content={description} />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="manifest" href="/site.webmanifest" />
+		<link rel="icon" type="image/x-icon" href="/favicon.ico?v=4" />
+		<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=4" />
+		<link rel="apple-touch-icon" sizes="180x180" href="/favicon.png?v=4" />
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=4" />
+		<link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=4" />
+		<link rel="stylesheet" href="/css/styles.css?v=3" />
+		<link rel="stylesheet" href="/css/cart-slide.css?v=1" />
+		<link rel="stylesheet" href="/css/stock-reservation-notification.css?v=1" />
+		<script
+			src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+			is:inline></script>
+		<script src="/js/supabase-init.js?v=3" is:inline></script>
+		<script src="/js/supabase-config.js?v=2" is:inline></script>
+		<script src="/js/stock-reservations.js?v=3" is:inline></script>
+		<script src="/js/carrito.js?v=9" is:inline></script>
+		<script src="/js/cart-slide.js?v=4" is:inline></script>
+		<script src="/js/auth-new.js?v=8" is:inline></script>
+		<script src="/js/perfil-modal.js?v=2" is:inline></script>
+		<script src="/js/modal-seleccionar-talla.js?v=3" is:inline></script>
+		<script src="/js/modal-alert.js?v=2" is:inline></script>
+		<script src="/js/script.js?v=9" is:inline></script>
+		<slot name="head" />
+		<title>{title}</title>
+	</head>
+	<body>
+		<Header />
+		
+		<!-- Cart Slide Over -->
+		<div id="cart-slide-overlay" class="cart-slide-overlay"></div>
+		<div id="cart-slide-panel" class="cart-slide-panel">
+			<div class="cart-slide-header">
+				<h2>Mi Carrito</h2>
+				<button class="cart-slide-close" onclick="closeCartSlide()">✕</button>
+			</div>
+			<div class="cart-slide-content">
+				<!-- Timer de expiración del carrito slide -->
+				<div id="cart-slide-timer" class="cart-slide-timer" style="display: none;">
+					<div class="timer-content-slide">
+						<span class="timer-label-slide">⏱ Reserva válida por:</span>
+					<span id="cart-slide-timer-valor" class="timer-value-slide"></span>
+					</div>
+				</div>
+				<div id="cart-slide-items" class="cart-items-list"></div>
+			</div>
+			<div class="cart-slide-footer">
+				<div id="cart-slide-footer-content"></div>
+			</div>
+		</div>
+
+		<!-- Modal Global para Seleccionar Talla de Anillo -->
+		<div id="modal-seleccionar-talla-global" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1002; align-items: center; justify-content: center;">
+			<div style="background: white; border-radius: 12px; max-width: 500px; padding: 2rem; width: 90%; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+				<button onclick="cerrarModalSeleccionarTalla()" style="position: absolute; top: 1rem; right: 1rem; background: #e0e0e0; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;">×</button>
+				
+				<h2 style="color: #000; margin: 0 0 1rem 0; font-size: 1.5rem;">Selecciona una talla de anillo</h2>
+				
+				<div id="modal-tallas-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-bottom: 1.5rem;"></div>
+				
+				<button onclick="agregarAlCarritoConTalla()" style="background: var(--color-principal); color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold;">Confirmar</button>
+			</div>
+		</div>
+
+		<main>
+			<slot />
+		</main>
+		<Footer />
+		
+		<!-- Script para sincronizar contador de carrito en tiempo real -->
+		<script is:inline>
+		// FUNCIÓN GLOBAL ÚNICA para manejar la expiración del carrito
+		function gestionarExpirationCarrito() {
+			try {
+				// ⚠️ NO LIMPIAR EL CARRITO SI ESTAMOS EN CHECKOUT O PAGO
+				const path = window.location.pathname;
+				if (path.includes('/checkout') || path.includes('/pago')) {
+					console.log('[PublicLayout] Página protegida detectada - NO verificar expiración');
+					return;
+				}
+
+				const carrito = JSON.parse(localStorage.getItem('carrito') || '[]');
+				
+				// Si no hay carrito, ocultar timers y resetear timestamp
+				if (carrito.length === 0) {
+					const timerPrincipal = document.getElementById('carrito-timer');
+					const timerSlide = document.getElementById('cart-slide-timer');
+					if (timerPrincipal) timerPrincipal.style.display = 'none';
+					if (timerSlide) timerSlide.style.display = 'none';
+					window.carritoTimestamp = null; // Resetear timestamp
+					sessionStorage.removeItem('carritoTimestamp'); // Limpiar sessionStorage
+					return;
+				}
+				
+				// ⚠️ IMPORTANTE: Recuperar timestamp de sessionStorage (persiste en la navegación)
+				if (!window.carritoTimestamp && carrito.length > 0) {
+					const timestampGuardado = sessionStorage.getItem('carritoTimestamp');
+					if (timestampGuardado) {
+						window.carritoTimestamp = parseInt(timestampGuardado, 10);
+					} else {
+						// Primera vez con carrito: crear timestamp y guardarlo
+						window.carritoTimestamp = Date.now();
+						sessionStorage.setItem('carritoTimestamp', window.carritoTimestamp.toString());
+					}
+				}
+				
+				// Calcular tiempo restante usando el timestamp global
+				const primerItemTiempo = window.carritoTimestamp;
+				const ahora = Date.now();
+				const tiempoTranscurrido = ahora - primerItemTiempo;
+				const tiempoRestante = Math.max(0, window.EXPIRACION_CARRITO_MS - tiempoTranscurrido);
+				
+				// Formato MM:SS
+				const minutos = Math.floor(tiempoRestante / 60000);
+				const segundos = Math.floor((tiempoRestante % 60000) / 1000);
+				const tiempoFormato = `${minutos}:${segundos.toString().padStart(2, '0')}`;
+				
+				// Actualizar timer del carrito principal
+				const timerValor = document.getElementById('carrito-timer-valor');
+				if (timerValor) {
+					timerValor.textContent = tiempoFormato;
+				}
+				
+				const timerContainer = document.getElementById('carrito-timer');
+				if (timerContainer) {
+					timerContainer.style.display = 'flex';
+					timerContainer.classList.remove('timer-green', 'timer-orange', 'timer-red');
+					if (tiempoRestante < 5 * 60 * 1000) {
+						timerContainer.classList.add('timer-red');
+					} else if (tiempoRestante < 10 * 60 * 1000) {
+						timerContainer.classList.add('timer-orange');
+					} else {
+						timerContainer.classList.add('timer-green');
+					}
+				}
+				
+				// Actualizar timer del carrito slide
+				const timerSlideValor = document.getElementById('cart-slide-timer-valor');
+				if (timerSlideValor) {
+					timerSlideValor.textContent = tiempoFormato;
+				}
+				
+				const timerSlideContainer = document.getElementById('cart-slide-timer');
+				if (timerSlideContainer) {
+					timerSlideContainer.style.display = 'flex';
+					timerSlideContainer.classList.remove('timer-green', 'timer-orange', 'timer-red');
+					if (tiempoRestante < 5 * 60 * 1000) {
+						timerSlideContainer.classList.add('timer-red');
+					} else if (tiempoRestante < 10 * 60 * 1000) {
+						timerSlideContainer.classList.add('timer-orange');
+					} else {
+						timerSlideContainer.classList.add('timer-green');
+					}
+				}
+				
+				// ⏰ SI EL TIEMPO EXPIRÓ (0:00)
+				if (tiempoRestante === 0 && carrito.length > 0) {
+					// Flag para evitar duplicación
+					if (window.carritoYaExpirado) {
+						return;
+					}
+					window.carritoYaExpirado = true;
+					
+					console.log('[PublicLayout GLOBAL] ⏰ TIEMPO EXPIRADO - Restaurando stock y limpiando carrito');
+					
+					// 1. RESTAURAR STOCK EN SUPABASE para todos los items
+					carrito.forEach(async (item) => {
+						if (window.supabaseClient && item.id && item.cantidad) {
+							try {
+								const { data: producto } = await window.supabaseClient
+									.from('products')
+									.select('stock')
+									.eq('id', item.id)
+									.single();
+								
+								if (producto) {
+									const nuevoStock = (producto.stock || 0) + item.cantidad;
+									await window.supabaseClient
+										.from('products')
+										.update({ stock: nuevoStock })
+										.eq('id', item.id);
+									
+									console.log(`[PublicLayout GLOBAL] Stock restaurado para producto ${item.id}: +${item.cantidad}`);
+								}
+							} catch (err) {
+								console.error(`[PublicLayout GLOBAL] Error restaurando stock para ${item.id}:`, err);
+							}
+						}
+					});
+					
+					// 2. LIMPIAR CARRITO de localStorage y memoria
+					localStorage.removeItem('carrito');
+					window.carrito = [];
+					if (typeof carrito !== 'undefined') {
+						window.carrito = [];
+					}
+					
+					// 3. ACTUALIZAR UIs (carrito principal, slide, contador)
+					if (typeof renderizarCarrito === 'function') {
+						renderizarCarrito();
+					}
+					if (typeof renderCartSlide === 'function') {
+						renderCartSlide();
+					}
+					if (typeof updateCartCount === 'function') {
+						updateCartCount();
+					}
+					
+					// 4. OCULTAR TIMERS
+					const timerP = document.getElementById('carrito-timer');
+					const timerS = document.getElementById('cart-slide-timer');
+					if (timerP) timerP.style.display = 'none';
+					if (timerS) timerS.style.display = 'none';
+					
+					// 5. CERRAR SLIDE si está abierto
+					const cartSlide = document.querySelector('[data-cart-slide]');
+					if (cartSlide) {
+						cartSlide.classList.remove('active');
+					}
+					const cartSlidePanel = document.getElementById('cart-slide-panel');
+					if (cartSlidePanel) {
+						cartSlidePanel.classList.remove('active');
+					}
+					
+					// 6. MOSTRAR NOTIFICACIÓN profesional
+					if (typeof mostrarModalAlerta === 'function') {
+						mostrarModalAlerta(
+							'Carrito Expirado',
+							'Tu carrito ha expirado después de 15 minutos. Los artículos se han removido y el stock ha sido restaurado.',
+							'warning'
+						);
+					}
+					
+					// 7. RESETEAR flag después de 5s
+					setTimeout(() => {
+						window.carritoYaExpirado = false;
+						console.log('[PublicLayout GLOBAL] Flag reseteado - permitir nuevo carrito');
+					}, 5000);
+				}
+			} catch (err) {
+				console.error('[PublicLayout GLOBAL] Error en gestionarExpirationCarrito:', err);
+			}
+		}
+		
+		function actualizarContadorCarrito() {
+			try {
+				const carrito = JSON.parse(localStorage.getItem('carrito') || '[]');
+				const count = carrito.reduce((total, item) => total + (item.cantidad || 0), 0);
+				const cartCountEl = document.getElementById('cart-count');
+				
+				if (cartCountEl) {
+					cartCountEl.textContent = count;
+				}
+			} catch (err) {
+				console.error('[PublicLayout] Error actualizando contador:', err);
+			}
+		}
+
+		// Escuchar evento personalizado cuando el carrito se actualiza
+		window.addEventListener('carritoActualizado', function(event) {
+			actualizarContadorCarrito();
+		});
+		
+		// Monitorear cambios en localStorage cada 500ms
+		setInterval(() => {
+			if (window._ultimoCarritoLocalLayout !== localStorage.getItem('carrito')) {
+				window._ultimoCarritoLocalLayout = localStorage.getItem('carrito');
+				actualizarContadorCarrito();
+			}
+		}, 500);
+
+		// ⏰ EJECUTAR FUNCIÓN GLOBAL ÚNICA cada segundo
+		setInterval(() => {
+			gestionarExpirationCarrito();
+		}, 1000);
+		
+		// Inicializar al cargar
+		document.addEventListener('DOMContentLoaded', actualizarContadorCarrito);
+		</script>
+	</body>
+</html>

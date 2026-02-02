@@ -1,0 +1,1031 @@
+---
+import PublicLayout from "../layouts/PublicLayout.astro";
+---
+
+<style>
+	@keyframes spin {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	.btn-tienda {
+		text-decoration: none !important;
+	}
+
+	.btn-tienda:hover {
+		text-decoration: none !important;
+	}
+</style>
+
+<PublicLayout
+	title="Joyería Galiana - Joyas Exclusivas de Lujo | Anillos, Collares, Pendientes"
+>
+	<!-- Modal de Login y Registro -->
+	<div id="login-modal" class="modal" style="display: none;">
+		<div class="modal-content auth-modal">
+			<span class="close" onclick="window.closeLoginModal()">&times;</span>
+			
+			<!-- Tabs de navegación -->
+			<div class="auth-tabs">
+				<button type="button" class="auth-tab active" data-tab="login">Iniciar Sesión</button>
+				<button type="button" class="auth-tab" data-tab="register">Registrarse</button>
+			</div>
+			
+			<!-- Formulario de Login -->
+			<form id="login-form" class="auth-form active">
+				<h2>Iniciar Sesión</h2>
+				<div class="form-group">
+					<label for="login-email">Email:</label>
+					<input type="email" id="login-email" required />
+				</div>
+				<div class="form-group">
+					<label for="login-password">Contraseña:</label>
+					<input type="password" id="login-password" required />
+				</div>
+				<div class="forgot-password-link">
+					<a href="#" onclick="abrirModalRecuperacion(event)">¿Olvidaste tu contraseña?</a>
+				</div>
+				<button type="submit" class="btn-principal">Iniciar Sesión</button>
+			</form>
+			
+			<!-- Formulario de Registro -->
+			<form id="register-form" class="auth-form">
+				<h2>Registrarse</h2>
+				<div class="form-group">
+					<label for="register-nombre">Nombre:</label>
+					<input type="text" id="register-nombre" required />
+				</div>
+				<div class="form-group">
+					<label for="register-apellido">Apellidos:</label>
+					<input type="text" id="register-apellido" />
+				</div>
+				<div class="form-group">
+					<label for="register-email">Email:</label>
+					<input type="email" id="register-email" required />
+				</div>
+				<div class="form-group">
+					<label for="register-telefono">Teléfono:</label>
+					<input type="tel" id="register-telefono" />
+				</div>
+				<div class="form-group">
+					<label for="register-direccion">Dirección:</label>
+					<input type="text" id="register-direccion" />
+				</div>
+				<div class="form-group">
+					<label for="register-ciudad">Ciudad:</label>
+					<input type="text" id="register-ciudad" />
+				</div>
+				<div class="form-group">
+					<label for="register-codigo-postal">Código Postal:</label>
+					<input type="text" id="register-codigo-postal" />
+				</div>
+				<div class="form-group">
+					<label for="register-password">Contraseña:</label>
+					<input type="password" id="register-password" required />
+				</div>
+				<div class="form-group">
+					<label for="register-confirm-password">Confirmar Contraseña:</label>
+					<input type="password" id="register-confirm-password" required />
+				</div>
+				<button type="submit" class="btn-principal">Registrarse</button>
+			</form>
+	</div>
+</div>
+
+<!-- POPUP NEWSLETTER (Esquina inferior derecha) -->
+<div id="newsletter-popup" style="display: none; position: fixed; bottom: 30px; right: 30px; width: 380px; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); z-index: 1000; animation: slideIn 0.3s ease;">
+	<style>
+		@keyframes slideIn {
+			from {
+				transform: translateY(400px);
+				opacity: 0;
+			}
+			to {
+				transform: translateY(0);
+				opacity: 1;
+			}
+		}
+
+		#newsletter-popup {
+			overflow: hidden;
+		}
+
+		.newsletter-popup-header {
+			background: linear-gradient(135deg, #d4af37 0%, #b8941a 100%);
+			padding: 20px;
+			position: relative;
+			color: white;
+		}
+
+		.newsletter-popup-close {
+			position: absolute;
+			top: 12px;
+			right: 12px;
+			background: none;
+			border: none;
+			font-size: 24px;
+			color: white;
+			cursor: pointer;
+			padding: 0;
+			width: 30px;
+			height: 30px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.newsletter-popup-close:hover {
+			opacity: 0.8;
+		}
+
+		.newsletter-popup-content {
+			padding: 24px;
+		}
+
+		.newsletter-popup-title {
+			font-size: 18px;
+			font-weight: 700;
+			margin: 0 0 8px 0;
+			color: #1a1a1a;
+			font-family: 'Playfair Display', Georgia, serif;
+		}
+
+		.newsletter-popup-subtitle {
+			font-size: 14px;
+			color: #666;
+			margin: 0 0 16px 0;
+			line-height: 1.4;
+		}
+
+		.newsletter-popup-badge {
+			display: inline-block;
+			background: #fff3e0;
+			color: #e65100;
+			padding: 6px 12px;
+			border-radius: 20px;
+			font-size: 12px;
+			font-weight: 700;
+			margin-bottom: 16px;
+			letter-spacing: 0.5px;
+		}
+
+		.newsletter-popup-form {
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+		}
+
+		.newsletter-popup-input {
+			padding: 12px;
+			border: 1px solid #ddd;
+			border-radius: 6px;
+			font-size: 14px;
+			font-family: inherit;
+		}
+
+		.newsletter-popup-input:focus {
+			outline: none;
+			border-color: #d4af37;
+			box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+		}
+
+		.newsletter-popup-button {
+			padding: 12px;
+			background: #d4af37;
+			color: white;
+			border: none;
+			border-radius: 6px;
+			font-weight: 700;
+			cursor: pointer;
+			font-size: 14px;
+			transition: all 0.2s ease;
+		}
+
+		.newsletter-popup-button:hover {
+			background: #c9a027;
+		}
+
+		.newsletter-popup-button:disabled {
+			background: #ccc;
+			cursor: not-allowed;
+		}
+
+		.newsletter-popup-message {
+			margin-top: 12px;
+			padding: 12px;
+			border-radius: 6px;
+			font-size: 13px;
+			text-align: center;
+		}
+
+		.newsletter-popup-message.success {
+			background: #e8f5e9;
+			color: #2e7d32;
+		}
+
+		.newsletter-popup-message.error {
+			background: #ffebee;
+			color: #c62828;
+		}
+
+		.newsletter-popup-message.info {
+			background: #e3f2fd;
+			color: #1565c0;
+		}
+
+		@media (max-width: 480px) {
+			#newsletter-popup {
+				width: calc(100vw - 20px);
+				bottom: 15px;
+				right: 10px;
+				left: 10px;
+			}
+		}
+	</style>
+
+	<div class="newsletter-popup-header">
+		<h3 class="newsletter-popup-title">Ofertas Exclusivas</h3>
+		<button class="newsletter-popup-close" onclick="cerrarNewsletterPopup()">×</button>
+	</div>
+
+	<div class="newsletter-popup-content">
+		<div class="newsletter-popup-badge">BIENVENIDA -10%</div>
+		<p class="newsletter-popup-subtitle">
+			Suscríbete a nuestro newsletter y obtén un código de descuento del 10% en tu primera compra.
+		</p>
+
+		<form class="newsletter-popup-form" id="newsletter-popup-form" onsubmit="subscribirNewsletterPopup(event)">
+			<input 
+				type="email" 
+				class="newsletter-popup-input" 
+				id="newsletter-popup-email" 
+				placeholder="Tu email" 
+				required 
+				autocomplete="email"
+			/>
+			<input 
+				type="text" 
+				class="newsletter-popup-input" 
+				id="newsletter-popup-nombre" 
+				placeholder="Tu nombre (opcional)" 
+				autocomplete="name"
+			/>
+			<button type="submit" class="newsletter-popup-button" id="newsletter-popup-btn">
+				Obtener mi descuento
+			</button>
+			<div id="newsletter-popup-message"></div>
+		</form>
+	</div>
+</div>
+
+<!-- Modal Recuperar Contraseña (FUERA del login-modal) -->
+<div id="recuperacion-modal" class="modal" style="display: none;">
+	<div class="modal-content auth-modal" style="max-width: 420px;">
+		<button class="btn-close-modal" onclick="cerrarModalRecuperacion()" type="button">
+			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<line x1="18" y1="6" x2="6" y2="18"></line>
+				<line x1="6" y1="6" x2="18" y2="18"></line>
+			</svg>
+		</button>
+		
+		<div style="text-align: center; margin-bottom: 30px;">
+			<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8B1538" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block; margin-bottom: 15px;">
+				<path d="M12 1v6m0 6v6"></path>
+				<rect x="5" y="9" width="14" height="12" rx="2" ry="2"></rect>
+				<path d="M8 14h8"></path>
+			</svg>
+			<h2 style="color: #8B1538; margin: 0; font-size: 24px;">Recuperar Contraseña</h2>
+			<p style="color: #666; margin: 10px 0 0 0; font-size: 14px;">Ingresa tu email para recibir un enlace de recuperación</p>
+		</div>
+
+		<form id="form-recuperacion">
+			<div class="form-group">
+				<label for="recuperacion-email" style="font-weight: 600; color: #333;">Correo Electrónico</label>
+				<input type="email" id="recuperacion-email" required placeholder="tu@email.com" style="width: 100%; padding: 12px; border: 2px solid #d4af37; border-radius: 6px; font-size: 14px;" />
+			</div>
+			<button type="submit" class="btn-principal" id="btn-recuperacion-submit" style="width: 100%; margin-top: 20px;">Enviar Enlace</button>
+			<div id="recuperacion-message" class="message" style="margin-top: 15px; padding: 12px; border-radius: 6px; text-align: center;"></div>
+			<div style="text-align: center; margin-top: 20px;">
+				<button type="button" class="btn-volver-recuperacion" onclick="cerrarModalRecuperacion()">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline; margin-right: 6px; vertical-align: middle;">
+						<line x1="19" y1="12" x2="5" y2="12"></line>
+						<polyline points="12 19 5 12 12 5"></polyline>
+					</svg>
+					Volver
+				</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<!-- Hero Section - Galería de Imágenes -->
+<section id="inicio" class="hero galeria-hero">
+		<div class="galeria-container">
+			<!-- Los slides se cargarán dinámicamente desde la BD -->
+		</div>
+
+		<!-- Controles de la Galería -->
+		<div class="galeria-controles">
+			<button class="control-btn prev" onclick="cambiarSlide(-1)"
+				>❮</button
+			>
+			<button class="control-btn next" onclick="cambiarSlide(1)">❯</button
+			>
+		</div>
+
+		<!-- Indicadores de Slides -->
+		<div class="galeria-indicadores">
+			<!-- Los indicadores se cargarán dinámicamente -->
+		</div>
+	</section>
+
+	<!-- Categorías de Compra -->
+	<section id="categorias" class="categorias">
+		<div class="container">
+			<h2>Compra por Categorías</h2>
+			<div class="categorias-grid">
+				<div class="categoria-card">
+					<div class="categoria-icon">
+						<img
+							src="/images/categoria-anillos.png"
+							alt="Anillos"
+						/>
+					</div>
+					<h3>Anillos</h3>
+					<p>Diseños elegantes y modernos</p>
+					<button
+						class="btn-secundario"
+						onclick="window.location.href='/productos?categoria=Anillos'"
+						>Ver Anillos</button
+					>
+				</div>
+				<div class="categoria-card">
+					<div class="categoria-icon">
+						<img
+							src="/images/categoria-collares.png"
+							alt="Collares"
+						/>
+					</div>
+					<h3>Collares</h3>
+					<p>Piezas sofisticadas</p>
+					<button
+						class="btn-secundario"
+						onclick="window.location.href='/productos?categoria=Collares'"
+						>Ver Collares</button
+					>
+				</div>
+				<div class="categoria-card">
+					<div class="categoria-icon">
+						<img
+							src="/images/categoria-pendientes.jpg"
+							alt="Pendientes"
+						/>
+					</div>
+					<h3>Pendientes</h3>
+					<p>Elegancia en cada oreja</p>
+					<button
+						class="btn-secundario"
+						onclick="window.location.href='/productos?categoria=Pendientes'"
+						>Ver Pendientes</button
+					>
+				</div>
+				<div class="categoria-card">
+					<div class="categoria-icon">
+						<img
+							src="/images/categoria-pulseras.jpg"
+							alt="Pulseras"
+						/>
+					</div>
+					<h3>Pulseras</h3>
+					<p>Brazaletes exclusivos</p>
+					<button
+						class="btn-secundario"
+						onclick="window.location.href='/productos?categoria=Pulseras'"
+						>Ver Pulseras</button
+					>
+				</div>
+				<div class="categoria-card">
+					<div class="categoria-icon">
+						<img
+							src="/images/categoria-relojes.png"
+							alt="Relojes"
+						/>
+					</div>
+					<h3>Relojes</h3>
+					<p>Relojes de lujo y precisión</p>
+					<button
+						class="btn-secundario"
+						onclick="window.location.href='/productos?categoria=Relojes'"
+						>Ver Relojes</button
+					>
+				</div>
+				<div class="categoria-card">
+					<div class="categoria-icon">
+						<img
+							src="/images/categoria-medallas.png"
+							alt="Medallas"
+						/>
+					</div>
+					<h3>Medallas</h3>
+					<p>Medallas exclusivas y religiosas</p>
+					<button
+						class="btn-secundario"
+						onclick="window.location.href='/productos?categoria=Medallas'"
+						>Ver Medallas</button
+					>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Sección de Productos Destacados -->
+	<section id="productos" class="productos">
+		<div class="container">
+			<h2>Últimas Tendencias</h2>
+			<div class="filtros-productos">
+				<button
+					class="filtro-btn activo"
+					onclick="aplicarFiltroTendencias('Anillos')">Anillos</button
+				>
+				<button
+					class="filtro-btn"
+					onclick="aplicarFiltroTendencias('Collares')"
+					>Collares</button
+				>
+				<button
+					class="filtro-btn"
+					onclick="aplicarFiltroTendencias('Pendientes')"
+					>Pendientes</button
+				>
+				<button
+					class="filtro-btn"
+					onclick="aplicarFiltroTendencias('Pulseras')"
+					>Pulseras</button
+				>
+				<button
+					class="filtro-btn"
+					onclick="aplicarFiltroTendencias('Relojes')">Relojes</button
+				>
+				<button
+					class="filtro-btn"
+					onclick="aplicarFiltroTendencias('Medallas')">Medallas</button
+				>
+			</div>
+			<div class="productos-grid" id="tendencias-grid">
+				<!-- Los productos se cargarán aquí dinámicamente desde la BD -->
+			</div>
+			<div class="ver-mas">
+				<button
+					class="btn-principal"
+					onclick="window.location.href='/productos'"
+					>Ver Todos los Productos</button
+				>
+			</div>
+		</div>
+	</section>
+
+	<!-- Sección Dónde Estamos -->
+	<section id="donde-estamos" class="donde-estamos">
+		<div class="container">
+			<div class="donde-estamos-content">
+				<div class="donde-estamos-text">
+					<h2>¿Dónde Nos Puedes Encontrar?</h2>
+					<p>
+						Visita nuestra tienda física para ver en persona toda nuestra
+						colección exclusiva de joyas. Nuestro equipo de expertos te
+						asesorará para encontrar la pieza perfecta que se adapte a tu estilo
+						y presupuesto.
+					</p>
+					<a
+						href="https://www.google.com/maps/place/Joyería+Galiana/@36.7826773,-6.3524505,939m/data=!3m2!1e3!4b1!4m15!1m8!3m7!1s0xd0dde20e6b03265:0xf26e50fc62ba2a04!2sC.+Barrameda,+21,+11540+Sanlúcar+de+Barrameda,+Cádiz!3b1!8m2!3d36.7826731!4d-6.3475796!16s%2Fg%2F11q2nmkw8h!3m5!1s0xd0dde20e6b3308b:0x83948d680f8a9f12!8m2!3d36.7826731!4d-6.3475796!16s%2Fg%2F11cmfwqt_h?entry=ttu&g_ep=EgoyMDI2MDEwNy4wIKXMDSoKLDEwMDc5MjA3MUgBUAM%3D"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="btn-principal btn-tienda"
+						style="text-decoration: none;"
+						>Ver en Google Maps</a
+					>
+				</div>
+				<div class="donde-estamos-image">
+					<img src="/images/tiendas.jpg" alt="Tienda Joyería Galiana" />
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Sección Sobre Nosotros -->
+	<section id="sobre-nosotros" class="sobre-nosotros">
+		<div class="container">
+			<div class="sobre-nosotros-content">
+				<div class="sobre-nosotros-image">
+					<img src="/images/sobre-nosotros.jpg" alt="Joyería Galiana" />
+				</div>
+				<div class="sobre-nosotros-text">
+					<h2>Sobre Joyería Galiana</h2>
+					<p>
+						Con más de 20 años de experiencia, Joyería Galiana es sinónimo
+						de calidad, confianza y excelencia. Cada pieza es cuidadosamente
+						seleccionada y elaborada por maestros joyeros con dedicación a
+						los detalles más exquisitos.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Sección de Contacto -->
+	<section id="contacto" class="contacto">
+		<div class="container">
+			<h2>Contacta con Nosotros</h2>
+			<div class="contacto-info-grid">
+				<div class="info-item">
+					<div class="info-icon">
+						<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+					</div>
+					<h3>Ubicación</h3>
+					<p>C. Barrameda, 21<br>11540 Sanlúcar de Barrameda, Cádiz</p>
+					<a href="https://www.google.com/maps/place/Joyería+Galiana/@36.7826773,-6.3524505,939m/data=!3m2!1e3!4b1!4m15!1m8!3m7!1s0xd0dde20e6b03265:0xf26e50fc62ba2a04!2sC.+Barrameda,+21,+11540+Sanlúcar+de+Barrameda,+Cádiz!3b1!8m2!3d36.7826731!4d-6.3475796!16s%2Fg%2F11q2nmkw8h!3m5!1s0xd0dde20e6b3308b:0x83948d680f8a9f12!8m2!3d36.7826731!4d-6.3475796!16s%2Fg%2F11cmfwqt_h?entry=ttu&g_ep=EgoyMDI2MDEwNy4wIKXMDSoKLDEwMDc5MjA3MUgBUAM%3D" target="_blank" rel="noopener noreferrer" class="btn-info">Ver en Maps</a>
+				</div>
+				<div class="info-item">
+					<div class="info-icon">
+						<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+					</div>
+					<h3>Teléfono</h3>
+					<p>+34 912 345 678</p>
+					<a href="tel:+34912345678" class="btn-info">Llamar</a>
+				</div>
+				<div class="info-item">
+					<div class="info-icon">
+						<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+					</div>
+					<h3>WhatsApp</h3>
+					<p>+34 912 345 678</p>
+					<a href="https://wa.me/34912345678" target="_blank" rel="noopener noreferrer" class="btn-info">Enviar</a>
+				</div>
+				<div class="info-item">
+					<div class="info-icon">
+						<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+					</div>
+					<h3>Email</h3>
+					<p>info@joyeriagaliana.com</p>
+					<a href="mailto:info@joyeriagaliana.com" class="btn-info">Enviar Email</a>
+				</div>
+			</div>
+			<div class="formulario-container">
+				<h3>Envía tu Mensaje</h3>
+			<form class="formulario-contacto" id="contact-form">
+				<input type="text" id="contact-nombre" placeholder="Tu nombre" required />
+				<input type="email" id="contact-email" placeholder="Tu email" required />
+				<input type="text" id="contact-asunto" placeholder="Asunto" required />
+				<textarea id="contact-mensaje" placeholder="Tu mensaje" rows="5" required></textarea>
+				<button type="submit" class="btn-principal">Enviar Mensaje</button>
+				<div id="contact-status" style="margin-top: 1rem; text-align: center;"></div>
+				</form>
+			</div>
+		</div>
+	</section>
+
+	<!-- Características y Beneficios -->
+	<section class="beneficios">
+		<div class="container">
+			<div class="beneficio-item">
+				<h3>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="18"
+						height="18"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						style="display: inline; vertical-align: middle; margin-right: 6px;"
+						><polyline
+							points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"
+						></polyline></svg
+					> Envío en 24-48h
+				</h3>
+				<p>Entrega rápida y segura</p>
+			</div>
+			<div class="beneficio-item">
+				<h3>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="18"
+						height="18"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						style="display: inline; vertical-align: middle; margin-right: 6px;"
+						><rect x="3" y="11" width="18" height="11" rx="2" ry="2"
+						></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg
+					> Pago 100% Seguro
+				</h3>
+				<p>Múltiples opciones de pago</p>
+			</div>
+			<div class="beneficio-item">
+				<h3>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="18"
+						height="18"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						style="display: inline; vertical-align: middle; margin-right: 6px;"
+						><polyline points="9 14 4 9 9 4"></polyline><path
+							d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg
+					> Devoluciones Gratis
+				</h3>
+				<p>30 días para cambiar</p>
+			</div>
+			<div class="beneficio-item">
+				<h3>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="18"
+						height="18"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						style="display: inline; vertical-align: middle; margin-right: 6px;"
+						><polygon
+							points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+						></polygon></svg
+					> Garantía 3 Años
+				</h3>
+				<p>Certificado de autenticidad</p>
+			</div>
+		</div>
+	</section>
+
+	<!-- Sección Newsletter -->
+	<section class="newsletter-section">
+		<div class="container">
+			<h2>Suscríbete a nuestro Newsletter</h2>
+			<p>Recibe ofertas exclusivas, nuevas colecciones y promociones especiales directamente en tu correo</p>
+			<form class="newsletter-form" onsubmit="handleNewsletterSubscribe(event)">
+				<input 
+					type="email" 
+					placeholder="Tu correo electrónico" 
+					id="newsletter-email"
+					required 
+				/>
+				<button type="submit" class="btn-principal">Suscribirse</button>
+			</form>
+			<p class="newsletter-privacy">Respetamos tu privacidad. Puedes darte de baja en cualquier momento.</p>
+		</div>
+	</section>
+
+	<script>
+		console.log('✅ Script de contacto - Versión almacenamiento en tiempo real');
+		
+		// Variables para almacenar los valores conforme el usuario escribe
+		const formData = {
+			nombre: '',
+			email: '',
+			asunto: '',
+			mensaje: ''
+		};
+		
+		function setupContactForm() {
+			console.log('🔍 Buscando formulario de contacto...');
+			
+			const contactForm = document.getElementById('contact-form');
+			
+			if (!contactForm) {
+				console.error('❌ Formulario no encontrado, reintentando en 1000ms');
+				setTimeout(setupContactForm, 1000);
+				return;
+			}
+			
+			console.log('✅ Formulario encontrado!');
+			
+			const nombreInput = contactForm.querySelector('#contact-nombre');
+			const emailInput = contactForm.querySelector('#contact-email');
+			const asuntoInput = contactForm.querySelector('#contact-asunto');
+			const mensajeInput = contactForm.querySelector('#contact-mensaje');
+			
+			console.log('✅ Inputs encontrados:', {
+				nombre: !!nombreInput,
+				email: !!emailInput,
+				asunto: !!asuntoInput,
+				mensaje: !!mensajeInput
+			});
+			
+			// Agregar listeners a cada input para ALMACENAR el valor mientras escribe
+			if (nombreInput) {
+				nombreInput.addEventListener('input', (e) => {
+					formData.nombre = e.target.value;
+					console.log(`📝 nombre actualizado: "${formData.nombre}"`);
+				});
+			}
+			
+			if (emailInput) {
+				emailInput.addEventListener('input', (e) => {
+					formData.email = e.target.value;
+					console.log(`📝 email actualizado: "${formData.email}"`);
+				});
+			}
+			
+			if (asuntoInput) {
+				asuntoInput.addEventListener('input', (e) => {
+					formData.asunto = e.target.value;
+					console.log(`📝 asunto actualizado: "${formData.asunto}"`);
+				});
+			}
+			
+			if (mensajeInput) {
+				mensajeInput.addEventListener('input', (e) => {
+					formData.mensaje = e.target.value;
+					console.log(`📝 mensaje actualizado: "${formData.mensaje}"`);
+				});
+			}
+			
+			console.log('✅ Event listeners de input agregados');
+			
+			// Submit event
+			contactForm.addEventListener('submit', async (e) => {
+				e.preventDefault();
+				console.log('\n🔴 ========== SUBMIT EVENT ==========');
+				console.log('📝 Submit disparado');
+				
+				// Usar los datos ALMACENADOS
+				console.log('📦 Datos almacenados en formData:');
+				console.log('   nombre:', `"${formData.nombre}"`);
+				console.log('   email:', `"${formData.email}"`);
+				console.log('   asunto:', `"${formData.asunto}"`);
+				console.log('   mensaje:', `"${formData.mensaje}"`);
+				
+				// Limpiar
+				const valores = {
+					nombre: formData.nombre.trim(),
+					email: formData.email.trim(),
+					asunto: formData.asunto.trim(),
+					mensaje: formData.mensaje.trim()
+				};
+				
+				console.log('✂️ Después de trim:');
+				console.log('   nombre:', `"${valores.nombre}"`, `(length: ${valores.nombre.length})`);
+				console.log('   email:', `"${valores.email}"`, `(length: ${valores.email.length})`);
+				console.log('   asunto:', `"${valores.asunto}"`, `(length: ${valores.asunto.length})`);
+				console.log('   mensaje:', `"${valores.mensaje}"`, `(length: ${valores.mensaje.length})`);
+				
+				// Validación
+				if (!valores.nombre || !valores.email || !valores.asunto || !valores.mensaje) {
+					console.error('❌ VALIDACIÓN FALLIDA - Campos vacíos');
+					const statusDiv = document.getElementById('contact-status');
+					if (statusDiv) statusDiv.innerHTML = '<span style="color: #ff4444;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline; margin-right: 6px; vertical-align: middle;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Por favor completa TODOS los campos</span>';
+					console.log('🔴 ========== FIN SUBMIT (ERROR) ==========\n');
+					return;
+				}
+				
+				console.log('✅ VALIDACIÓN OK - Enviando...');
+				
+				const submitBtn = contactForm.querySelector('button[type="submit"]');
+				const statusDiv = document.getElementById('contact-status');
+				
+				if (submitBtn) {
+					submitBtn.disabled = true;
+					submitBtn.textContent = 'Enviando...';
+				}
+				if (statusDiv) statusDiv.innerHTML = '<span style="color: #666;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline; margin-right: 6px; vertical-align: middle; animation: spin 1s linear infinite;"><path d="M21.5 2v6h-6M2.5 22v-6h6"></path><path d="M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path></svg> Enviando...</span>';
+				
+				try {
+					console.log('🚀 POST request a /api/send-contact con datos:', valores);
+					const response = await fetch('/api/send-contact', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(valores)
+					});
+					
+					console.log('📡 Response status:', response.status);
+					const result = await response.json();
+					console.log('📦 Response:', result);
+					
+					if (response.ok && result.success) {
+						console.log('✅✅✅ ÉXITO TOTAL - Mensaje guardado en BD');
+						if (statusDiv) statusDiv.innerHTML = '<span style="color: #4CAF50; font-weight: 600;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline; margin-right: 6px; vertical-align: middle;"><polyline points="20 6 9 17 4 12"></polyline></svg> ¡Mensaje enviado! Nos contactaremos pronto.</span>';
+						contactForm.reset();
+						formData.nombre = '';
+						formData.email = '';
+						formData.asunto = '';
+						formData.mensaje = '';
+						setTimeout(() => {
+							if (submitBtn) {
+								submitBtn.disabled = false;
+								submitBtn.textContent = 'Enviar Mensaje';
+							}
+							if (statusDiv) statusDiv.innerHTML = '';
+						}, 4000);
+					} else {
+						console.error('❌ Error en response:', result);
+						if (statusDiv) statusDiv.innerHTML = `<span style="color: #ff4444;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline; margin-right: 6px; vertical-align: middle;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg> Error: ${result.error}</span>`;
+						if (submitBtn) {
+							submitBtn.disabled = false;
+							submitBtn.textContent = 'Enviar Mensaje';
+						}
+					}
+				} catch (error) {
+					console.error('❌ Fetch error:', error);
+					if (statusDiv) statusDiv.innerHTML = '<span style="color: #ff4444;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline; margin-right: 6px; vertical-align: middle;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg> Error de conexión</span>';
+					if (submitBtn) {
+						submitBtn.disabled = false;
+						submitBtn.textContent = 'Enviar Mensaje';
+					}
+				}
+				console.log('🔴 ========== FIN SUBMIT ==========\n');
+			});
+			
+			console.log('✅ Submit listener agregado');
+		}
+		
+		// Esperar a DOMContentLoaded
+		if (document.readyState === 'loading') {
+			console.log('📄 DOM cargando...');
+			document.addEventListener('DOMContentLoaded', () => {
+				console.log('🎬 DOMContentLoaded');
+				setTimeout(setupContactForm, 1000);
+			setupRecuperacionModal();
+		});
+	} else {
+		console.log('📄 DOM ya está listo');
+		setTimeout(setupContactForm, 1000);
+		setupRecuperacionModal();
+	}
+
+	// Funciones para modal de recuperación
+	function setupRecuperacionModal() {
+		window.abrirModalRecuperacion = function(e) {
+			e.preventDefault();
+			document.getElementById('login-modal').style.display = 'none';
+			document.getElementById('recuperacion-modal').style.display = 'flex';
+		};
+
+		window.cerrarModalRecuperacion = function() {
+			document.getElementById('recuperacion-modal').style.display = 'none';
+			document.getElementById('login-modal').style.display = 'flex';
+			const form = document.getElementById('form-recuperacion');
+			if (form) form.reset();
+			const msg = document.getElementById('recuperacion-message');
+			if (msg) msg.textContent = '';
+		};
+
+		// Manejar envío de recuperación
+		const formRecuperacion = document.getElementById('form-recuperacion');
+		console.log('📋 form-recuperacion encontrado:', !!formRecuperacion);
+		
+		if (formRecuperacion) {
+			formRecuperacion.addEventListener('submit', async (e) => {
+				e.preventDefault();
+				console.log('📨 Enviando recuperación de contraseña...');
+				
+				const email = document.getElementById('recuperacion-email').value.trim();
+				const messageDiv = document.getElementById('recuperacion-message');
+				const btnSubmit = document.getElementById('btn-recuperacion-submit');
+
+				btnSubmit.disabled = true;
+				btnSubmit.textContent = 'Enviando...';
+
+				try {
+					console.log('🔗 Llamando API con email:', email);
+					const response = await fetch('/api/request-password-reset', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({ email }),
+					});
+
+					console.log('✅ Response status:', response.status);
+					const data = await response.json();
+					console.log('📦 Response data:', data);
+
+					if (!response.ok) {
+						throw new Error(data.error || 'Error al solicitar reset');
+					}
+
+					messageDiv.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline; margin-right: 8px; vertical-align: middle; color: #28a745;"><polyline points="20 6 9 17 4 12"></polyline></svg>Enlace enviado a tu correo. Revisa tu bandeja de entrada.';
+					messageDiv.className = 'message success';
+					formRecuperacion.reset();
+
+					setTimeout(() => {
+						window.cerrarModalRecuperacion();
+					}, 2000);
+
+				} catch (err) {
+					console.error('❌ Error:', err.message);
+					messageDiv.textContent = err.message || 'Error desconocido';
+					messageDiv.className = 'message error';
+				} finally {
+					btnSubmit.disabled = false;
+					btnSubmit.textContent = 'Enviar Enlace';
+				}
+			});
+		} else {
+			console.error('❌ form-recuperacion NO encontrado');
+		}
+	}
+
+	// ========== NEWSLETTER POPUP FUNCTIONS ==========
+	window.mostrarNewsletterPopup = function() {
+		const popup = document.getElementById('newsletter-popup');
+		if (popup) {
+			popup.style.display = 'block';
+			// Guardar timestamp de cuando se mostró el popup
+			localStorage.setItem('newsletterPopupLastShown', Date.now().toString());
+		}
+	};
+
+	window.cerrarNewsletterPopup = function() {
+		const popup = document.getElementById('newsletter-popup');
+		if (popup) {
+			popup.style.display = 'none';
+		}
+	};
+
+	window.subscribirNewsletterPopup = async function(event) {
+		event.preventDefault();
+
+		const email = document.getElementById('newsletter-popup-email').value.trim();
+		const nombre = document.getElementById('newsletter-popup-nombre').value.trim();
+		const messageDiv = document.getElementById('newsletter-popup-message');
+		const button = document.getElementById('newsletter-popup-btn');
+		const form = document.getElementById('newsletter-popup-form');
+
+		button.disabled = true;
+		button.textContent = 'Suscribiendo...';
+		messageDiv.textContent = '';
+
+		try {
+			const response = await fetch('/api/newsletter-popup-subscribe', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ email, nombre }),
+			});
+
+			const data = await response.json();
+
+			if (data.alreadySubscribed) {
+				messageDiv.textContent = 'Ya estás suscrito a nuestra newsletter';
+				messageDiv.className = 'newsletter-popup-message info';
+				setTimeout(() => {
+					window.cerrarNewsletterPopup();
+				}, 2000);
+			} else if (data.success) {
+				form.innerHTML = `
+					<div style="text-align: center; padding: 20px;">
+						<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2e7d32; margin-bottom: 12px;">
+							<polyline points="20 6 9 17 4 12"></polyline>
+						</svg>
+						<h3 style="color: #2e7d32; margin: 12px 0; font-family: 'Playfair Display', Georgia, serif;">¡Te has suscrito!</h3>
+						<p style="color: #666; margin: 12px 0;">Se envió un email con tu código de descuento del 10% en tu primera compra</p>
+					</div>
+				`;
+				setTimeout(() => {
+					window.cerrarNewsletterPopup();
+				}, 2500);
+			} else {
+				messageDiv.textContent = data.message || 'Error al suscribirse';
+				messageDiv.className = 'newsletter-popup-message error';
+				button.disabled = false;
+				button.textContent = 'Obtener mi descuento';
+			}
+		} catch (error) {
+			console.error('Error:', error);
+			messageDiv.textContent = 'Error al procesar tu suscripción';
+			messageDiv.className = 'newsletter-popup-message error';
+			button.disabled = false;
+			button.textContent = 'Obtener mi descuento';
+		}
+	};
+
+	// Mostrar popup cada 2 horas (usando timestamp en localStorage)
+	document.addEventListener('DOMContentLoaded', () => {
+		const lastShown = localStorage.getItem('newsletterPopupLastShown');
+		const ahora = Date.now();
+		const dosHoras = 2 * 60 * 60 * 1000; // 2 horas en milisegundos (7200000)
+		
+		if (!lastShown || (ahora - parseInt(lastShown)) > dosHoras) {
+			// Si nunca fue mostrado o ya pasaron 2 horas desde la última vez
+			setTimeout(() => {
+				window.mostrarNewsletterPopup();
+			}, 3000);
+		}
+	});
+</script>

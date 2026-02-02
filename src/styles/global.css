@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@layer base {
+	html {
+		scroll-behavior: smooth;
+	}
+
+	body {
+		background-color: #f8f7f4;
+		color: #2d3436;
+		font-family: 'Inter', system-ui, sans-serif;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		font-family: 'Playfair Display', serif;
+		font-weight: 700;
+	}
+}
+
+@layer components {
+	.btn-primary {
+		@apply px-6 py-3 rounded-sm hover:transition-colors duration-200 font-medium;
+		background-color: #1a3a52;
+		color: #f8f7f4;
+	}
+
+	.btn-primary:hover {
+		background-color: #2d3436;
+	}
+
+	.btn-secondary {
+		@apply px-6 py-3 border-2 hover:transition-colors duration-200 font-medium;
+		border-color: #1a3a52;
+		color: #1a3a52;
+	}
+
+	.btn-secondary:hover {
+		background-color: #1a3a52;
+		color: #f8f7f4;
+	}
+
+	.btn-accent {
+		@apply px-6 py-3 rounded-sm hover:opacity-90 transition-opacity duration-200 font-medium;
+		background-color: #b8860b;
+		color: #2d3436;
+	}
+
+	.container-prose {
+		@apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+	}
+}

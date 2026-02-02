@@ -1,0 +1,612 @@
+---
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { createClient } from '@supabase/supabase-js';
+import Stripe from 'stripe';
+
+// Crear cliente Supabase sin RLS (solo en servidor)
+// Nota: En producción, usar SUPABASE_SERVICE_ROLE_KEY en lugar de ANON_KEY
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Obtener usuario_id que viene en la metadata de Stripe (pasado desde el cliente)
+let usuarioIdDelCheckout: string | null = null;
+
+// Obtener session_id de la URL
+const sessionId = Astro.url.searchParams.get('session_id');
+
+let sessionData: any = null;
+let error: string | null = null;
+let pedidoCreado: any = null;
+let paymentStatus = 'unknown';
+
+console.log('[pago-exitoso] START - sessionId:', sessionId);
+
+if (sessionId) {
+  try {
+    const stripeKey = import.meta.env.STRIPE_SECRET_KEY;
+    console.log('[pago-exitoso] stripeKey exists:', !!stripeKey);
+    
+    if (!stripeKey) {
+      error = 'Stripe no configurado - falta STRIPE_SECRET_KEY';
+    } else {
+      const stripe = new Stripe(stripeKey);
+      
+      // Obtener detalles de la sesión
+      sessionData = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ['line_items', 'customer_details']
+      });
+
+      paymentStatus = sessionData.payment_status;
+      console.log('[pago-exitoso] Session retrieved, payment_status:', paymentStatus);
+
+      if (sessionData.payment_status === 'paid') {
+        console.log('[pago-exitoso] Procesando pedido...');
+        
+        // Procesar el pedido
+        const lineItems = sessionData.line_items?.data || [];
+        const metadata = sessionData.metadata || {};
+        const amount = sessionData.amount_total || 0;
+        
+        // Obtener usuario_id de la metadata de Stripe
+        usuarioIdDelCheckout = metadata.usuarioId || null;
+        console.log('[pago-exitoso] Usuario ID desde Stripe metadata:', usuarioIdDelCheckout);
+
+        // Obtener descuentoId de la metadata de Stripe
+        const descuentoId = metadata.descuentoId || null;
+        console.log('[pago-exitoso] Descuento ID desde Stripe metadata:', descuentoId);
+
+        const productos: any[] = [];
+        let totalEnvio = 0;
+
+        // Intentar usar los items del carrito original (con talla) desde metadata
+        let carritoOriginal: any[] = [];
+        try {
+          if (metadata.items) {
+            carritoOriginal = JSON.parse(metadata.items);
+            console.log('[pago-exitoso] ✅ Carrito original recuperado de metadata:', carritoOriginal);
+          }
+        } catch (e) {
+          console.log('[pago-exitoso] ⚠️ No se pudo parsear carrito de metadata');
+        }
+
+        // Procesar líneas
+        for (const item of lineItems) {
+          const productName = item.description || 'Producto';
+          const cantidad = item.quantity || 1;
+          const precioUnitario = (item.price?.unit_amount || 0) / 100;
+
+          // Detectar envío
+          if (productName.toLowerCase().includes('envío') || productName.toLowerCase().includes('shipping')) {
+            totalEnvio = precioUnitario * cantidad;
+            console.log('[pago-exitoso] Envío detectado:', totalEnvio);
+          } else {
+            // Obtener product_id desde el metadata de line_item (no product_data)
+            const productId = item.metadata?.product_id;
+            console.log('[pago-exitoso] Producto:', productName, 'product_id:', productId, 'metadata:', item.metadata);
+            
+            // Buscar en carrito original para obtener talla
+            const itemDelCarrito = carritoOriginal.find((c: any) => String(c.id) === String(productId));
+            const talla = itemDelCarrito?.talla || null;
+            
+            productos.push({
+              nombre: productName,
+              cantidad: cantidad,
+              precio: precioUnitario,
+              talla: talla,
+              subtotal: precioUnitario * cantidad,
+              product_id: productId
+            });
+          }
+        }
+
+        // Crear pedido - PRIMERO verificar si ya existe
+        try {
+          // Verificar si ya existe un pedido con este stripe_payment_id
+          const { data: pedidosExistentes, error: checkError } = await supabase
+            .from('pedidos')
+            .select('id')
+            .eq('stripe_payment_id', sessionId);
+          
+          const pedidoExistente = pedidosExistentes && pedidosExistentes.length > 0 ? pedidosExistentes[0] : null;
+          
+          console.log('[pago-exitoso] Verificando pedido existente:', { pedidoExistente, checkError });
+          
+          if (pedidoExistente) {
+            console.log('[pago-exitoso] ⚠️ Pedido ya existe con ID:', pedidoExistente.id);
+            pedidoCreado = pedidoExistente;
+            // No insertar de nuevo, no enviar email
+          } else {
+            // Solo insertar si NO existe
+            const subtotal = (amount - Math.round(totalEnvio * 100)) / 100;
+            const pedido: any = {
+              nombre: metadata.nombre || sessionData.customer_details?.name || 'Cliente',
+              email: sessionData.customer_email || metadata.email || '',
+              telefono: metadata.telefono || '',
+              direccion: metadata.direccion || '',
+              ciudad: metadata.ciudad || '',
+              codigo_postal: metadata.codigoPostal || '',
+              pais: metadata.pais || 'ES',
+              subtotal: subtotal,
+              envio: totalEnvio,
+              descuento: metadata.descuento ? parseFloat(metadata.descuento) : 0,
+              total: amount / 100,
+              items: productos,
+              stripe_payment_id: sessionId,
+              estado: 'confirmado'
+            };
+
+            // Agregar usuario_id solo si está en la metadata
+            if (usuarioIdDelCheckout && usuarioIdDelCheckout.trim() !== '') {
+              pedido.usuario_id = usuarioIdDelCheckout;
+              console.log('[pago-exitoso] ✅ Usuario ID añadido al pedido:', usuarioIdDelCheckout);
+            } else {
+              console.log('[pago-exitoso] ⚠️ Sin usuario logueado - pedido anónimo');
+            }
+
+            console.log('[pago-exitoso] Insertando pedido:', pedido);
+
+            // Intentar insertar el pedido
+            let inserted: any = null;
+            let pedidoError: any = null;
+            
+            try {
+              const result = await supabase
+                .from('pedidos')
+                .insert([pedido])
+                .select();
+              
+              if (result.error) {
+                pedidoError = result.error;
+                console.error('[pago-exitoso] Error insert:', result.error);
+              } else {
+                inserted = result.data;
+              }
+            } catch (insertError: any) {
+              console.error('[pago-exitoso] Insert exception:', insertError);
+              pedidoError = insertError;
+            }
+
+            if (pedidoError) {
+              console.error('[pago-exitoso] Error creando pedido:', pedidoError.message || pedidoError);
+              error = `Error al crear pedido: ${pedidoError.message || JSON.stringify(pedidoError)}`;
+            } else {
+              pedidoCreado = inserted?.[0];
+              console.log('[pago-exitoso] Pedido creado exitosamente:', pedidoCreado?.id);
+              
+              // REGISTRAR DESCUENTO SI EXISTE
+              if (descuentoId && descuentoId.trim() !== '') {
+                try {
+                  console.log('[pago-exitoso] 📊 Intentando registrar uso del descuento:', descuentoId);
+                  
+                  // Llamar a la función de registrarUsoDescuento (ya existe en descuentos.js)
+                  // Necesitamos hacer una llamada al servidor para registrar el uso
+                  const registerResponse = await fetch(`${new URL(Astro.request.url).origin}/api/register-discount-usage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      descuentoId: descuentoId,
+                      orderId: pedidoCreado.id
+                    })
+                  });
+                  
+                  const registerResult = await registerResponse.json();
+                  if (registerResult.success) {
+                    console.log('[pago-exitoso] ✅ Descuento registrado correctamente');
+                  } else {
+                    console.error('[pago-exitoso] ❌ Error registrando descuento:', registerResult.error);
+                  }
+                } catch (discountError: any) {
+                  console.error('[pago-exitoso] ❌ Error al registrar descuento:', discountError.message);
+                }
+              } else {
+                console.log('[pago-exitoso] ℹ️ Sin descuento para registrar');
+              }
+              
+              // Enviar email de pago exitoso SOLO para pedidos nuevos
+              const emailCliente = sessionData.customer_email || metadata.email || '';
+              const nombreCliente = metadata.nombre || sessionData.customer_details?.name || 'Cliente';
+              
+              if (emailCliente && pedidoCreado?.id) {
+                try {
+                  console.log('[pago-exitoso] Enviando email a través de API:', emailCliente);
+                  
+                  // Llamar al endpoint de email con el ID real del pedido
+                  const emailResponse = await fetch(`${new URL(Astro.request.url).origin}/api/send-payment-success-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      email: emailCliente,
+                      nombre: nombreCliente,
+                      orderId: pedidoCreado.id,
+                      amount: amount / 100,
+                      items: productos || []
+                    })
+                  });
+                  
+                  const emailResult = await emailResponse.json();
+                  console.log('[pago-exitoso] Resultado del endpoint:', emailResult);
+                  
+                  if (emailResult.success) {
+                    console.log('[pago-exitoso] Email enviado:', emailResult.messageId);
+                  } else {
+                    console.error('[pago-exitoso] Error al enviar email:', emailResult.error);
+                  }
+                } catch (emailErr: any) {
+                  console.error('[pago-exitoso] Error llamando endpoint de email:', emailErr.message);
+                }
+              } else {
+                console.warn('[pago-exitoso] No hay email o pedido_id para enviar confirmación');
+              }
+              
+              // LIMPIAR CARRITO EN BASE DE DATOS DESPUÉS DE COMPLETAR EL PEDIDO
+              if (usuarioIdDelCheckout && usuarioIdDelCheckout.trim() !== '') {
+                try {
+                  console.log('[pago-exitoso] 🧹 Limpiando carrito en BD para usuario:', usuarioIdDelCheckout);
+                  
+                  const { error: deleteError } = await supabase
+                    .from('carrito')
+                    .delete()
+                    .eq('usuario_id', usuarioIdDelCheckout);
+                  
+                  if (deleteError) {
+                    console.error('[pago-exitoso] ❌ Error limpiando carrito en BD:', deleteError);
+                  } else {
+                    console.log('[pago-exitoso] ✅ Carrito limpiado en BD correctamente');
+                  }
+                } catch (cleanError: any) {
+                  console.error('[pago-exitoso] ❌ Error al limpiar carrito en BD:', cleanError.message);
+                }
+              } else {
+                console.log('[pago-exitoso] ℹ️ Usuario anónimo - no se limpia BD');
+              }
+            }
+          }
+          
+          // Limpiar carrito
+          console.log('[pago-exitoso] ✅ Limpiando carrito...');
+          // Nota: localStorage será limpiado en el cliente-side script
+          
+        } catch (pedidoErr: any) {
+          console.error('[pago-exitoso] Exception al crear pedido:', pedidoErr.message);
+          error = `Error: ${pedidoErr.message}`;
+        }
+      } else {
+        error = `El pago no ha sido completado (estado: ${sessionData.payment_status})`;
+      }
+    }
+  } catch (e: any) {
+    console.error('[pago-exitoso] Exception:', e.message, e);
+    error = e.message || 'Error desconocido procesando el pago';
+  }
+} else {
+  error = 'No se encontró session_id en la URL';
+}
+
+console.log('[pago-exitoso] END - error:', error, 'pedidoCreado:', !!pedidoCreado);
+---
+---
+
+<PublicLayout title="Pago Exitoso - Joyería Galiana">
+    <style>
+        .success-container {
+            max-width: 700px;
+            margin: 60px auto;
+            padding: 40px;
+            text-align: center;
+        }
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            animation: scaleIn 0.5s ease-out;
+        }
+        .success-icon svg {
+            width: 50px;
+            height: 50px;
+            color: white;
+        }
+        @keyframes scaleIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .success-title {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .success-message {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .order-details {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: left;
+            margin-bottom: 30px;
+        }
+        .order-details h3 {
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+        .detail-row span:first-child {
+            color: #666;
+        }
+        .detail-row span:last-child {
+            font-weight: 600;
+            color: #333;
+        }
+        .detail-row.total {
+            border-top: 2px solid #d4af37;
+            margin-top: 10px;
+            padding-top: 15px;
+            font-size: 18px;
+        }
+        .btn-continuar {
+            display: inline-block;
+            background: linear-gradient(135deg, #d4af37 0%, #b8972e 100%);
+            color: white;
+            text-decoration: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .btn-continuar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+        }
+        .info-adicional {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .info-adicional h4 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+        .info-adicional p {
+            color: #555;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .error-container {
+            background: #ffebee;
+            padding: 20px;
+            border-radius: 8px;
+            color: #c62828;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+
+    <main class="success-container" data-payment-success={pedidoCreado ? 'true' : 'false'}>
+        {error ? (
+            <div class="error-container">
+                <h2>Error al procesar el pago</h2>
+                <p style="word-break: break-word; font-family: monospace; font-size: 12px;">{error}</p>
+                <a href="/carrito" class="btn-continuar" style="margin-top: 20px;">Volver al carrito</a>
+            </div>
+        ) : sessionData && sessionData.payment_status === 'paid' && pedidoCreado ? (
+            <>
+                <div class="success-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+
+                <h1 class="success-title">¡Pago Completado!</h1>
+                <p class="success-message">
+                    Gracias por tu compra. Hemos recibido tu pedido correctamente.
+                </p>
+
+                <div class="order-details">
+                    <h3>Detalles del Pedido</h3>
+                    
+                    <div class="detail-row">
+                        <span>Número de pedido:</span>
+                        <span>{pedidoCreado?.id || sessionData.id.slice(-8).toUpperCase()}</span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span>Email de confirmación:</span>
+                        <span>{sessionData.customer_email}</span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span>Estado del pago:</span>
+                        <span style="color: #4CAF50; display: flex; align-items: center; gap: 5px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Completado
+                        </span>
+                    </div>
+
+                    <div class="detail-row total">
+                        <span>Total pagado:</span>
+                        <span>€{(sessionData.amount_total / 100).toFixed(2)}</span>
+                    </div>
+                </div>
+
+                <div class="info-adicional">
+                    <h4>¿Qué sigue ahora?</h4>
+                    <p>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; margin-right: 8px; vertical-align: middle; color: #2e7d32;">
+                            <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                        </svg>
+                        Recibirás un email de confirmación con los detalles de tu pedido.
+                    </p>
+                    <p>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; margin-right: 8px; vertical-align: middle; color: #2e7d32;">
+                            <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                        Prepararemos tu pedido en las próximas 24-48 horas.
+                    </p>
+                    <p>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; margin-right: 8px; vertical-align: middle; color: #2e7d32;">
+                            <circle cx="5" cy="17" r="2"></circle>
+                            <path d="M3 16.5v-2a1 1 0 0 1 1-1h15a1 1 0 0 1 1 1v2"></path>
+                            <circle cx="19" cy="17" r="2"></circle>
+                            <path d="M3 9.833a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5a2 2 0 0 0 4 0v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5a2 2 0 0 0 4 0v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1"></path>
+                            <path d="M3 9.833V7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v2.833"></path>
+                        </svg>
+                        Te enviaremos el número de seguimiento cuando tu pedido sea enviado.
+                    </p>
+                </div>
+
+                <a href="/" class="btn-continuar" style="margin-top: 30px;">
+                    Volver a la Tienda
+                </a>
+            </>
+        ) : sessionData && sessionData.payment_status === 'paid' ? (
+            <div class="error-container">
+                <h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; margin-right: 8px; vertical-align: middle; animation: spin 1s linear infinite;">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <path d="M12 7v5"></path>
+                    </svg>
+                    Procesando tu pedido...
+                </h2>
+                <p>Estamos finalizando los detalles de tu pedido. Por favor espera...</p>
+                <a href="/" class="btn-continuar" style="margin-top: 20px;">Volver a la Tienda</a>
+            </div>
+        ) : (
+            <div class="error-container">
+                <h2>Verificando pago...</h2>
+                <p>Por favor espera mientras verificamos tu pago.</p>
+                <p style="font-size: 12px; color: #666;">Status: {paymentStatus}</p>
+            </div>
+        )}
+    </main>
+
+<!-- ✅ LIMPIAR TEMPORIZADOR CUANDO PAGO ES EXITOSO -->
+<script is:inline>
+    // El carrito ya está limpio en /api/clear-cart, simplemente limpiar sesión de pausa
+    sessionStorage.removeItem('carritoTiempoPausado');
+    console.log('[pago-exitoso] Sesión de pausa limpiada - compra completada');
+</script>
+</PublicLayout>
+
+<script>
+    // Ejecutar cuando el DOM esté completamente cargado
+    document.addEventListener('DOMContentLoaded', function() {
+        const mainElement = document.querySelector('main[data-payment-success]');
+        if (mainElement && mainElement.getAttribute('data-payment-success') === 'true') {
+            console.log('🧹 [pago-exitoso] Limpiando carrito y datos...');
+            
+            // 🛑 NO LLAMAR A onPurchaseComplete() - el stock ya fue restado cuando se creó el pedido en BD
+            // Las reservas de 15 minutos solo existen en localStorage y se limpiarán automáticamente
+            
+            // Limpiar TODOS los lugares donde se almacena el carrito
+            localStorage.removeItem('carrito');
+            sessionStorage.removeItem('carrito-checkout');
+            sessionStorage.removeItem('datos-cliente');
+            sessionStorage.removeItem('stripe-session-id');
+            sessionStorage.removeItem('descuento');
+            sessionStorage.removeItem('descuento_id');
+            sessionStorage.removeItem('carritoTimestamp');
+            
+            // Sincronizar window.carrito y variantes
+            if (window.carrito) {
+                window.carrito = [];
+            }
+            if (window.carritoLocal) {
+                window.carritoLocal = [];
+            }
+            if (window._checkoutCarrito) {
+                window._checkoutCarrito = [];
+            }
+            
+            console.log('✅ [pago-exitoso] Carrito limpiado correctamente');
+            console.log('📋 [pago-exitoso] Verificación - carrito:', localStorage.getItem('carrito'));
+            
+            // LIMPIAR CARRITO EN BD LLAMANDO AL SERVIDOR (si el usuario está logueado)
+            // Esperar a que window.currentUserData esté disponible
+            async function limpiarCarritoEnBD() {
+                let intentos = 0;
+                const maxIntentos = 30; // 3 segundos máximo
+                
+                while (intentos < maxIntentos) {
+                    if (typeof window !== 'undefined' && window.currentUserData && window.currentUserData.id) {
+                        console.log('🔄 [pago-exitoso] Limpiando carrito en BD para usuario:', window.currentUserData.id);
+                        
+                        try {
+                            const response = await fetch('/api/clear-cart', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    userId: window.currentUserData.id
+                                })
+                            });
+                            
+                            const result = await response.json();
+                            if (result.success) {
+                                console.log('✅ [pago-exitoso] Carrito limpiado en BD exitosamente');
+                                return;
+                            } else {
+                                console.error('❌ [pago-exitoso] Error limpiando carrito en BD:', result.error);
+                                return;
+                            }
+                        } catch (error) {
+                            console.error('❌ [pago-exitoso] Error llamando a /api/clear-cart:', error);
+                            return;
+                        }
+                    }
+                    
+                    // Esperar 100ms e intentar de nuevo
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    intentos++;
+                }
+                
+                console.log('⚠️ [pago-exitoso] No se pudo limpiar BD - usuario no disponible después de 3s');
+            }
+            
+            limpiarCarritoEnBD();
+            
+            // Actualizar contador de carrito en el header
+            if (typeof updateCartCount === 'function') {
+                updateCartCount();
+                console.log('✅ [pago-exitoso] Contador de carrito actualizado a 0');
+            }
+            
+            // Disparar evento de actualización para que otros scripts lo sepan
+            window.dispatchEvent(new CustomEvent('carritoActualizado', { 
+                detail: { carrito: [], limpiado: true } 
+            }));
+            
+            // Recargar datos de usuario si es necesario
+            if (typeof window.currentUserData !== 'undefined' && window.currentUserData && window.currentUserData.id) {
+                console.log('🔄 [pago-exitoso] Recargando carrito desde BD para usuario:', window.currentUserData.id);
+                if (typeof cargarCarritoDeBD === 'function') {
+                    cargarCarritoDeBD(window.currentUserData.id);
+                }
+            }
+        }
+    });
+</script>

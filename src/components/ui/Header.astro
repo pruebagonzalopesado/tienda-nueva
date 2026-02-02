@@ -1,0 +1,100 @@
+---
+
+---
+
+<!-- Header y Navegación -->
+<header class="header">
+	<div class="container">
+		<button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">
+			<span></span>
+			<span></span>
+			<span></span>
+		</button>
+		<div class="logo">
+			<a href="/"
+				><img
+					src="/images/logo.png"
+					alt="Joyería Galiana"
+					class="logo-img"
+				/></a
+			>
+		</div>
+		<nav class="nav" id="nav-menu">
+			<ul>
+				<li><a href="/#inicio">Inicio</a></li>
+				<li><a href="/productos">Productos</a></li>
+				<li><a href="/#categorias">Categorías</a></li>
+				<li><a href="/#sobre-nosotros">Sobre Nosotros</a></li>
+				<li><a href="/#contacto">Contacto</a></li>
+				<li id="auth-button">
+					<a href="#" id="auth-link">Iniciar Sesión</a>
+				</li>
+			</ul>
+		</nav>
+		<div class="header-right">
+			<div
+				class="cart-icon"
+				onclick="handleCartClick()"
+				style="cursor: pointer;"
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					style="display: inline; vertical-align: middle; margin-right: 4px;"
+				>
+					<circle cx="9" cy="21" r="1"></circle>
+					<circle cx="20" cy="21" r="1"></circle>
+					<path
+						d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
+					></path>
+				</svg>
+				<span id="cart-count">0</span>
+			</div>
+		</div>
+		
+	</div>
+</header>
+
+<script>
+	// Manejar click en el botón de auth
+	document.addEventListener('DOMContentLoaded', function() {
+		const authLink = document.getElementById('auth-link');
+		
+		if (authLink) {
+			authLink.addEventListener('click', function(e) {
+				e.preventDefault();
+				
+				// Verificar en el momento del click si hay sesión
+				const currentUser = localStorage.getItem('currentUser');
+				let isAdmin = false;
+				
+				if (currentUser) {
+					try {
+						const userData = JSON.parse(currentUser);
+						isAdmin = userData.rol === 'admin';
+					} catch(err) {}
+				}
+				
+				// También verificar si window.currentUserData está disponible (auth-new.js)
+				if (!isAdmin && window.currentUserData) {
+					isAdmin = window.currentUserData.rol === 'admin';
+				}
+				
+				console.log('Auth click - isAdmin:', isAdmin, 'currentUser:', currentUser);
+				
+				if (isAdmin) {
+					window.location.href = '/admin-panel.html';
+				} else {
+					window.location.href = '/admin-login.html';
+				}
+			});
+		}
+	});
+</script>

@@ -1,0 +1,486 @@
+---
+import PublicLayout from "../layouts/PublicLayout.astro";
+---
+
+<PublicLayout title="Pago - Joyería Galiana">
+    <link rel="stylesheet" href="/css/checkout.css?v=1" slot="head" />
+    <style>
+        .redirect-info {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .redirect-info .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            margin-right: auto;
+            color: #d4af37;
+        }
+        .redirect-info .icon svg {
+            width: 48px;
+            height: 48px;
+            color: #d4af37;
+        }
+        .redirect-info h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .redirect-info p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .stripe-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #888;
+            margin-top: 20px;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #d4af37;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .btn-pagar-stripe {
+            background: linear-gradient(135deg, #d4af37 0%, #b8972e 100%);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 250px;
+            width: 100%;
+        }
+        .btn-pagar-stripe:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+        }
+        .btn-pagar-stripe:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .metodos-pago {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .metodo-pago {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .metodo-pago svg {
+            width: 20px;
+            height: 20px;
+            color: #d4af37;
+            flex-shrink: 0;
+        }
+        .metodo-pago:hover {
+            border-color: #d4af37;
+            color: #d4af37;
+        }
+    </style>
+
+    <main class="checkout-container">
+        <div class="container">
+            <h1>Finalizar Compra</h1>
+
+            <div class="checkout-content">
+                <div class="checkout-form">
+                    <!-- Resumen de datos del cliente -->
+                    <fieldset>
+                        <legend>Datos de Envío</legend>
+                        <div class="datos-resumen" id="datos-cliente-resumen">
+                            <p><strong>Nombre:</strong> <span id="resumen-nombre">-</span></p>
+                            <p><strong>Email:</strong> <span id="resumen-email">-</span></p>
+                            <p><strong>Teléfono:</strong> <span id="resumen-telefono">-</span></p>
+                            <p><strong>Dirección:</strong> <span id="resumen-direccion">-</span></p>
+                            <a href="/checkout" class="btn-editar">Editar datos</a>
+                        </div>
+                    </fieldset>
+
+                    <!-- Información de pago -->
+                    <fieldset>
+                        <legend>Método de Pago</legend>
+                        
+                        <div class="redirect-info">
+                            <div class="icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v4"></path>
+                                </svg>
+                            </div>
+                            <h3>Pago Seguro con Stripe</h3>
+                            <p>Serás redirigido a la pasarela de pago segura de Stripe donde podrás elegir tu método de pago preferido.</p>
+                            
+                            <div class="metodos-pago">
+                                <div class="metodo-pago">
+                                    <img src="/images/payment-methods/mastercard.png" alt="Mastercard" style="width: 32px; height: 24px; object-fit: contain;" />
+                                </div>
+                                <div class="metodo-pago">
+                                    <img src="/images/payment-methods/apple.png" alt="Apple Pay" style="width: 40px; height: 30px; object-fit: contain;" />
+                                </div>
+                                <div class="metodo-pago">
+                                    <img src="/images/payment-methods/stripe.png" alt="Stripe" style="width: 32px; height: 24px; object-fit: contain;" />
+                                </div>
+                                <div class="metodo-pago">
+                                    <img src="/images/payment-methods/google.png" alt="Google Pay" style="width: 32px; height: 24px; object-fit: contain;" />
+                                </div>
+                                <div class="metodo-pago">
+                                    <img src="/images/payment-methods/paypal.png" alt="PayPal" style="width: 32px; height: 24px; object-fit: contain;" />
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Términos y Condiciones -->
+                    <div class="form-group">
+                        <label class="checkbox">
+                            <input type="checkbox" id="terminos" required />
+                            <span>Acepto los <a href="#">términos y condiciones</a></span>
+                        </label>
+                    </div>
+
+                    <!-- Botón Pagar -->
+                    <button type="button" class="btn-pagar-stripe" id="btn-pagar" onclick="irAPasarelaPago()">
+                        Ir a la Pasarela de Pago
+                    </button>
+
+                    <div class="stripe-logo">
+                        <span>Procesado de forma segura por</span>
+                        <strong>Stripe</strong>
+                    </div>
+                </div>
+
+                <!-- Resumen de Pedido -->
+                <aside class="checkout-summary">
+                    <h2>Resumen del Pedido</h2>
+
+                    <div class="order-items" id="order-items">
+                        <!-- Se cargará aquí -->
+                    </div>
+
+                    <div class="summary-divider"></div>
+
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span id="checkout-subtotal">€0.00</span>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Envío:</span>
+                        <span id="checkout-envio">€0.00</span>
+                    </div>
+
+                    <div class="summary-row" id="checkout-descuento-row" style="display: none;">
+                        <span>Descuento:</span>
+                        <span id="checkout-descuento">-€0.00</span>
+                    </div>
+
+                    <div class="summary-divider"></div>
+
+                    <div class="summary-row total">
+                        <span>Total:</span>
+                        <span id="checkout-total">€0.00</span>
+                    </div>
+
+                    <div class="security-info">
+                        <p>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; margin-right: 8px; vertical-align: middle;">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v4"></path>
+                            </svg>
+                            Tus datos están protegidos con encriptación SSL
+                        </p>
+                        <p>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; margin-right: 8px; vertical-align: middle;">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Compra segura y garantizada
+                        </p>
+                        <p>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; margin-right: 8px; vertical-align: middle;">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Devolución dentro de 30 días
+                        </p>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <script is:inline>
+        // Usar window para evitar conflictos con carrito.js que también declara estas variables
+        if (typeof window.carritoLocal === 'undefined') {
+            window.carritoLocal = [];
+        }
+        if (typeof window.datosClientePago === 'undefined') {
+            window.datosClientePago = {};
+        }
+        if (typeof window.descuentoPago === 'undefined') {
+            window.descuentoPago = 0;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarDatosPago();
+        });
+
+        function cargarDatosPago() {
+            // Cargar carrito desde sessionStorage
+            const carritoStr = sessionStorage.getItem('carrito-checkout');
+            if (!carritoStr) {
+                alert('No hay productos en el carrito. Redirigiendo...');
+                window.location.href = '/carrito';
+                return;
+            }
+            window.carritoLocal = JSON.parse(carritoStr);
+
+            // Cargar datos del cliente
+            const datosStr = sessionStorage.getItem('datos-cliente');
+            if (!datosStr) {
+                alert('Falta información de envío. Redirigiendo...');
+                window.location.href = '/checkout';
+                return;
+            }
+            window.datosClientePago = JSON.parse(datosStr);
+
+            // Cargar descuento si existe
+            const descuentoStr = sessionStorage.getItem('descuento');
+            if (descuentoStr) {
+                window.descuentoPago = parseFloat(descuentoStr);
+            }
+
+            // Mostrar resumen del cliente
+            mostrarDatosCliente();
+            
+            // Mostrar resumen del pedido
+            mostrarResumenPedido();
+        }
+
+        function mostrarDatosCliente() {
+            document.getElementById('resumen-nombre').textContent = window.datosClientePago.nombre || '-';
+            document.getElementById('resumen-email').textContent = window.datosClientePago.email || '-';
+            document.getElementById('resumen-telefono').textContent = window.datosClientePago.telefono || '-';
+            
+            let direccionCompleta = window.datosClientePago.direccion || '';
+            if (window.datosClientePago.ciudad) direccionCompleta += ', ' + window.datosClientePago.ciudad;
+            if (window.datosClientePago.codigoPostal) direccionCompleta += ' ' + window.datosClientePago.codigoPostal;
+            if (window.datosClientePago.pais) direccionCompleta += ', ' + window.datosClientePago.pais;
+            
+            document.getElementById('resumen-direccion').textContent = direccionCompleta || '-';
+        }
+
+        function mostrarResumenPedido() {
+            const orderItems = document.getElementById('order-items');
+            orderItems.innerHTML = '';
+
+            let subtotal = 0;
+
+            window.carritoLocal.forEach(item => {
+                subtotal += item.precio * item.cantidad;
+                orderItems.innerHTML += `
+                    <div class="order-item">
+                        <img src="${item.imagen || '/images/placeholder.jpg'}" alt="${item.nombre}">
+                        <div class="item-details">
+                            <h4>${item.nombre}</h4>
+                            <p>Cantidad: ${item.cantidad}</p>
+                            <p class="item-price">€${(item.precio * item.cantidad).toFixed(2)}</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Calcular envío (gratis para pedidos >= 100€)
+            const envio = subtotal >= 100 ? 0 : 3;
+            
+            // Calcular descuento
+            const descuentoAmount = window.descuentoPago > 0 ? subtotal * (window.descuentoPago / 100) : 0;
+            
+            // Total
+            const total = subtotal + envio - descuentoAmount;
+
+            document.getElementById('checkout-subtotal').textContent = `€${subtotal.toFixed(2)}`;
+            document.getElementById('checkout-envio').textContent = envio === 0 ? 'GRATIS' : `€${envio.toFixed(2)}`;
+            document.getElementById('checkout-total').textContent = `€${total.toFixed(2)}`;
+
+            if (window.descuentoPago > 0) {
+                document.getElementById('checkout-descuento-row').style.display = 'flex';
+                document.getElementById('checkout-descuento').textContent = `-€${descuentoAmount.toFixed(2)}`;
+            }
+        }
+
+        async function irAPasarelaPago() {
+            const terminos = document.getElementById('terminos');
+            if (!terminos.checked) {
+                alert('Debes aceptar los términos y condiciones');
+                return;
+            }
+
+            // Validar que hay carrito y datos
+            console.log('[pago.astro] Validando datos antes de enviar...');
+            console.log('[pago.astro] carrito:', window.carritoLocal);
+            console.log('[pago.astro] datosCliente:', window.datosClientePago);
+            console.log('[pago.astro] descuento:', window.descuentoPago);
+
+            if (!window.carritoLocal || window.carritoLocal.length === 0) {
+                alert('El carrito está vacío. Por favor vuelve a /carrito');
+                return;
+            }
+
+            if (!window.datosClientePago || !window.datosClientePago.email) {
+                alert('Falta información de envío. Por favor vuelve a /checkout');
+                return;
+            }
+
+            const btn = document.getElementById('btn-pagar');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Redirigiendo a Stripe...';
+
+            try {
+                // Función para esperar a que window.currentUserData esté disponible
+                async function obtenerUsuarioId() {
+                    // Reintentar hasta 3 segundos esperando que auth-new.js complete la carga
+                    for (let i = 0; i < 30; i++) {
+                        if (typeof window !== 'undefined' && window.currentUserData) {
+                            console.log('[pago.astro] ✅ Encontrado window.currentUserData después de', i * 100, 'ms');
+                            return window.currentUserData.id || '';
+                        }
+                        // Esperar 100ms antes de reintentar
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                    
+                    console.log('[pago.astro] ⚠️ window.currentUserData no disponible después de 3 segundos, intentando fallbacks...');
+                    
+                    // Fallback 1: intentar leer del localStorage
+                    const currentUserData = localStorage.getItem('currentUserData');
+                    if (currentUserData) {
+                        try {
+                            const userData = JSON.parse(currentUserData);
+                            console.log('[pago.astro] ✅ usuarioId desde localStorage:', userData.id);
+                            return userData.id || userData.usuario_id || '';
+                        } catch (e) {
+                            console.log('[pago.astro] ❌ No se pudo parsear userData de localStorage:', e);
+                        }
+                    }
+                    
+                    // Fallback 2: intentar leer del sessionStorage
+                    const userDataSession = sessionStorage.getItem('currentUserData');
+                    if (userDataSession) {
+                        try {
+                            const userData = JSON.parse(userDataSession);
+                            console.log('[pago.astro] ✅ usuarioId desde sessionStorage:', userData.id);
+                            return userData.id || userData.usuario_id || '';
+                        } catch (e) {
+                            console.log('[pago.astro] ❌ No se pudo parsear userData de sessionStorage:', e);
+                        }
+                    }
+                    
+                    console.log('[pago.astro] ⚠️ Sin usuario logueado (usuario anónimo)');
+                    return '';
+                }
+                
+                // Obtener el usuario_id
+                const usuarioId = await obtenerUsuarioId();
+
+                // Obtener descuento_id desde sessionStorage
+                const descuentoId = sessionStorage.getItem('descuento_id');
+                console.log('[pago.astro] descuento_id desde sessionStorage:', descuentoId);
+
+                console.log('[pago.astro] Enviando datos al servidor:', {
+                    items: window.carritoLocal,
+                    datosCliente: window.datosClientePago,
+                    descuento: window.descuentoPago,
+                    descuentoId: descuentoId,
+                    usuarioId: usuarioId
+                });
+
+                const requestBody = {
+                    items: window.carritoLocal,
+                    datosCliente: window.datosClientePago,
+                    descuento: window.descuentoPago,
+                    descuentoId: descuentoId,
+                    usuarioId: usuarioId
+                };
+
+                console.log('[pago.astro] Request Body:', JSON.stringify(requestBody, null, 2));
+
+                const response = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log('[pago.astro] Response status:', response.status);
+                const data = await response.json();
+                console.log('[pago.astro] Response data:', JSON.stringify(data, null, 2));
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                if (!data.url) {
+                    console.error('[pago.astro] ❌ No hay URL en la respuesta:', data);
+                    throw new Error('No se pudo obtener la URL de Stripe');
+                }
+
+                // Guardar el session ID para verificación posterior
+                sessionStorage.setItem('stripe-session-id', data.sessionId);
+
+                // Redirigir a Stripe Checkout
+                window.location.href = data.url;
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al procesar el pago: ' + error.message);
+                btn.disabled = false;
+                btn.innerHTML = 'Ir a la Pasarela de Pago';
+            }
+        }
+    </script>
+    
+    <!-- ⏸️ PAUSAR TEMPORIZADOR DEL CARRITO EN PAGO -->
+    <script is:inline>
+        // Pausar el temporizador cuando entramos a pago
+        if (window.pausarTemporizador) {
+            window.pausarTemporizador();
+            console.log('[pago] Temporizador pausado - estamos en pago');
+        }
+    </script>
+</PublicLayout>

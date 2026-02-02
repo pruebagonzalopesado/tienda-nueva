@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Joyería Galiana</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .loader {
+            text-align: center;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(212, 175, 55, 0.3);
+            border-top-color: #d4af37;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        p {
+            font-size: 16px;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="loader">
+        <div class="spinner"></div>
+        <p>Verificando acceso...</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0"></script>
+    <script>
+        async function verificarAcceso() {
+            try {
+                // Inicializar Supabase
+                const SUPABASE_URL = 'https://tvzvuotqdtwmssxfnyqc.supabase.co';
+                const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2enZ1b3RxZHR3bXNzeGZueXFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTI1NzE2NTAsImV4cCI6MjAwODE0NzY1MH0.lZ0fGMAkqwXhDn_yl5dKMpDuJU0W0EqBP3cAXEF-i4g';
+                
+                const { createClient } = window.supabase;
+                const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                
+                // Verificar si hay logout reciente
+                const lastLogoutTime = localStorage.getItem('lastLogoutTime');
+                console.log('Último logout registrado:', lastLogoutTime);
+                
+                // Verificar sesión (consulta fresca sin caché)
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                
+                console.log('Verificando sesión en /admin:', session ? 'Sesión activa' : 'Sin sesión');
+                
+                if (!session) {
+                    // No hay sesión, ir al login
+                    console.log('No hay sesión, redirigiendo a login');
+                    window.location.href = '/admin-login.html';
+                    return;
+                }
+                
+                // Si hay sesión pero hubo logout reciente, redirigir al login
+                if (lastLogoutTime) {
+                    const logoutTime = parseInt(lastLogoutTime);
+                    const timeSinceLogout = Date.now() - logoutTime;
+                    // Si el logout fue hace menos de 30 segundos, no permitir acceso
+                    if (timeSinceLogout < 30000) {
+                        console.log('Logout reciente detectado, redirigiendo a login');
+                        localStorage.removeItem('lastLogoutTime');
+                        window.location.href = '/admin-login.html';
+                        return;
+                    }
+                }
+                
+                // Verificar en tabla usuarios si es admin
+                const userId = session.user.id;
+                console.log('Sesión encontrada para:', session.user.email);
+                
+                // Intentar verificar si es admin
+                try {
+                    const { data: usuario, error } = await supabase
+                        .from('usuarios')
+                        .select('rol')
+                        .eq('id', userId)
+                        .single();
+                    
+                    if (error) {
+                        console.warn('Error al verificar admin:', error.message);
+                        // Si hay error, asumir que no es admin
+                        window.location.href = '/admin-login.html';
+                        return;
+                    }
+                    
+                    // Verificar si es admin
+                    const esAdmin = usuario?.rol === 'admin';
+                    
+                    if (esAdmin) {
+                        console.log('Usuario es admin, accediendo al panel');
+                        // Limpiar el registro de logout cuando acceda exitosamente
+                        localStorage.removeItem('lastLogoutTime');
+                        window.location.href = '/admin-panel.html';
+                    } else {
+                        console.log('Usuario NO es admin, redirigiendo a login');
+                        window.location.href = '/admin-login.html';
+                    }
+                    
+                } catch (err) {
+                    console.error('Error verificando tabla usuarios:', err.message);
+                    // Si hay error al consultar, no permitir acceso
+                    window.location.href = '/admin-login.html';
+                }
+                
+            } catch (err) {
+                console.error('Error verificando acceso:', err);
+                // En caso de error, redirigir al login
+                window.location.href = '/admin-login.html';
+            }
+        }
+        
+        // Ejecutar verificación cuando carga la página
+        // Agregar timestamp para evitar caché
+        const url = new URL(window.location);
+        url.searchParams.set('t', Date.now());
+        window.history.replaceState({}, '', url.toString().split('?')[0]);
+        
+        verificarAcceso();
+    </script>
+</body>
+</html>

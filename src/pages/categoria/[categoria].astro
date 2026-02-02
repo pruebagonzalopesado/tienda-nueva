@@ -1,0 +1,56 @@
+---
+import PublicLayout from "../../layouts/PublicLayout.astro";
+---
+
+<PublicLayout title="Categorías - Joyería Galiana">
+    <link rel="stylesheet" href="/css/categorias.css?v=1" slot="head" />
+
+    <!-- Contenido Principal -->
+    <main class="categorias-container">
+        <div class="container">
+            <div class="categoria-header">
+                <h1 id="categoria-titulo">Categoría</h1>
+                <p id="categoria-desc">Explora nuestra colección de joyas</p>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filtros-container">
+                <div class="filtro-grupo">
+                    <label for="filtro-subcategoria">Subcategoría:</label>
+                    <div id="filtro-subcategoria" class="subcategoria-buttons">
+                        <!-- Se cargará dinámicamente -->
+                    </div>
+                </div>
+                <div class="filtro-grupo">
+                    <label for="filtro-precio">Ordenar por:</label>
+                    <select id="filtro-precio" onchange="aplicarFiltros()">
+                        <option value="nuevo">Más Nuevo</option>
+                        <option value="precio-asc">Precio: Menor a Mayor</option
+                        >
+                        <option value="precio-desc"
+                            >Precio: Mayor a Menor</option
+                        >
+                        <option value="nombre">Nombre (A-Z)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Grid de Productos -->
+            <div class="productos-grid" id="productos-grid">
+                <!-- Se cargará dinámicamente -->
+            </div>
+
+            <!-- Sin productos -->
+            <div
+                id="sin-productos"
+                class="sin-productos"
+                style="display: none;"
+            >
+                <h2>No hay productos en esta categoría</h2>
+                <p><a href="/">Volver al inicio</a></p>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/productos.js?v=10" is:inline></script>
+</PublicLayout>

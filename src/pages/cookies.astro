@@ -1,0 +1,299 @@
+---
+import PublicLayout from '../layouts/PublicLayout.astro';
+---
+
+<PublicLayout title="Política de Cookies - Joyería Galiana">
+    <style>
+        .cookies-container {
+            max-width: 900px;
+            margin: 3rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .cookies-container h1 {
+            color: #8B0A1A;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .cookies-container h2 {
+            color: #d4af37;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #d4af37;
+            padding-bottom: 0.5rem;
+        }
+
+        .cookies-container h3 {
+            color: #8B0A1A;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .cookies-container p {
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 1rem;
+            text-align: justify;
+        }
+
+        .cookies-container ul {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .cookies-container li {
+            margin-bottom: 0.5rem;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .cookies-container a {
+            color: #d4af37;
+            text-decoration: none;
+        }
+
+        .cookies-container a:hover {
+            text-decoration: underline;
+        }
+
+        .cookies-tabla {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .cookies-tabla th,
+        .cookies-tabla td {
+            border: 1px solid #ddd;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .cookies-tabla th {
+            background: #f5f5f5;
+            color: #8B0A1A;
+            font-weight: 600;
+        }
+
+        .cookies-tabla tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .cookies-fecha {
+            text-align: center;
+            color: #999;
+            font-size: 0.9rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-bottom: 2rem;
+            padding: 0.75rem 1.5rem;
+            background: #d4af37 !important;
+            color: #1a1a1a !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .back-button:hover {
+            background: #c99f2e;
+        }
+    </style>
+
+    <main class="cookies-container">
+        <a href="/" class="back-button">← Volver a Inicio</a>
+
+        <h1>Política de Cookies</h1>
+
+        <h2>1. Introducción</h2>
+        <p>
+            En Joyería Galiana utilizamos cookies y tecnologías similares en nuestro sitio web para mejorar tu experiencia 
+            de usuario, entender cómo utilizas nuestro sitio y ofrecerte publicidad personalizada. Esta Política de Cookies 
+            explica qué son las cookies, cómo las utilizamos y cómo puedes controlarlas.
+        </p>
+
+        <h2>2. ¿Qué son las Cookies?</h2>
+        <p>
+            Las cookies son pequeños archivos de texto que se guardan en tu dispositivo (ordenador, teléfono, tableta) cuando 
+            visitas un sitio web. Estas cookies se utilizan para recordar información sobre tu visita y mejorar tu experiencia 
+            en futuras visitas. Las cookies no pueden contener virus ni software malicioso.
+        </p>
+
+        <h2>3. Tipos de Cookies que Utilizamos</h2>
+        <h3>3.1 Cookies Esenciales (Técnicas)</h3>
+        <p>
+            Estas cookies son necesarias para que el sitio web funcione correctamente. Sin estas cookies, algunos servicios no 
+            podrían proporcionarse. Incluyen:
+        </p>
+        <ul>
+            <li>Cookies de autenticación para mantener tu sesión iniciada</li>
+            <li>Cookies de seguridad para proteger contra fraude</li>
+            <li>Cookies de preferencias de usuario (idioma, moneda)</li>
+            <li>Cookies de carrito de compra</li>
+        </ul>
+
+        <h3>3.2 Cookies de Análisis y Rendimiento</h3>
+        <p>
+            Utilizamos estas cookies para entender cómo los usuarios interactúan con nuestro sitio web. Estas cookies nos 
+            ayudan a identificar problemas y mejoras potenciales:
+        </p>
+        <ul>
+            <li>Google Analytics para rastrear el tráfico del sitio</li>
+            <li>Cookies de rendimiento para medir la velocidad del sitio</li>
+            <li>Cookies de comportamiento para entender flujos de usuario</li>
+        </ul>
+
+        <h3>3.3 Cookies de Funcionalidad</h3>
+        <p>
+            Estas cookies permiten que el sitio web recuerde las elecciones que has hecho para ofrecerte funcionalidades 
+            personalizadas:
+        </p>
+        <ul>
+            <li>Recordar tus preferencias de búsqueda</li>
+            <li>Mantener tu historial de visualización de productos</li>
+            <li>Recordar artículos del carrito</li>
+        </ul>
+
+        <h3>3.4 Cookies de Marketing y Publicidad</h3>
+        <p>
+            Utilizamos estas cookies para ofrecerte anuncios personalizados basados en tus intereses y comportamiento de 
+            navegación. Estas cookies pueden compartirse con socios publicitarios:
+        </p>
+        <ul>
+            <li>Cookies de redes sociales (Facebook, Instagram, TikTok)</li>
+            <li>Cookies de Google Ads para publicidad personalizada</li>
+            <li>Cookies de seguimiento de conversiones</li>
+        </ul>
+
+        <h2>4. Tabla de Cookies Utilizadas</h2>
+        <table class="cookies-tabla">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Propósito</th>
+                    <th>Duración</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>session_id</td>
+                    <td>Esencial</td>
+                    <td>Mantener sesión del usuario</td>
+                    <td>Hasta cerrar navegador</td>
+                </tr>
+                <tr>
+                    <td>user_preferences</td>
+                    <td>Funcionalidad</td>
+                    <td>Guardar preferencias de usuario</td>
+                    <td>1 año</td>
+                </tr>
+                <tr>
+                    <td>cart_items</td>
+                    <td>Funcionalidad</td>
+                    <td>Almacenar carrito de compra</td>
+                    <td>30 días</td>
+                </tr>
+                <tr>
+                    <td>_ga</td>
+                    <td>Análisis</td>
+                    <td>Google Analytics - rastreo de tráfico</td>
+                    <td>2 años</td>
+                </tr>
+                <tr>
+                    <td>_gid</td>
+                    <td>Análisis</td>
+                    <td>Google Analytics - sesión anónima</td>
+                    <td>24 horas</td>
+                </tr>
+                <tr>
+                    <td>fb_pixel</td>
+                    <td>Marketing</td>
+                    <td>Seguimiento de conversiones en Facebook</td>
+                    <td>3 meses</td>
+                </tr>
+                <tr>
+                    <td>Google Ads</td>
+                    <td>Marketing</td>
+                    <td>Publicidad personalizada</td>
+                    <td>Variable</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>5. Cookies de Terceros</h2>
+        <p>
+            Nuestro sitio web puede contener contenido de terceros (como mapas, vídeos, anuncios) que pueden establecer sus 
+            propias cookies. No controlamos estas cookies de terceros, pero podemos informarte sobre ellas:
+        </p>
+        <ul>
+            <li><strong>Google:</strong> Analytics, Maps, Ads - <a href="https://policies.google.com/privacy" target="_blank">Política de Google</a></li>
+            <li><strong>Meta (Facebook, Instagram):</strong> Píxeles de seguimiento - <a href="https://www.facebook.com/privacy/policy" target="_blank">Política de Meta</a></li>
+            <li><strong>Stripe:</strong> Procesamiento de pagos - <a href="https://stripe.com/privacy" target="_blank">Política de Stripe</a></li>
+        </ul>
+
+        <h2>6. Cómo Controlar las Cookies</h2>
+        <h3>6.1 Navegador Web</h3>
+        <p>
+            La mayoría de navegadores web permiten controlar las cookies a través de la configuración. Puedes:
+        </p>
+        <ul>
+            <li>Ver qué cookies están guardadas en tu dispositivo</li>
+            <li>Eliminar cookies específicas o todas las cookies</li>
+            <li>Bloquear que los sitios web guarden nuevas cookies</li>
+            <li>Usar modo "incógnito" o "privado" para navegar sin guardar cookies</li>
+        </ul>
+        <p>
+            Para más información sobre cómo controlar cookies en tu navegador específico:
+        </p>
+        <ul>
+            <li><a href="https://support.google.com/chrome/answer/95647" target="_blank">Google Chrome</a></li>
+            <li><a href="https://support.mozilla.org/kb/enable-and-disable-cookies-website-preferences" target="_blank">Firefox</a></li>
+            <li><a href="https://support.apple.com/HT201265" target="_blank">Safari</a></li>
+            <li><a href="https://support.microsoft.com/en-us/windows/manage-cookies-in-microsoft-edge-view-allow-and-block-cookies-in-microsoft-edge-1437e1a0-e2a0-4e37-a4d3-3bdf27b04e8c" target="_blank">Edge</a></li>
+        </ul>
+
+        <h3>6.2 Consentimiento</h3>
+        <p>
+            Al continuar navegando en nuestro sitio web después de que se te haya mostrado nuestro aviso de cookies, 
+            consentimos que se utilicen las cookies descritas. Puedes retirar tu consentimiento en cualquier momento 
+            modificando tu configuración de cookies.
+        </p>
+
+        <h2>7. Do Not Track (DNT)</h2>
+        <p>
+            Algunos navegadores permiten enviar señales "Do Not Track" (DNT). Actualmente, no hemos implementado soporte 
+            específico para responder a señales DNT, pero respetamos tus preferencias de privacidad según lo permitido por 
+            la ley.
+        </p>
+
+        <h2>8. Cambios en Esta Política</h2>
+        <p>
+            Nos reservamos el derecho de actualizar esta Política de Cookies en cualquier momento para reflejar cambios en 
+            nuestras prácticas o por razones técnicas, legales o reglamentarias. Los cambios serán efectivos cuando se 
+            publiquen en nuestro sitio web.
+        </p>
+
+        <h2>9. Contacto</h2>
+        <p>
+            Si tienes preguntas sobre nuestro uso de cookies o cómo controlarlas, por favor contáctanos:
+        </p>
+        <ul>
+            <li><strong>Email:</strong> <a href="mailto:cookies@joyeriagaliana.com">cookies@joyeriagaliana.com</a></li>
+            <li><strong>Dirección:</strong> Joyería Galiana, Plaza Mayor 123, 28001 Madrid, España</li>
+            <li><strong>Teléfono:</strong> +34 (0) 123 456 7890</li>
+        </ul>
+
+        <div class="cookies-fecha">
+            <p>Última actualización: 15 de enero de 2026</p>
+        </div>
+    </main>
+</PublicLayout>

@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - Joyería Galiana</title>
+    <link rel="stylesheet" href="/css/admin-styles.css?v=21">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script>
+        // VERIFICACIÓN INMEDIATA ANTES DE CARGAR CONTENIDO
+        async function verificarAdminInmediato() {
+            try {
+                // Esperar Supabase
+                let intentos = 0;
+                while (!window.supabaseClient && intentos < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    intentos++;
+                }
+                
+                if (!window.supabaseClient) {
+                    window.location.href = '/admin-login.html';
+                    return;
+                }
+                
+                const supabase = window.supabaseClient;
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (!session) {
+                    window.location.href = '/admin-login.html';
+                    return;
+                }
+                
+                const { data: usuario, error } = await supabase
+                    .from('usuarios')
+                    .select('rol')
+                    .eq('id', session.user.id)
+                    .single();
+                
+                if (error || !usuario || usuario.rol !== 'admin') {
+                    window.location.href = '/admin-login.html';
+                    return;
+                }
+                
+                // Si es admin, permitir que cargue normalmente
+                console.log('✅ Acceso a panel confirmado');
+                
+            } catch (err) {
+                console.error('Error verificando admin:', err);
+                window.location.href = '/admin-login.html';
+            }
+        }
+        
+        // Ejecutar verificación
+        verificarAdminInmediato();
+    </script>
+</head>
+
+<body>
+    <header class="admin-header">
+        <div class="container">
+            <button id="menu-toggle" class="menu-toggle" aria-label="Abrir menú">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1><img src="/images/logo.png" alt="Joyería Galiana" style="height: 60px; vertical-align: middle; margin-right: 15px;">Panel Admin</h1>
+            <div class="user-info">
+                <span id="user-email"></span>
+            </div>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <aside class="admin-sidebar">
+            <nav>
+                <ul>
+                    <li><a href="#" data-section="dashboard" class="nav-link active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg> Dashboard</a></li>
+                    <li><a href="#" data-section="productos" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> Productos</a></li>
+                    <li><a href="#" data-section="ofertas" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9h12M6 9l1.86-5.59a1 1 0 0 1 .95-.66h8.38a1 1 0 0 1 .95.66L18 9M6 9c-.06.94-.21 2.12-1 3.46-1.08 1.87-1.37 4.41-.04 6.54M18 9c.06.94.21 2.12 1 3.46 1.08 1.87 1.37 4.41.04 6.54"></path></svg> Ofertas</a></li>
+                    <li><a href="#" data-section="galeria" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Galería</a></li>
+                    <li><a href="#" data-section="pedidos" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="9" y1="21" x2="9" y2="7"></line><line x1="15" y1="21" x2="15" y2="7"></line><path d="M5 7h14"></path><path d="M18 7V4a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v3"></path></svg> Pedidos</a></li>
+                    <li><a href="#" data-section="devoluciones" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-9 9"></path></svg> Devoluciones</a></li>
+                    <li><a href="#" data-section="newsletter" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> Newsletter</a></li>
+                    <li><a href="#" data-section="contacto" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> Mensajes</a></li>
+                    <li><a href="#" data-section="descuentos" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg> Descuentos</a></li>
+                </ul>
+            </nav>
+            <a href="/" class="btn-back">← Volver a la Web</a>
+        </aside>
+
+        <main class="admin-content">
+            <section id="dashboard" class="admin-section active">
+                <h2>Dashboard</h2>
+                
+                <!-- Fila 1: Tarjetas principales -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Productos</h3>
+                        <p id="stat-productos">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Ofertas</h3>
+                        <p id="stat-ofertas">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Slides Galería</h3>
+                        <p id="stat-galeria">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Pedidos Realizados</h3>
+                        <p id="stat-pedidos">0</p>
+                    </div>
+                </div>
+
+                <!-- Fila 2: Nuevas tarjetas de ventas -->
+                <div class="stats-grid" style="margin-top: 2rem;">
+                    <div class="stat-card stat-card-large">
+                        <h3>Ventas del Mes</h3>
+                        <p id="stat-ventas-mes" style="font-size: 2.5rem; color: #2ecc71;">€0.00</p>
+                        <small style="color: #666; font-size: 0.95rem;">Total en euros este mes</small>
+                    </div>
+                    <div class="stat-card stat-card-large">
+                        <h3>Producto Más Vendido</h3>
+                        <p id="stat-producto-top" style="font-size: 1.8rem; color: #3498db;">-</p>
+                        <small id="stat-producto-top-cantidad" style="color: #666; font-size: 0.95rem;">Unidades vendidas</small>
+                    </div>
+                </div>
+
+                <!-- Fila 3: Gráfico de ventas últimos 7 días -->
+                <div class="chart-container" style="margin-top: 2rem; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);">
+                    <h3 style="margin-bottom: 1.5rem; color: #333;">Ventas Últimos 7 Días</h3>
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="chartVentas7Dias"></canvas>
+                    </div>
+                </div>
+
+                <!-- Fila 4: Tarjetas adicionales -->
+                <div class="stats-grid" style="margin-top: 2rem;">
+                    <div class="stat-card">
+                        <h3>Usuarios Suscritos</h3>
+                        <p id="stat-usuarios-suscritos">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Mensajes Sin Leer</h3>
+                        <p id="stat-mensajes-sin-leer">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Productos Sin Stock</h3>
+                        <p id="stat-productos-sin-stock">0</p>
+                    </div>
+                    <div class="stat-card" id="stat-pedidos-sin-enviar-card">
+                        <h3>Pedidos Sin Enviar</h3>
+                        <p id="stat-pedidos-sin-enviar">0</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="productos" class="admin-section">
+                <div class="section-header">
+                    <h2>Gestión de Productos</h2>
+                    <button onclick="abrirFormularioProducto()" class="btn-principal">+ Nuevo Producto</button>
+                </div>
+
+                <div id="formulario-producto" class="formulario-admin" style="display: none;">
+                    <h3 id="formulario-titulo">Agregar Nuevo Producto</h3>
+                    <form id="form-producto" onsubmit="guardarProducto(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nombre:</label>
+                                <input type="text" id="prod-nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Precio (€):</label>
+                                <input type="number" id="prod-precio" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Categoría:</label>
+                                <select id="prod-categoria" onchange="cargarSubcategorias(this.value)">
+                                    <option>Anillos</option>
+                                    <option>Collares</option>
+                                    <option>Pendientes</option>
+                                    <option>Pulseras</option>
+                                    <option>Relojes</option>
+                                    <option>Medallas</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label id="label-subcategoria" style="display: none;">Subcategoría:</label>
+                                <select id="prod-subcategoria" style="display: none;">
+                                    <option value="">Selecciona una subcategoría...</option>
+                                </select>
+                                <div id="msg-subcategoria" style="display: none; padding: 0.5rem; background: #e8f4f8; border-radius: 4px; color: #0066cc; font-size: 0.9rem;">
+                                    Esta categoría no tiene subcategorías
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <select id="prod-etiqueta">
+                                    <option value="">Sin etiqueta</option>
+                                    <option>NUEVO</option>
+                                    <option>DESTACADO</option>
+                                    <option>OFERTA</option>
+                                    <option>LIMITADA</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción:</label>
+                            <textarea id="prod-descripcion" rows="4"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Referencia (SKU/Código):</label>
+                                <input type="text" id="prod-referencia" placeholder="Ej: ANILLO-001">
+                            </div>
+                            <div class="form-group">
+                                <label>Stock:</label>
+                                <input type="number" id="prod-stock" value="0">
+                            </div>
+                        </div>
+                        
+                        <!-- Selector de tallas (solo para Anillos) -->
+                        <div id="section-tallas" style="display: none; padding: 1rem; background: #f9f9f9; border-radius: 6px; border-left: 4px solid #d4af37;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" id="prod-usa-tallas">
+                                <span>Este anillo usa sistema de tallas (6-22)</span>
+                            </label>
+                            <small style="display: block; margin-top: 0.5rem; color: #666;">Los clientes podrán seleccionar cualquier talla disponible</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Agregar Imágenes:</label>
+                            <div id="zona-subida-imagenes" style="border: 2px dashed #d4af37; border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; background: #fafaf8; transition: all 0.3s ease;">
+                                <p style="margin: 0; color: #666; font-size: 1rem;">📁 Haz clic o arrastra imágenes aquí</p>
+                                <small style="display: block; margin-top: 0.5rem; color: #999;">Una imagen a la vez (PNG, JPG, JPEG, WEBP)</small>
+                                <input type="file" id="prod-imagen-file" accept="image/*" style="display: none;">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Imágenes Agregadas:</label>
+                            <div id="prod-imagenes-existentes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 1rem; margin: 1rem 0; min-height: 120px;"></div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-principal">Guardar Producto</button>
+                            <button type="button" onclick="cerrarFormularioProducto()" class="btn-secundario">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="tabla-container">
+                    <div style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <input type="text" id="buscar-productos" placeholder="Buscar por nombre o referencia..." style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; flex: 1; min-width: 200px; font-size: 0.95rem;">
+                        <button type="button" onclick="limpiarBusquedaProductos()" style="padding: 0.75rem 1.5rem; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Limpiar</button>
+                    </div>
+                    <table id="tabla-productos">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Precio</th>
+                                <th>Categoría</th>
+                                <th>Stock</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productos-tbody">
+                        </tbody>
+                    </table>
+                </div>
+                <div id="pagination-productos" style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap; padding: 2rem 1rem;"></div>
+            </section>
+
+            <section id="ofertas" class="admin-section">
+                <div class="section-header">
+                    <h2>Gestión de Ofertas</h2>
+                    <button onclick="abrirFormularioOferta()" class="btn-principal">+ Nueva Oferta</button>
+                </div>
+
+                <div id="formulario-oferta" class="formulario-admin" style="display: none;">
+                    <h3 id="oferta-titulo">Agregar Oferta a Producto</h3>
+                    <form id="form-oferta" onsubmit="guardarOferta(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Producto:</label>
+                                <select id="oferta-producto" required>
+                                    <option value="">Selecciona un producto</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Descuento (%):</label>
+                                <input type="number" id="oferta-descuento" min="1" max="100" required>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-principal">Guardar Oferta</button>
+                            <button type="button" onclick="cerrarFormularioOferta()" class="btn-secundario">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="tabla-container">
+                    <table id="tabla-ofertas">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Descuento</th>
+                                <th>Precio Original</th>
+                                <th>Precio con Descuento</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ofertas-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="galeria" class="admin-section">
+                <div class="section-header">
+                    <h2>Gestión de Galería (Hero)</h2>
+                    <button onclick="abrirFormularioSlide()" class="btn-principal">+ Nuevo Slide</button>
+                </div>
+
+                <div id="formulario-slide" class="formulario-admin" style="display: none;">
+                    <h3 id="slide-titulo">Agregar Nuevo Slide</h3>
+                    <form id="form-slide" onsubmit="guardarSlide(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Título:</label>
+                                <input type="text" id="slide-titulo-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Orden:</label>
+                                <input type="number" id="slide-orden" value="1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción:</label>
+                            <textarea id="slide-descripcion" rows="4"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>URL del Botón "Ver Más":</label>
+                            <input type="text" id="slide-enlace" placeholder="Ej: /productos?categoria=Relojes o https://ejemplo.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Imagen del Slide:</label>
+                            <div id="zona-subida-slide" style="border: 2px dashed #d4af37; border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; background: #fafaf8; transition: all 0.3s ease;">
+                                <p style="margin: 0; color: #666; font-size: 1rem;">📁 Haz clic o arrastra la imagen aquí</p>
+                                <small style="display: block; margin-top: 0.5rem; color: #999;">PNG, JPG, JPEG, WEBP</small>
+                                <input type="file" id="slide-imagen-file" accept="image/*" style="display: none;">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Imagen Seleccionada:</label>
+                            <div id="slide-imagen-preview" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 1rem; margin: 1rem 0; min-height: 120px;"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="slide-activo" checked>
+                                Activo
+                            </label>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-principal">Guardar Slide</button>
+                            <button type="button" onclick="cerrarFormularioSlide()" class="btn-secundario">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="galeria-grid" class="galeria-grid">
+                </div>
+            </section>
+
+            <section id="pedidos" class="admin-section">
+                <div class="section-header">
+                    <h2>Gestión de Pedidos</h2>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                    <input type="text" id="search-input" placeholder="Buscar por email o ID..." style="flex: 1; min-width: 200px; padding: 0.5rem 1rem; border: 1px solid #ddd; border-radius: 4px;">
+                    <select id="filter-estado" style="padding: 0.5rem 1rem; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="">Todos los estados</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="confirmado">Confirmado</option>
+                        <option value="enviado">Enviado</option>
+                        <option value="entregado">Entregado</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <div class="tabla-container">
+                    <table id="tabla-pedidos" style="width: 100%; border-collapse: collapse;">
+                        <thead style="background: #d4af37; color: white;">
+                            <tr>
+                                <th style="padding: 1rem; text-align: left;">ID</th>
+                                <th style="padding: 1rem; text-align: left;">Cliente</th>
+                                <th style="padding: 1rem; text-align: left;">Email</th>
+                                <th style="padding: 1rem; text-align: left;">Total</th>
+                                <th style="padding: 1rem; text-align: left;">Estado</th>
+                                <th style="padding: 1rem; text-align: left;">Fecha</th>
+                                <th style="padding: 1rem; text-align: left;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pedidos-tbody">
+                            <tr><td colspan="7" style="text-align: center; padding: 2rem;">Cargando pedidos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="pagination" style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem;"></div>
+            </section>
+
+            <!-- SECCIÓN DE DEVOLUCIONES -->
+            <section id="devoluciones" class="admin-section">
+                <div class="section-header">
+                    <h2>Gestión de Devoluciones</h2>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                    <input type="text" id="search-devoluciones" placeholder="Buscar por email o ID de pedido..." style="flex: 1; min-width: 200px; padding: 0.5rem 1rem; border: 1px solid #ddd; border-radius: 4px;">
+                    <select id="filter-devolucion-estado" style="padding: 0.5rem 1rem; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="">Todos los estados</option>
+                        <option value="procesado">Procesado</option>
+                        <option value="confirmada">Confirmada</option>
+                        <option value="rechazada">Rechazada</option>
+                    </select>
+                </div>
+                <div class="tabla-container">
+                    <table id="tabla-devoluciones" style="width: 100%; border-collapse: collapse;">
+                        <thead style="background: #d4af37; color: white;">
+                            <tr>
+                                <th style="padding: 1rem; text-align: left;">ID Dev.</th>
+                                <th style="padding: 1rem; text-align: left;">Pedido</th>
+                                <th style="padding: 1rem; text-align: left;">Email</th>
+                                <th style="padding: 1rem; text-align: left;">Estado</th>
+                                <th style="padding: 1rem; text-align: left;">Fecha</th>
+                                <th style="padding: 1rem; text-align: center;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="devoluciones-tbody">
+                            <tr><td colspan="6" style="text-align: center; padding: 2rem;">Cargando devoluciones...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- MODAL DE GESTIÓN DE DEVOLUCIONES -->
+            <div id="modal-devolucion" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+                <div style="background: white; border-radius: 12px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; padding: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="margin: 0; color: #333;">Gestionar Devolución <span id="modal-dev-id"></span></h3>
+                        <button onclick="cerrarModalDevolucion()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">×</button>
+                    </div>
+
+                    <div style="background: #f9f9f9; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">ID Devolución</label>
+                                <span id="dev-id" style="font-weight: bold; color: #333;">-</span>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">ID Pedido</label>
+                                <span id="dev-pedido-id" style="font-weight: bold; color: #d4af37;">-</span>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Cliente</label>
+                                <span id="dev-cliente" style="color: #333;">-</span>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Email</label>
+                                <span id="dev-email" style="color: #333;">-</span>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Motivo de Devolución</label>
+                            <p id="dev-motivo" style="margin: 0; color: #333; line-height: 1.5; padding: 0.5rem; background: white; border-radius: 4px;">-</p>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Estado Actual</label>
+                                <span id="dev-estado-actual" style="font-weight: bold; color: #333;">-</span>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Precio Total</label>
+                                <span id="dev-monto" style="font-weight: bold; color: #28a745;">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Acciones -->
+                    <div id="dev-acciones" style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                        <button onclick="confirmarDevolucion()" style="flex: 1; padding: 0.75rem 1rem; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                            Confirmar Devolución
+                        </button>
+                        <button onclick="abrirModalRechazo()" style="flex: 1; padding: 0.75rem 1rem; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                            Rechazar Devolución
+                        </button>
+                    </div>
+
+                    <!-- Modal de Rechazo -->
+                    <div id="modal-rechazo" style="display: none; background: #f5f5f5; border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                        <h4 style="margin-top: 0; color: #333;">Motivo del Rechazo</h4>
+                        <textarea id="motivo-rechazo" placeholder="Ingresa el motivo del rechazo..." style="width: 100%; min-height: 100px; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-family: Arial; box-sizing: border-box; margin-bottom: 1rem;"></textarea>
+                        <div style="display: flex; gap: 1rem;">
+                            <button onclick="enviarRechazo()" style="flex: 1; padding: 0.75rem 1rem; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                                Confirmar Rechazo
+                            </button>
+                            <button onclick="cerrarModalRechazo()" style="flex: 1; padding: 0.75rem 1rem; background: #999; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+
+                    <button onclick="cerrarModalDevolucion()" style="width: 100%; padding: 0.75rem 1rem; background: #ddd; color: #333; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+
+            <section id="newsletter" class="admin-section">
+                <div class="section-header">
+                    <h2>Gestión de Newsletter</h2>
+                </div>
+
+                <div class="newsletter-admin-container">
+                    <div class="newsletter-top">
+                        <div class="stat-box">
+                            <div class="stat-label">Suscriptores Activos</div>
+                            <div class="stat-value" id="subscriber-count">-</div>
+                        </div>
+                    </div>
+
+                    <div class="newsletter-form-section">
+                        <h3>Enviar Newsletter</h3>
+                        <form id="newsletter-send-form" onsubmit="sendNewsletterEmail(event)">
+                            <div class="form-group">
+                                <label for="newsletter-subject">Asunto:</label>
+                                <input 
+                                    type="text" 
+                                    id="newsletter-subject" 
+                                    placeholder="Ej: Nueva colección de primavera"
+                                    required
+                                />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="newsletter-content">Contenido (HTML):</label>
+                                <textarea 
+                                    id="newsletter-content" 
+                                    placeholder="Escribe el contenido del email..."
+                                    rows="10"
+                                    required
+                                ></textarea>
+                            </div>
+
+                            <div class="form-group checkbox-group">
+                                <label>
+                                    <input type="checkbox" id="confirm-send" required />
+                                    <span>Confirmo el envío a todos los suscriptores</span>
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn-principal">Enviar Newsletter</button>
+                        </form>
+                        <p class="form-info" style="margin-top: 15px; padding: 10px; background: #fff3cd; border-left: 4px solid #d4af37; color: #666; font-size: 0.9rem;">
+                            💡 Tip: Puedes usar HTML básico para formatear tu email. Ej: &lt;b&gt;texto&lt;/b&gt;, &lt;a href="url"&gt;enlace&lt;/a&gt;, etc.
+                        </p>
+                    </div>
+
+                    <div class="newsletter-history-section">
+                        <h3>Suscriptores</h3>
+                        <div style="margin-bottom: 15px;">
+                            <input type="text" id="search-suscriptores" placeholder="Buscar por email..." style="width: 100%; max-width: 300px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <table class="newsletter-table">
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Estado</th>
+                                    <th>Suscrito</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="newsletter-subscribers-tbody">
+                                <tr>
+                                    <td colspan="3" class="loading">Cargando suscriptores...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="contacto" class="admin-section">
+                <div class="section-header">
+                    <h2>Mensajes</h2>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="search-contacto" placeholder="Buscar por email o nombre..." style="width: 100%; max-width: 300px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+
+                <table class="newsletter-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Asunto</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contacto-tbody">
+                        <tr>
+                            <td colspan="6" class="loading">Cargando mensajes...</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div id="pagination-contacto" style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap; padding: 2rem 1rem;"></div>
+            </section>
+
+            <section id="descuentos" class="admin-section">
+                <div class="section-header">
+                    <h2>Gestión de Códigos de Descuento</h2>
+                    <button onclick="abrirFormularioDescuento()" class="btn-principal">+ Nuevo Descuento</button>
+                </div>
+
+                <div id="formulario-descuento" class="formulario-admin" style="display: none;">
+                    <h3 id="descuento-titulo">Crear Código de Descuento</h3>
+                    <form id="form-descuento" onsubmit="guardarDescuento(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Código de Descuento:</label>
+                                <input type="text" id="desc-codigo" placeholder="Ej: NAVIDAD2025" required style="text-transform: uppercase;">
+                            </div>
+                            <div class="form-group">
+                                <label>Porcentaje de Descuento (%):</label>
+                                <input type="number" id="desc-porcentaje" min="1" max="100" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Usos Máximos (0 = Ilimitado):</label>
+                                <input type="number" id="desc-usos-max" min="0" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Fecha de Vencimiento (Opcional):</label>
+                                <input type="datetime-local" id="desc-fecha-fin">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción:</label>
+                            <textarea id="desc-descripcion" rows="3" placeholder="Ej: Oferta especial de Navidad"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" id="desc-activo" checked style="margin-right: 0.5rem;">
+                                Descuento Activo
+                            </label>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-principal">Guardar Descuento</button>
+                            <button type="button" onclick="cerrarFormularioDescuento()" class="btn-secundario">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="tabla-container">
+                    <div style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: center;">
+                        <input type="text" id="buscar-descuentos" placeholder="Buscar por código..." style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; flex: 1; font-size: 0.95rem;">
+                        <button type="button" onclick="limpiarBusquedaDescuentos()" style="padding: 0.75rem 1.5rem; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Limpiar</button>
+                    </div>
+                    <table id="tabla-descuentos">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Descuento %</th>
+                                <th>Usos Máximos</th>
+                                <th>Usos Actuales</th>
+                                <th>Disponible</th>
+                                <th>Vencimiento</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="descuentos-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal de Detalles de Pedido -->
+    <style>
+        #modal-detalle { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        #modal-detalle.active { display: flex; }
+    </style>
+    <div id="modal-detalle">
+        <div style="background: white; border-radius: 8px; max-width: 800px; max-height: 90vh; overflow-y: auto; padding: 2rem; width: 90%;">
+            <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #d4af37;">
+                <h2 style="margin: 0 0 0.5rem 0;">Detalles del Pedido</h2>
+                <div style="color: #666; font-family: monospace; font-size: 0.9rem; word-break: break-all;"><strong>ID:</strong> <span id="modal-pedido-id">-</span></div>
+            </div>
+            
+            <div style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #e0e0e0;">
+                <h3>Información del Cliente</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                    <div><strong>Nombre:</strong> <span id="detalle-nombre">-</span></div>
+                    <div><strong>Email:</strong> <span id="detalle-email">-</span></div>
+                    <div><strong>Teléfono:</strong> <span id="detalle-telefono">-</span></div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #e0e0e0;">
+                <h3>Dirección de Envío</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                    <div><strong>Dirección:</strong> <span id="detalle-direccion">-</span></div>
+                    <div><strong>Ciudad:</strong> <span id="detalle-ciudad">-</span></div>
+                    <div><strong>Código Postal:</strong> <span id="detalle-codigo-postal">-</span></div>
+                    <div><strong>País:</strong> <span id="detalle-pais">-</span></div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #e0e0e0;">
+                <h3>Productos</h3>
+                <div id="detalle-productos"></div>
+            </div>
+            
+            <div style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #e0e0e0;">
+                <h3>Resumen del Pedido</h3>
+                <div style="background: #f9f9f9; padding: 1rem; border-radius: 6px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;"><span>Subtotal:</span><span id="detalle-subtotal">€0.00</span></div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;"><span>Envío:</span><span id="detalle-envio">€0.00</span></div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;"><span>Descuento:</span><span id="detalle-descuento">€0.00</span></div>
+                    <div style="display: flex; justify-content: space-between; font-weight: 600; color: #d4af37; border-top: 2px solid #d4af37; padding-top: 0.5rem;"><span>Total:</span><span id="detalle-total">€0.00</span></div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 2rem;">
+                <h3>Estado del Pedido</h3>
+                <select id="detalle-estado" style="padding: 0.5rem 1rem; border: 1px solid #ddd; border-radius: 4px; width: 100%;">
+                    <option value="pendiente">Pendiente</option>
+                    <option value="confirmado">Confirmado</option>
+                    <option value="enviado">Enviado</option>
+                    <option value="entregado">Entregado</option>
+                    <option value="cancelado">Cancelado</option>
+                </select>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button onclick="descargarFactura()" style="padding: 0.75rem 1.5rem; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Descargar Factura</button>
+                <button onclick="actualizarEstadoPedido()" style="padding: 0.75rem 1.5rem; background: #d4af37; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Actualizar Estado</button>
+                <button onclick="cerrarModal()" style="padding: 0.75rem 1.5rem; background: #e0e0e0; color: #333; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación -->
+    <div id="confirm-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); max-width: 400px; width: 90%;">
+            <p id="confirm-message" style="margin: 0 0 2rem 0; font-size: 1.1rem; color: #333;"></p>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button id="confirm-cancel" style="padding: 0.75rem 1.5rem; background: #e0e0e0; color: #333; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Cancelar</button>
+                <button id="confirm-ok" style="padding: 0.75rem 1.5rem; background: #d4af37; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase-init.js?v=2"></script>
+    <script src="/js/supabase-config.js"></script>
+    <script src="/js/admin.js"></script>
+    
+    <script>
+        // Menú hamburguesa
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.admin-sidebar');
+            
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                    menuToggle.classList.toggle('active');
+                });
+            }
+            
+            // Cerrar menú al hacer clic en un enlace
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    sidebar.classList.remove('active');
+                    menuToggle.classList.remove('active');
+                });
+            });
+        });
+    </script>
+    <script src="/js/pedidos-funciones.js"></script>
+    <script src="/js/descuentos-admin.js"></script>
+    <script src="/js/devoluciones-admin.js"></script>
+</body>
+
+</html>

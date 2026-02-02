@@ -1,0 +1,980 @@
+---
+import PublicLayout from '../layouts/PublicLayout.astro';
+---
+
+<PublicLayout title="Seguimiento del Pedido - Joyería Galiana">
+	<style is:global>
+		@keyframes spin {
+			to { transform: rotate(360deg); }
+		}
+
+		.seguimiento-hero {
+			background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+			padding: 60px 20px;
+			text-align: center;
+		}
+
+		.seguimiento-hero h1 {
+			font-family: 'Playfair Display', Georgia, serif;
+			font-size: 48px;
+			color: #1a1a1a;
+			margin: 0 0 20px 0;
+		}
+
+		.seguimiento-hero p {
+			font-size: 16px;
+			color: #666;
+			margin: 0;
+		}
+
+		.seguimiento-container {
+			max-width: 1000px;
+			margin: 0 auto;
+			padding: 40px 20px;
+		}
+
+		.search-section {
+			background: white;
+			border-radius: 12px;
+			padding: 40px;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+			margin-bottom: 40px;
+		}
+
+		.search-form {
+			display: grid;
+			grid-template-columns: 1fr 1fr 120px;
+			gap: 20px;
+			align-items: end;
+		}
+
+		.form-group {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.form-group label {
+			font-weight: 600;
+			color: #333;
+			margin-bottom: 8px;
+			font-size: 14px;
+		}
+
+		.form-group input {
+			padding: 12px;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+			font-size: 14px;
+			font-family: inherit;
+		}
+
+		.form-group input:focus {
+			outline: none;
+			border-color: #d4af37;
+			box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+		}
+
+		.btn-buscar {
+			padding: 12px 24px;
+			background: linear-gradient(135deg, #8b1538 0%, #a81e4c 100%);
+			color: white;
+			border: none;
+			border-radius: 8px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s ease;
+		}
+
+		.btn-buscar:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 4px 12px rgba(139, 21, 56, 0.3);
+		}
+
+		.pedidos-list {
+			display: flex;
+			flex-direction: column;
+			gap: 20px;
+		}
+
+		.pedido-card {
+			background: white;
+			border-radius: 16px;
+			overflow: hidden;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+			border: 1px solid rgba(0, 0, 0, 0.05);
+			transition: all 0.3s ease;
+			display: flex;
+			align-items: center;
+			padding: 20px;
+			gap: 20px;
+			cursor: pointer;
+		}
+
+		.pedido-card:hover {
+			box-shadow: 0 8px 24px rgba(212, 175, 55, 0.12);
+			border-color: rgba(212, 175, 55, 0.2);
+		}
+
+		.pedido-media {
+			width: 100px;
+			height: 100px;
+			border-radius: 12px;
+			overflow: hidden;
+			background: linear-gradient(135deg, #f8f6f0 0%, #efe9db 100%);
+			flex-shrink: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.pedido-media img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+		}
+
+		.pedido-card:hover .pedido-media img {
+			transform: scale(1.1);
+		}
+
+		.pedido-body {
+			flex: 1;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 20px;
+		}
+
+		.pedido-info {
+			flex: 1;
+		}
+
+		.pedido-id {
+			font-weight: 600;
+			color: #333;
+			margin-bottom: 8px;
+			font-size: 15px;
+		}
+
+		.pedido-fecha {
+			font-size: 13px;
+			color: #999;
+			margin-bottom: 8px;
+		}
+
+		.pedido-status {
+			display: inline-block;
+			padding: 6px 12px;
+			border-radius: 20px;
+			font-size: 11px;
+			font-weight: 600;
+			text-transform: uppercase;
+		}
+
+		.status-confirmado {
+			background: #d4edda;
+			color: #155724;
+		}
+
+		.status-pendiente {
+			background: #fff3cd;
+			color: #856404;
+		}
+
+		.status-enviado {
+			background: #cfe2ff;
+			color: #084298;
+		}
+
+		.status-entregado {
+			background: #d1ecf1;
+			color: #0c5460;
+		}
+
+		.status-cancelado {
+			background: #f8d7da;
+			color: #721c24;
+		}
+
+		.status-devolucion_proceso {
+			background: #fff3e0;
+			color: #e65100;
+		}
+
+		.status-devolucion_aceptada {
+			background: #e8f5e9;
+			color: #2e7d32;
+		}
+
+		.status-devolucion_rechazada {
+			background: #ffebee;
+			color: #c62828;
+		}
+
+		.pedido-items {
+			font-size: 13px;
+			color: #999;
+			margin-top: 8px;
+		}
+
+		.pedido-precio {
+			font-size: 20px;
+			font-weight: 600;
+			color: #8b1538;
+			white-space: nowrap;
+		}
+
+		.loading-box {
+			text-align: center;
+			padding: 60px 20px;
+		}
+
+		.spinner {
+			width: 50px;
+			height: 50px;
+			border: 4px solid rgba(212, 175, 55, 0.3);
+			border-top-color: #d4af37;
+			border-radius: 50%;
+			animation: spin 0.8s linear infinite;
+			margin: 0 auto 20px;
+		}
+
+		.error-box {
+			background: white;
+			border-radius: 12px;
+			padding: 30px;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+			border-left: 4px solid #e74c3c;
+			text-align: center;
+			margin-bottom: 20px;
+		}
+
+		.error-message {
+			color: #e74c3c;
+			margin: 0;
+		}
+
+		.modal-overlay {
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background: rgba(0,0,0,0.5);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			z-index: 1000;
+			padding: 20px;
+		}
+
+		.modal-content {
+			background: white;
+			border-radius: 16px;
+			padding: 40px;
+			max-width: 800px;
+			width: 100%;
+			max-height: 90vh;
+			overflow-y: auto;
+			position: relative;
+		}
+
+		.modal-close {
+			position: absolute;
+			top: 20px;
+			right: 20px;
+			border: none;
+			background: none;
+			font-size: 24px;
+			cursor: pointer;
+			color: #999;
+		}
+
+		.modal-order-id {
+			font-family: 'Playfair Display', Georgia, serif;
+			font-size: 28px;
+			color: #1a1a1a;
+			margin-bottom: 10px;
+			font-weight: 600;
+		}
+
+		.modal-order-date {
+			font-size: 14px;
+			color: #666;
+			margin-bottom: 30px;
+		}
+
+		.modal-products-table {
+			width: 100%;
+			margin-bottom: 30px;
+			border-collapse: collapse;
+		}
+
+		.modal-products-table thead tr {
+			background: #f0f0f0;
+			border-bottom: 2px solid #d4af37;
+		}
+
+		.modal-products-table th {
+			padding: 15px;
+			text-align: left;
+			font-weight: 600;
+			color: #333;
+		}
+
+		.modal-products-table td {
+			padding: 15px;
+			border-bottom: 1px solid #eee;
+		}
+
+		.modal-totals {
+			display: flex;
+			justify-content: flex-end;
+			margin-bottom: 30px;
+		}
+
+		.modal-totals-box {
+			width: 300px;
+		}
+
+		.modal-total-row {
+			display: flex;
+			justify-content: space-between;
+			padding: 12px 0;
+			border-bottom: 1px solid #eee;
+			font-size: 14px;
+		}
+
+		.modal-total-row.total {
+			border-bottom: 2px solid #d4af37;
+			font-weight: 600;
+			color: #8b1538;
+			font-size: 16px;
+			padding: 15px 0;
+		}
+
+		.modal-actions {
+			display: flex;
+			gap: 10px;
+			flex-wrap: wrap;
+		}
+
+		.btn-action {
+			padding: 12px 24px;
+			border: none;
+			border-radius: 8px;
+			cursor: pointer;
+			font-weight: 600;
+			font-size: 14px;
+			transition: all 0.3s ease;
+		}
+
+		.btn-descargar {
+			background: #d4af37;
+			color: white;
+		}
+
+		.btn-descargar:hover {
+			background: #b8941e;
+			transform: translateY(-2px);
+		}
+
+		.btn-cancelar {
+			background: #f44336;
+			color: white;
+		}
+
+		.btn-cancelar:hover {
+			background: #da190b;
+			transform: translateY(-2px);
+		}
+
+		.btn-devolucion {
+			background: #2196F3;
+			color: white;
+		}
+
+		.btn-devolucion:hover {
+			background: #0b7dda;
+			transform: translateY(-2px);
+		}
+
+		@media (max-width: 768px) {
+			.search-form {
+				grid-template-columns: 1fr;
+			}
+
+			.pedido-body {
+				flex-direction: column;
+				align-items: flex-start;
+			}
+
+			.modal-content {
+				padding: 20px;
+			}
+		}
+	</style>
+
+	<div class="seguimiento-hero">
+		<h1>Seguimiento del Pedido</h1>
+		<p>Consulta el estado y detalles de tu pedido</p>
+	</div>
+
+	<div class="seguimiento-container">
+		<div class="search-section">
+			<form id="searchForm" class="search-form">
+				<div class="form-group">
+					<label for="email">Email</label>
+					<input 
+						type="email" 
+						id="email" 
+						placeholder="tu@email.com" 
+						required
+					/>
+				</div>
+				<div class="form-group">
+					<label for="pedidoId">Número de Pedido</label>
+					<input 
+						type="number" 
+						id="pedidoId" 
+						placeholder="Ej: 146" 
+						required
+					/>
+				</div>
+				<button type="submit" class="btn-buscar">Buscar</button>
+			</form>
+		</div>
+
+		<div id="loadingContainer" style="display: none;" class="loading-box">
+			<div class="spinner"></div>
+			<p style="color: #999;">Buscando tu pedido...</p>
+		</div>
+
+		<div id="errorContainer" style="display: none;" class="error-box">
+			<p id="errorMessage" class="error-message"></p>
+		</div>
+
+		<div id="resultContainer" class="pedidos-list">
+			<!-- Se llena dinámicamente -->
+		</div>
+	</div>
+
+	<script>
+		// Funciones globales
+		window.abrirDetallesPedido = abrirDetallesPedido;
+		window.descargarFactura = descargarFactura;
+		window.cancelarPedidoConfirmar = cancelarPedidoConfirmar;
+		window.solicitarDevolucionConfirmar = solicitarDevolucionConfirmar;
+
+		const searchForm = document.getElementById('searchForm');
+		const resultContainer = document.getElementById('resultContainer');
+		const errorContainer = document.getElementById('errorContainer');
+		const errorMessage = document.getElementById('errorMessage');
+		const loadingContainer = document.getElementById('loadingContainer');
+
+		async function obtenerImagenProducto(productId) {
+			try {
+				const response = await fetch(`/api/get-product-image?id=${productId}`);
+				if (response.ok) {
+					const data = await response.json();
+					return data.imagen || null;
+				}
+			} catch (e) {
+				console.log('[obtenerImagenProducto] Error:', e);
+			}
+			return null;
+		}
+
+		searchForm.addEventListener('submit', async (e) => {
+			e.preventDefault();
+
+			const email = document.getElementById('email').value.trim();
+			const pedidoId = document.getElementById('pedidoId').value.trim();
+
+			resultContainer.innerHTML = '';
+			errorContainer.style.display = 'none';
+			loadingContainer.style.display = 'block';
+
+			try {
+				const response = await fetch('/api/search-order', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ email, pedidoId: parseInt(pedidoId) })
+				});
+
+				const data = await response.json();
+				console.log('[búsqueda] Respuesta:', data);
+
+				if (!response.ok) {
+					throw new Error(data.error || 'Error al buscar el pedido');
+				}
+
+				mostrarPedido(data.pedido);
+			} catch (error) {
+				console.error('[búsqueda] Error:', error);
+				mostrarError(error.message);
+			} finally {
+				loadingContainer.style.display = 'none';
+			}
+		});
+
+		function mostrarError(mensaje) {
+			errorMessage.textContent = '❌ ' + mensaje;
+			errorContainer.style.display = 'block';
+		}
+
+		function mostrarPedido(pedido) {
+			let items = Array.isArray(pedido.items) ? pedido.items : 
+							(typeof pedido.items === 'string' ? JSON.parse(pedido.items) : []);
+			
+			console.log('[mostrarPedido] Items:', items);
+			const primeItem = items[0];
+			console.log('[mostrarPedido] Primer item:', JSON.stringify(primeItem, null, 2));
+			console.log('[mostrarPedido] Product ID:', primeItem?.product_id);
+
+			const fecha = new Date(pedido.fecha_creacion).toLocaleDateString('es-ES');
+			
+			// Determinar estado a mostrar: si hay devolución, usar estado de devolución, si no, usar estado del pedido
+			let estadoMostrar = pedido.estado;
+			let estadoTextoMostrar = pedido.estado;
+			
+			if (pedido.devolucion && typeof pedido.devolucion === 'object') {
+				// Mapear estado de devolución a estados internos para las clases CSS
+				const estadoDev = pedido.devolucion.estado;
+				if (estadoDev === 'confirmada') {
+					estadoMostrar = 'devolucion_aceptada';
+					estadoTextoMostrar = 'Devolución Aceptada';
+				} else if (estadoDev === 'rechazada') {
+					estadoMostrar = 'devolucion_rechazada';
+					estadoTextoMostrar = 'Devolución Cancelada';
+				} else {
+					estadoMostrar = 'devolucion_proceso';
+					estadoTextoMostrar = 'Devolución en Proceso';
+				}
+			} else {
+				// Usar mapeo normal del estado del pedido
+				const estadoTextos = {
+					'pendiente': 'Pendiente',
+					'confirmado': 'Confirmado',
+					'enviado': 'Enviado',
+					'entregado': 'Entregado',
+					'cancelado': 'Cancelado',
+					'devolucion_proceso': 'Devolución en Proceso',
+					'devolucion_aceptada': 'Devolución Aceptada',
+					'devolucion_rechazada': 'Devolución Rechazada'
+				};
+				estadoTextoMostrar = estadoTextos[pedido.estado] || pedido.estado || 'Pendiente';
+			}
+
+			const estadoClase = `status-${estadoMostrar || 'pendiente'}`;
+			const estadoTexto = estadoTextoMostrar;
+
+			// Obtener imagen del primer item usando product_id
+			(async () => {
+				let imagenPrincipal = primeItem?.imagen;
+				if (!imagenPrincipal && primeItem?.product_id) {
+					imagenPrincipal = await obtenerImagenProducto(primeItem.product_id);
+					console.log('[mostrarPedido] Imagen obtenida via API:', imagenPrincipal);
+				}
+				console.log('[mostrarPedido] Imagen final:', imagenPrincipal);
+
+				let html = `
+					<article class="pedido-card" onclick="window.abrirDetallesPedido(${pedido.id})">
+						<div class="pedido-media">
+							${imagenPrincipal && imagenPrincipal.trim() ? `<img src="${imagenPrincipal}" alt="Pedido #${pedido.id}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />` : ''}
+							<div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #f8f6f0 0%, #efe9db 100%); ${imagenPrincipal && imagenPrincipal.trim() ? 'display:none;' : ''}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 50px; height: 50px; color: #d4af37;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg></div>
+						</div>
+						<div class="pedido-body">
+							<div class="pedido-info">
+								<div class="pedido-id">Pedido #${pedido.id}</div>
+								<div class="pedido-fecha">${fecha}</div>
+								<span class="pedido-status ${estadoClase}">${estadoTexto}</span>
+								<div class="pedido-items">${items.length} producto${items.length !== 1 ? 's' : ''}</div>
+							</div>
+							<div class="pedido-precio">€${pedido.total.toFixed(2)}</div>
+						</div>
+					</article>
+				`;
+
+				resultContainer.innerHTML = html;
+				window.pedidoActualBusqueda = { ...pedido, items: items };
+			})();
+		}
+
+		function puedeCancelar(pedido) {
+			if (pedido.estado !== 'confirmado') return false;
+			const fechaPedido = new Date(pedido.fecha_creacion);
+			const ahora = new Date();
+			const diasTranscurridos = Math.floor((ahora - fechaPedido) / (1000 * 60 * 60 * 24));
+			console.log(`[cancelar] Pedido #${pedido.id}: ${diasTranscurridos} días, puede cancelar: ${diasTranscurridos < 2}`);
+			return diasTranscurridos < 2;
+		}
+
+		function puedeDevolucionar(pedido) {
+			if (pedido.estado !== 'entregado') return false;
+			const fechaPedido = new Date(pedido.fecha_creacion);
+			const ahora = new Date();
+			const diasTranscurridos = Math.floor((ahora - fechaPedido) / (1000 * 60 * 60 * 24));
+			console.log(`[devolucion] Pedido #${pedido.id}: ${diasTranscurridos} días, puede devolver: ${diasTranscurridos < 15}`);
+			return diasTranscurridos < 15;
+		}
+
+		function abrirDetallesPedido(pedidoId) {
+			console.log('[modal] Abriendo modal para pedido:', pedidoId);
+			const pedido = window.pedidoActualBusqueda;
+			console.log('[modal] Pedido encontrado:', pedido);
+			console.log('[modal] Campos del pedido:', Object.keys(pedido));
+			console.log('[modal] JSON completo del pedido:', JSON.stringify(pedido, null, 2));
+			if (!pedido) {
+				console.error('[modal] No hay pedido en memoria');
+				return;
+			}
+
+			const items = pedido.items || [];
+			
+			const fecha = new Date(pedido.fecha_creacion).toLocaleDateString('es-ES');
+			const estadoTexto = {
+				'pendiente': 'Pendiente',
+				'confirmado': 'Confirmado',
+				'enviado': 'Enviado',
+				'entregado': 'Entregado',
+				'cancelado': 'Cancelado',
+				'devolucion_proceso': 'Devolución en Proceso',
+				'devolucion_aceptada': 'Devolución Aceptada',
+				'devolucion_rechazada': 'Devolución Rechazada'
+			}[pedido.estado] || pedido.estado || 'Pendiente';
+
+			const productosHtml = items.map(item => `
+				<tr>
+					<td>${item.nombre || 'Producto'}</td>
+					<td style="text-align: center;">${item.talla || '-'}</td>
+					<td style="text-align: center;">${item.cantidad || 1}</td>
+					<td style="text-align: right;">€${(item.precio || 0).toFixed(2)}</td>
+					<td style="text-align: right;">€${((item.precio || 0) * (item.cantidad || 1)).toFixed(2)}</td>
+				</tr>
+			`).join('');
+
+			let botonesHtml = `<button class="btn-action btn-descargar" onclick="window.descargarFactura(${pedido.id}, ${JSON.stringify({
+				estado: pedido.estado,
+				devolucionEstado: pedido.devolucion?.estado || null
+			}).replace(/"/g, '&quot;')})">📄 Descargar Factura</button>`;
+
+			if (puedeCancelar(pedido)) {
+				botonesHtml += `<button class="btn-action btn-cancelar" onclick="window.cancelarPedidoConfirmar(${pedido.id})">Cancelar Pedido</button>`;
+			}
+
+			if (puedeDevolucionar(pedido)) {
+				botonesHtml += `<button class="btn-action btn-devolucion" onclick="window.solicitarDevolucionConfirmar(${pedido.id})">Solicitar Devolución</button>`;
+			}
+
+			// PREPARAR: Construir devolucionHtml y badge separadamente ANTES de usar
+			let devolucionHtml = '';
+			let estadoDevolucionBadge = '';
+			if (pedido.devolucion && typeof pedido.devolucion === 'object') {
+				const dev = pedido.devolucion;
+				console.log('[devolucion] Devolución encontrada:', dev);
+				
+				// Crear badge del estado de devolución
+				const estadoTexto = dev.estado === 'confirmada' ? 'Aceptada' : dev.estado === 'rechazada' ? 'Cancelada' : 'En Proceso';
+				const estadoColor = dev.estado === 'confirmada' ? '#4CAF50' : dev.estado === 'rechazada' ? '#f44336' : '#FF9800';
+				
+				estadoDevolucionBadge = `
+					<div style="display: inline-block; background: ${estadoColor}; color: white; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 12px; margin-top: 10px;">
+						Devolución: ${estadoTexto}
+					</div>
+				`;
+				
+				devolucionHtml = `
+					<div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #d4af37;">
+						<div style="font-weight: 600; color: #333; margin-bottom: 10px;">Información de Devolución</div>
+						<div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd;">
+							<span style="font-weight: 500; color: #666;">Motivo Solicitud</span>
+							<span style="color: #333;">${dev.motivo_solicitud || '-'}</span>
+						</div>
+						${dev.estado === 'rechazada' ? `<div style="display: flex; justify-content: space-between; padding: 8px 0;">
+							<span style="font-weight: 500; color: #666;">Motivo de Cancelación</span>
+							<span style="color: #333;">${dev.motivo_rechazo || '-'}</span>
+						</div>` : ''}
+					</div>
+				`;
+			} else {
+				console.log('[devolucion] No hay devolución o no es objeto:', pedido.devolucion);
+			}
+
+			// PRIMERO crear el HTML básico del modal
+			let modalHtml = `
+				<div class="modal-overlay" data-modal="true">
+					<div class="modal-content">
+						<button class="modal-close" onclick="this.closest('[data-modal]').remove()">×</button>
+						<div class="modal-order-id">Pedido #${pedido.id}</div>
+						<div class="modal-order-date">${fecha}</div>
+						
+						<table class="modal-products-table">
+							<thead>
+								<tr>
+									<th>Descripción</th>
+									<th style="text-align: center;">Talla</th>
+									<th style="text-align: center;">Cantidad</th>
+									<th style="text-align: right;">Precio</th>
+									<th style="text-align: right;">Total</th>
+								</tr>
+							</thead>
+							<tbody>${productosHtml}</tbody>
+						</table>
+
+						<div class="modal-totals">
+							<div class="modal-totals-box">
+								<div class="modal-total-row">
+									<span>Subtotal:</span>
+									<span>€${(pedido.subtotal || 0).toFixed(2)}</span>
+								</div>
+								<div class="modal-total-row">
+									<span>Envío:</span>
+									<span>€${(pedido.envio || 0).toFixed(2)}</span>
+								</div>
+								<div class="modal-total-row total">
+									<span>TOTAL:</span>
+									<span>€${pedido.total.toFixed(2)}</span>
+								</div>
+							</div>
+						</div>
+			`;
+
+			// Añadir badge de estado de devolución si existe
+			if (estadoDevolucionBadge) {
+				modalHtml += estadoDevolucionBadge;
+			}
+
+			// SEGUNDO: Agregar devolucionHtml si existe
+			if (pedido.devolucion && typeof pedido.devolucion === 'object') {
+				modalHtml += devolucionHtml;
+			}
+
+			// TERCERO: Agregar los botones finales
+			modalHtml += `
+						<div class="modal-actions">
+							${botonesHtml}
+						</div>
+					</div>
+				</div>
+			`;
+
+			const modal = document.createElement('div');
+			modal.innerHTML = modalHtml;
+			document.body.appendChild(modal);
+			
+			// Congelar scroll del body mientras el modal está abierto
+			document.body.style.overflow = 'hidden';
+			
+			// Agregar listener para descongelar cuando se cierre
+			const closeButton = modal.querySelector('.modal-close');
+			const overlay = modal.querySelector('.modal-overlay');
+			
+			const closeModal = () => {
+				document.body.style.overflow = 'auto';
+				modal.remove();
+			};
+			
+			if (closeButton) {
+				closeButton.addEventListener('click', closeModal);
+			}
+			
+			if (overlay) {
+				overlay.addEventListener('click', (e) => {
+					if (e.target === overlay) {
+						closeModal();
+					}
+				});
+			}
+		}
+
+		async function descargarFactura(pedidoId, info) {
+			try {
+				// Determinar si es reembolso
+				let esReembolso = false;
+				if (info && typeof info === 'object') {
+					if (info.estado === 'cancelado' || info.devolucionEstado === 'confirmada') {
+						esReembolso = true;
+					}
+				}
+				
+				const response = await fetch(`/api/download-invoice?id=${pedidoId}&reembolso=${esReembolso}`);
+				if (!response.ok) throw new Error('Error al descargar');
+				const blob = await response.blob();
+				const url = window.URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = `factura-pedido-${pedidoId}${esReembolso ? '-reembolso' : ''}.pdf`;
+				document.body.appendChild(a);
+				a.click();
+				window.URL.revokeObjectURL(url);
+				document.body.removeChild(a);
+			} catch (error) {
+				alert('Error al descargar la factura');
+			}
+		}
+
+		async function cancelarPedidoConfirmar(pedidoId) {
+			const pedido = window.pedidoActualBusqueda;
+			if (!pedido) return;
+			
+			mostrarModalConfirmacion(
+				'¿Cancelar Pedido?',
+				'¿Estás seguro de que deseas cancelar este pedido? Esta acción no se puede deshacer.',
+				async () => {
+					try {
+						const response = await fetch('/api/cancel-order', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({
+								pedidoId: parseInt(pedidoId),
+								email: pedido.email,
+								nombre: pedido.nombre || 'Cliente'
+							})
+						});
+
+						const data = await response.json();
+
+						if (data.success) {
+							mostrarModalExito('Pedido cancelado exitosamente. Te hemos enviado una confirmación por email.');
+						} else {
+							mostrarModalError('Error: ' + (data.message || 'No se pudo cancelar el pedido'));
+						}
+					} catch (error) {
+						console.error('Error:', error);
+						mostrarModalError('Error al cancelar el pedido. Intenta más tarde.');
+					}
+				}
+			);
+		}
+
+		async function solicitarDevolucionConfirmar(pedidoId) {
+			const pedido = window.pedidoActualBusqueda;
+			if (!pedido) return;
+			
+			mostrarModalInputConfirmacion(
+				'Solicitar Devolución',
+				'¿Cuál es el motivo de la devolución?',
+				'Ingresa el motivo aquí...',
+				async (motivo) => {
+					if (!motivo || motivo.trim().length < 10) {
+						mostrarModalError('Por favor, ingresa un motivo válido (mínimo 10 caracteres)');
+						return;
+					}
+					
+					try {
+						const response = await fetch('/api/request-return', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({
+								pedidoId: parseInt(pedidoId),
+								email: pedido.email,
+								nombre: pedido.nombre || 'Cliente',
+								motivo: motivo.trim()
+							})
+						});
+
+						const data = await response.json();
+
+						if (data.success) {
+							mostrarModalExito('Tu solicitud de devolución ha sido registrada exitosamente. Te hemos enviado un email confirmando que tu devolución está en proceso. El equipo de Joyería Galiana se pondrá en contacto contigo dentro de 24 horas.');
+						} else {
+							mostrarModalError('Error: ' + (data.message || 'No se pudo procesar la devolución'));
+						}
+					} catch (error) {
+						console.error('Error:', error);
+						mostrarModalError('Error al procesar la devolución. Intenta más tarde.');
+					}
+				}
+			);
+		}
+
+		function mostrarModalConfirmacion(titulo, mensaje, onConfirm) {
+			const html = `
+				<div id="modal-confirm" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000;">
+					<div class="modal-content" style="background: white; border-radius: 16px; padding: 40px; max-width: 500px; text-align: center;">
+						<h2 style="color: #333; margin-bottom: 16px;">${titulo}</h2>
+						<p style="color: #666; margin-bottom: 32px; line-height: 1.6;">${mensaje}</p>
+						<div style="display: flex; gap: 12px; justify-content: center;">
+							<button style="padding: 12px 24px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;" onclick="this.closest('[id=modal-confirm]').remove();">
+								Cancelar
+							</button>
+							<button style="padding: 12px 24px; background: #d4af37; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;" onclick="this.closest('[id=modal-confirm]').remove(); window.pendingConfirm && window.pendingConfirm();">
+								Confirmar
+							</button>
+						</div>
+					</div>
+				</div>
+			`;
+			window.pendingConfirm = onConfirm;
+			document.body.insertAdjacentHTML('beforeend', html);
+		}
+
+		function mostrarModalInputConfirmacion(titulo, mensaje, placeholder, onConfirm) {
+			const html = `
+				<div id="modal-input" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000;">
+					<div class="modal-content" style="background: white; border-radius: 16px; padding: 40px; max-width: 500px;">
+						<h2 style="color: #333; margin-bottom: 16px; text-align: center;">${titulo}</h2>
+						<p style="color: #666; margin-bottom: 20px; line-height: 1.6; text-align: center;">${mensaje}</p>
+						<textarea id="modal-input-text" placeholder="${placeholder}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; resize: vertical; min-height: 100px;" ></textarea>
+						<div style="display: flex; gap: 12px; justify-content: center; margin-top: 24px;">
+							<button style="padding: 12px 24px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;" onclick="this.closest('[id=modal-input]').remove();">
+								Cancelar
+							</button>
+							<button style="padding: 12px 24px; background: #d4af37; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;" onclick="
+								const valor = document.getElementById('modal-input-text').value;
+								this.closest('[id=modal-input]').remove();
+								window.pendingInputConfirm && window.pendingInputConfirm(valor);
+							">
+								Confirmar
+							</button>
+						</div>
+					</div>
+				</div>
+			`;
+			window.pendingInputConfirm = onConfirm;
+			document.body.insertAdjacentHTML('beforeend', html);
+		}
+
+		function mostrarModalExito(mensaje) {
+			const html = `
+				<div id="modal-exito" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000;">
+					<div class="modal-content" style="background: white; border-radius: 16px; padding: 40px; max-width: 500px; text-align: center;">
+						<div style="font-size: 64px; margin-bottom: 20px;">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 64px; height: 64px; color: #4caf50;">
+								<polyline points="20 6 9 17 4 12"></polyline>
+							</svg>
+						</div>
+						<h2 style="color: #4caf50; margin-bottom: 16px;">¡Éxito!</h2>
+						<p style="color: #666; margin-bottom: 24px; line-height: 1.6;">${mensaje}</p>
+						<button style="padding: 12px 24px; background: #4caf50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;" onclick="this.closest('[id=modal-exito]').remove(); window.location.reload();">
+							Aceptar
+						</button>
+					</div>
+				</div>
+			`;
+			document.body.insertAdjacentHTML('beforeend', html);
+		}
+
+		function mostrarModalError(mensaje) {
+			const html = `
+				<div id="modal-error" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000;">
+					<div class="modal-content" style="background: white; border-radius: 16px; padding: 40px; max-width: 500px; text-align: center;">
+						<div style="font-size: 64px; margin-bottom: 20px;">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 64px; height: 64px; color: #f44336;">
+								<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+							</svg>
+						</div>
+						<h2 style="color: #f44336; margin-bottom: 16px;">Error</h2>
+						<p style="color: #666; margin-bottom: 24px; line-height: 1.6;">${mensaje}</p>
+						<button style="padding: 12px 24px; background: #f44336; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;" onclick="this.closest('[id=modal-error]').remove();">
+							Aceptar
+						</button>
+					</div>
+				</div>
+			`;
+			document.body.insertAdjacentHTML('beforeend', html);
+		}
+	</script>
+</PublicLayout>

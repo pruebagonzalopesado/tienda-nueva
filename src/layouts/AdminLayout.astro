@@ -1,0 +1,80 @@
+---
+import '../styles/global.css';
+
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="manifest" href="/site.webmanifest" />
+		<link rel="icon" type="image/x-icon" href="/favicon.ico?v=4" />
+		<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=4" />
+		<link rel="apple-touch-icon" sizes="180x180" href="/favicon.png?v=4" />
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=4" />
+		<link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=4" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+		<title>{title} | Galiana Admin</title>
+		<script is:inline>
+			// Validar acceso admin ANTES de renderizar
+			function checkAdminAccess() {
+				const currentUserStr = localStorage.getItem('currentUser');
+				if (!currentUserStr) {
+					console.log('❌ No hay usuario en localStorage, redirigiendo a login');
+					window.location.href = '/admin/login';
+					return false;
+				}
+
+				try {
+					const currentUser = JSON.parse(currentUserStr);
+					if (currentUser.rol !== 'admin') {
+						console.log('❌ Usuario no es admin, redirigiendo a inicio');
+						window.location.href = '/';
+						return false;
+					}
+					console.log('✅ Usuario es admin, permitiendo acceso');
+					return true;
+				} catch (e) {
+					console.error('Error parseando currentUser:', e);
+					window.location.href = '/admin/login';
+					return false;
+				}
+			}
+
+			// Ejecutar validación inmediatamente
+			checkAdminAccess();
+		</script>
+	</head>
+	<body class="bg-gray-50">
+		<div class="flex h-screen bg-broken-white">
+			<!-- Sidebar para navegación admin -->
+			<aside class="w-64 bg-navy text-broken-white shadow-lg">
+				<div class="p-6">
+					<h1 class="font-serif text-2xl font-bold">Galiana</h1>
+					<p class="text-sm opacity-75">Panel de Administración</p>
+				</div>
+				<nav class="mt-8">
+					<a href="/admin" class="block px-6 py-3 hover:bg-charcoal transition">Inicio</a>
+					<a href="/admin/productos" class="block px-6 py-3 hover:bg-charcoal transition">Productos</a>
+					<a href="/admin/categorias" class="block px-6 py-3 hover:bg-charcoal transition">Categorías</a>
+					<a href="/admin/inventario" class="block px-6 py-3 hover:bg-charcoal transition">Inventario</a>
+				</nav>
+			</aside>
+
+			<!-- Main Content -->
+			<main class="flex-1 overflow-auto">
+				<div class="container-prose py-8">
+					<slot />
+				</div>
+			</main>
+		</div>
+	</body>
+</html>

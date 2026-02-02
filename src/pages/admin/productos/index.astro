@@ -1,0 +1,60 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Gestión de Productos">
+  <div class="space-y-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Productos</h1>
+        <p class="text-gray-600 mt-1">Administra todos los productos de tu tienda</p>
+      </div>
+      <a
+        href="/admin/productos/nuevo"
+        class="px-4 py-2 bg-amber-900 text-white rounded-lg hover:bg-amber-800 font-medium"
+      >
+        + Nuevo Producto
+      </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+      <table class="w-full">
+        <thead class="bg-gray-100 border-b">
+          <tr>
+            <th class="px-6 py-3 text-left text-sm font-medium text-gray-900">
+              Producto
+            </th>
+            <th class="px-6 py-3 text-left text-sm font-medium text-gray-900">
+              Precio
+            </th>
+            <th class="px-6 py-3 text-left text-sm font-medium text-gray-900">
+              Stock
+            </th>
+            <th class="px-6 py-3 text-left text-sm font-medium text-gray-900">
+              Acciones
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <tr>
+            <td class="px-6 py-4">Collar Minimalista</td>
+            <td class="px-6 py-4">$299.99</td>
+            <td class="px-6 py-4">
+              <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
+                12
+              </span>
+            </td>
+            <td class="px-6 py-4 space-x-2">
+              <a href="#" class="text-amber-900 hover:text-amber-800 text-sm font-medium">
+                Editar
+              </a>
+              <button class="text-red-600 hover:text-red-700 text-sm font-medium">
+                Eliminar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</AdminLayout>

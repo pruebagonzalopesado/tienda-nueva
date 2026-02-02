@@ -1,0 +1,2255 @@
+---
+import PublicLayout from "../layouts/PublicLayout.astro";
+---
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<PublicLayout title="Mis Compras - Joyería Galiana">
+    <style is:global>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+        .compras-page {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #fdfbf7 0%, #f8f6f0 100%);
+            padding: 100px 0 140px;
+        }
+
+        .compras-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header Premium */
+        .page-header {
+            text-align: center;
+            margin-bottom: 72px;
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(212, 175, 55, 0.06) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            padding: 10px 20px;
+            border-radius: 50px;
+            margin-bottom: 24px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #b8942e;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .header-badge svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .page-header h1 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 56px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin: 0 0 16px;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+        }
+
+        .page-header .subtitle {
+            font-size: 18px;
+            color: #888;
+            margin: 0;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+
+        /* Estado Mensaje Premium */
+        .estado-panel {
+            background: white;
+            border-radius: 32px;
+            padding: 100px 60px;
+            text-align: center;
+            box-shadow: 
+                0 4px 6px rgba(0, 0, 0, 0.02),
+                0 12px 40px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .estado-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 4px;
+            background: linear-gradient(90deg, #d4af37, #f4d03f, #d4af37);
+            border-radius: 0 0 4px 4px;
+        }
+
+        .estado-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #fdfbf7 0%, #f5f2ea 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 36px;
+            font-size: 56px;
+            box-shadow: 0 8px 32px rgba(212, 175, 55, 0.1);
+            border: 2px solid rgba(212, 175, 55, 0.1);
+        }
+
+        .estado-panel h2 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 36px;
+            color: #1a1a1a;
+            margin: 0 0 16px;
+            font-weight: 600;
+        }
+
+        .estado-panel p {
+            font-size: 17px;
+            color: #777;
+            margin: 0 0 40px;
+            line-height: 1.8;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #d4af37 0%, #c9a227 100%);
+            color: white;
+            text-decoration: none;
+            padding: 18px 40px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            box-shadow: 
+                0 4px 16px rgba(212, 175, 55, 0.3),
+                0 8px 32px rgba(212, 175, 55, 0.2);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 
+                0 8px 24px rgba(212, 175, 55, 0.4),
+                0 16px 48px rgba(212, 175, 55, 0.25);
+        }
+
+        /* Filtros y búsqueda */
+        .filtros-container {
+            margin-bottom: 32px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .filtros-busqueda {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 0 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus-within {
+            border-color: #d4af37;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+            background: white;
+        }
+
+        .search-box svg {
+            width: 20px;
+            height: 20px;
+            color: #999;
+            flex-shrink: 0;
+            margin-right: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 12px 0;
+            font-size: 14px;
+            color: #333;
+            outline: none;
+        }
+
+        .search-box input::placeholder {
+            color: #999;
+        }
+
+        .filtro-estado {
+            min-width: 200px;
+        }
+
+        .filtro-estado select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #333;
+            background: #f9f9f9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filtro-estado select:focus {
+            border-color: #d4af37;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+            background: white;
+            outline: none;
+        }
+
+        .filtro-estado select:hover {
+            border-color: #d4af37;
+        }
+
+        .btn-primary svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Grid de Pedidos - LISTA VERTICAL */
+        .pedidos-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Tarjeta de Pedido - LISTA */
+        .pedido-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            gap: 20px;
+            cursor: pointer;
+        }
+
+        .pedido-card:hover {
+            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.12);
+            border-color: rgba(212, 175, 55, 0.2);
+        }
+
+        /* Imagen Premium */
+        .pedido-media {
+            width: 100px;
+            height: 100px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #f8f6f0 0%, #efe9db 100%);
+            flex-shrink: 0;
+        }
+
+        /* Carrusel de imágenes */
+        .pedido-carousel {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .carousel-track {
+            display: flex;
+            height: 100%;
+            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .carousel-slide {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .pedido-card:hover .carousel-slide img {
+            transform: scale(1.05);
+        }
+
+        /* Flechas de navegación */
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .pedido-card:hover .carousel-btn {
+            opacity: 1;
+        }
+
+        .carousel-btn:hover {
+            background: white;
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .carousel-btn svg {
+            width: 16px;
+            height: 16px;
+            color: #1a1a1a;
+        }
+
+        .carousel-prev {
+            left: 12px;
+        }
+
+        .carousel-next {
+            right: 12px;
+        }
+
+        /* Indicadores de puntos */
+        .carousel-dots {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 5;
+        }
+
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0;
+        }
+
+        .carousel-dot.active {
+            background: white;
+            transform: scale(1.2);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .carousel-dot:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .pedido-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .pedido-card:hover .pedido-media img {
+            transform: scale(1.1);
+        }
+
+        .btn-cancelar-tarjeta {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-cancelar-tarjeta:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+        }
+
+        .btn-cancelar-tarjeta:active {
+            transform: translateY(0);
+        }
+
+        .btn-devolucion-tarjeta {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-devolucion-tarjeta:hover {
+            background: #1976d2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn-devolucion-tarjeta:active {
+            transform: translateY(0);
+        }
+
+        .pedido-media-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #f8f6f0 0%, #efe9db 100%);
+        }
+
+        .pedido-media-placeholder span {
+            font-size: 64px;
+            filter: grayscale(20%);
+        }
+
+        /* Overlays en imagen */
+        .pedido-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            z-index: 2;
+        }
+
+        .pedido-id {
+            background: rgba(26, 26, 26, 0.9);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pedido-status {
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            backdrop-filter: blur(12px);
+            text-transform: none !important;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .status-confirmado {
+            background: rgba(34, 197, 94, 0.95);
+            color: white;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+
+        .status-pendiente {
+            background: rgba(251, 191, 36, 0.95);
+            color: #1a1a1a;
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+        }
+
+        .status-cancelado {
+            background: rgba(239, 68, 68, 0.95);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .status-enviado {
+            background: rgba(59, 130, 246, 0.95);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .status-entregado {
+            background: rgba(76, 175, 80, 0.95);
+            color: white;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .status-devolucion_proceso {
+            background: rgba(255, 193, 7, 0.95);
+            color: #1a1a1a;
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        }
+
+        .status-devolucion_aceptada {
+            background: rgba(34, 197, 94, 0.95);
+            color: white;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+
+        .status-devolucion_cancelada {
+            background: rgba(239, 68, 68, 0.95);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Contenido de la tarjeta */
+        .pedido-body {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .pedido-info {
+            flex: 1;
+        }
+
+        .pedido-id {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .pedido-status.status-confirmado {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .pedido-status.status-preparando {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .pedido-status.status-enviado {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .pedido-status.status-entregado {
+            background: #f3e5f5;
+            color: #6a1b9a;
+        }
+
+        .pedido-status.status-cancelado {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .pedido-status.status-devolucion_proceso {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .pedido-status.status-devolucion_aceptada {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .pedido-status.status-devolucion_cancelada {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .pedido-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .pedido-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pedido-meta-item svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Total */
+        .pedido-precio {
+            text-align: right;
+            min-width: 150px;
+        }
+
+        .pedido-total {
+            font-size: 24px;
+            font-weight: 700;
+            color: #d4af37;
+            margin-bottom: 8px;
+        }
+
+        .pedido-acciones {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .btn-cancelar {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancelar:hover {
+            background: #cc0000;
+        }
+
+        .btn-cancelar:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Lista de productos */
+        .productos-lista {
+            margin-bottom: 24px;
+        }
+
+        .producto-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 14px 0;
+            border-bottom: 1px solid #f8f8f8;
+        }
+
+        .producto-row:last-child {
+            border-bottom: none;
+        }
+
+        .producto-detalles {
+            flex: 1;
+            padding-right: 16px;
+        }
+
+        .producto-nombre {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .producto-qty {
+            font-size: 12px;
+            color: #aaa;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .producto-qty::before {
+            content: '';
+            width: 4px;
+            height: 4px;
+            background: #d4af37;
+            border-radius: 50%;
+        }
+
+        .producto-precio {
+            font-size: 15px;
+            font-weight: 700;
+            color: #d4af37;
+            white-space: nowrap;
+        }
+
+        /* Footer con total */
+        .pedido-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-top: 24px;
+            border-top: 2px solid #f0f0f0;
+            margin-top: 8px;
+        }
+
+        .total-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        .total-amount {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            line-height: 1;
+        }
+
+        .total-currency {
+            font-size: 18px;
+            color: #d4af37;
+            margin-right: 2px;
+        }
+
+        /* Línea dorada decorativa */
+        .pedido-card::after {
+            display: none;
+        }
+
+        .pedido-card:hover::after {
+            display: none;
+        }
+
+        /* Loading Skeleton Premium */
+        .skeleton-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+
+        .skeleton-card {
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+        }
+
+        .skeleton-media {
+            height: 240px;
+            background: linear-gradient(110deg, #f5f5f5 25%, #ececec 37%, #f5f5f5 63%);
+            background-size: 200% 100%;
+            animation: shimmer 1.8s ease-in-out infinite;
+        }
+
+        .skeleton-body {
+            padding: 28px;
+        }
+
+        .skeleton-line {
+            height: 14px;
+            background: linear-gradient(110deg, #f5f5f5 25%, #ececec 37%, #f5f5f5 63%);
+            background-size: 200% 100%;
+            animation: shimmer 1.8s ease-in-out infinite;
+            border-radius: 8px;
+            margin-bottom: 14px;
+        }
+
+        .skeleton-line.w-40 { width: 40%; }
+        .skeleton-line.w-60 { width: 60%; }
+        .skeleton-line.w-80 { width: 80%; }
+        .skeleton-line.w-full { width: 100%; }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .pedidos-grid {
+                gap: 24px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .compras-page {
+                padding: 80px 0 100px;
+            }
+
+            .page-header h1 {
+                font-size: 40px;
+            }
+
+            .page-header {
+                margin-bottom: 48px;
+            }
+
+            .pedido-card {
+                flex-direction: row;
+                align-items: center;
+                padding: 12px;
+                gap: 12px;
+            }
+
+            .pedido-media {
+                width: 80px;
+                height: 80px;
+                border-radius: 8px;
+                flex-shrink: 0;
+            }
+
+            .pedido-body {
+                width: auto;
+                flex: 1;
+                flex-direction: row;
+                gap: 12px;
+                flex-wrap: wrap;
+                align-items: center;
+            }
+
+            .pedido-header {
+                flex: 1;
+                min-width: 120px;
+            }
+
+            .pedido-header h3 {
+                font-size: 0.95rem;
+                margin: 0 0 4px 0;
+            }
+
+            .pedido-header p {
+                font-size: 0.8rem;
+                margin: 0;
+            }
+
+            .estado-panel {
+                padding: 60px 32px;
+                border-radius: 24px;
+            }
+
+            .estado-panel h2 {
+                font-size: 28px;
+            }
+
+            .estado-icon {
+                width: 100px;
+                height: 100px;
+                font-size: 48px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 32px;
+            }
+
+            .header-badge {
+                font-size: 10px;
+                padding: 8px 16px;
+            }
+
+            .pedido-card {
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .pedido-media {
+                width: 70px;
+                height: 70px;
+                border-radius: 6px;
+            }
+
+            .pedido-body {
+                gap: 8px;
+            }
+
+            .pedido-header h3 {
+                font-size: 0.8rem;
+            }
+
+            .pedido-header p {
+                font-size: 0.7rem;
+            }
+
+            .pedido-info-row {
+                font-size: 0.75rem;
+                margin: 2px 0;
+            }
+
+            .btn-primary {
+                padding: 12px 24px;
+                font-size: 14px;
+            }
+        }
+    </style>
+
+    <main class="compras-page">
+        <div class="compras-wrapper">
+            <header class="page-header">
+                <div class="header-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                    </svg>
+                    Historial de Pedidos
+                </div>
+                <h1>Mis Compras</h1>
+                <p class="subtitle">Consulta el estado y detalles de todos tus pedidos</p>
+            </header>
+
+            <div class="filtros-container">
+                <div class="filtros-busqueda">
+                    <div class="search-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" id="busqueda-pedidos" placeholder="Buscar por ID o cliente..." />
+                    </div>
+                    <div class="filtro-estado">
+                        <select id="filtro-estado">
+                            <option value="">Todos los estados</option>
+                            <option value="confirmado">Confirmado</option>
+                            <option value="enviado">Enviado</option>
+                            <option value="entregado">Entregado</option>
+                            <option value="cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="compras-content">
+                <div class="skeleton-grid">
+                    <div class="skeleton-card">
+                        <div class="skeleton-media"></div>
+                        <div class="skeleton-body">
+                            <div class="skeleton-line w-40"></div>
+                            <div class="skeleton-line w-80"></div>
+                            <div class="skeleton-line w-60"></div>
+                            <div class="skeleton-line w-full"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton-media"></div>
+                        <div class="skeleton-body">
+                            <div class="skeleton-line w-40"></div>
+                            <div class="skeleton-line w-80"></div>
+                            <div class="skeleton-line w-60"></div>
+                            <div class="skeleton-line w-full"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton-media"></div>
+                        <div class="skeleton-body">
+                            <div class="skeleton-line w-40"></div>
+                            <div class="skeleton-line w-80"></div>
+                            <div class="skeleton-line w-60"></div>
+                            <div class="skeleton-line w-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Detalles del Pedido -->
+    <div id="modal-detalles" class="modal" style="display: none;">
+        <div class="modal-overlay" onclick="cerrarDetallesPedido()"></div>
+        <div class="modal-content">
+            <button class="modal-close" onclick="cerrarDetallesPedido()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div id="modal-body">
+                <!-- Contenido dinámico -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación de Cancelación -->
+    <div id="modal-confirm-cancelar" class="modal" style="display: none;">
+        <div class="modal-overlay" onclick="cerrarConfirmacionCancelacion()"></div>
+        <div class="modal-content">
+            <h2 style="margin-bottom: 16px; color: #333;">¿Cancelar Pedido?</h2>
+            <p style="color: #666; margin-bottom: 24px; line-height: 1.6;">
+                ¿Estás seguro de que deseas cancelar este pedido? Se restaurará el stock de los productos y recibirás una confirmación por correo electrónico.
+            </p>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-primary" onclick="cerrarConfirmacionCancelacion()">
+                    Atrás
+                </button>
+                <button class="modal-btn modal-btn-danger" onclick="confirmarCancelacion()">
+                    Sí, Cancelar Pedido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación de Devolución -->
+    <div id="modal-confirm-devolucion" class="modal" style="display: none;">
+        <div class="modal-overlay" onclick="cerrarConfirmacionDevolucion()"></div>
+        <div class="modal-content">
+            <h2 style="margin-bottom: 16px; color: #333;">Solicitar Devolución</h2>
+            <p style="color: #666; margin-bottom: 24px; line-height: 1.6;">
+                Por favor, cuéntanos el motivo de tu devolución. Tu solicitud será procesada en 24 horas.
+            </p>
+            
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">
+                    Motivo de la devolución *
+                </label>
+                <textarea 
+                    id="motivo-devolucion"
+                    placeholder="Por favor, describe el motivo de tu devolución (calidad, defecto, cambio de opinión, etc.)"
+                    style="
+                        width: 100%;
+                        min-height: 120px;
+                        padding: 12px;
+                        border: 2px solid #e0e0e0;
+                        border-radius: 8px;
+                        font-family: Arial, sans-serif;
+                        font-size: 14px;
+                        resize: vertical;
+                        box-sizing: border-box;
+                        transition: border-color 0.3s ease;
+                    "
+                    onkeydown="document.getElementById('motivo-devolucion').style.borderColor = '#d4af37';"
+                    onblur="document.getElementById('motivo-devolucion').style.borderColor = '#e0e0e0';"
+                ></textarea>
+                <small style="color: #999; display: block; margin-top: 4px;">
+                    Mínimo 10 caracteres
+                </small>
+            </div>
+
+            <div id="error-motivo" style="display: none; background: #ffebee; color: #c62828; padding: 12px; border-radius: 4px; margin-bottom: 16px; font-size: 14px;"></div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-primary" onclick="cerrarConfirmacionDevolucion()">
+                    Atrás
+                </button>
+                <button class="modal-btn" style="background: #2196f3; color: white;" onclick="confirmarDevolucion()">
+                    Enviar Solicitud
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style is:inline>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            cursor: pointer;
+        }
+
+        .modal-content {
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #f5f5f5;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: #e8e8e8;
+        }
+
+        .modal-header {
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .modal-order-id {
+            font-size: 24px;
+            font-weight: 700;
+            color: #d4af37;
+        }
+
+        .modal-order-status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: none !important;
+        }
+
+        .modal-order-status.confirmado {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .modal-order-status.enviado {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+
+        .modal-order-status.entregado {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .modal-order-status.cancelado {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .modal-order-status.devolucion_proceso {
+            background: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+        }
+
+        .modal-products {
+            margin-bottom: 30px;
+            border-top: 1px solid #f0f0f0;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 20px 0;
+        }
+
+        .modal-product-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #f5f5f5;
+            align-items: flex-start;
+        }
+
+        .modal-product-item:last-child {
+            border-bottom: none;
+        }
+
+        .modal-product-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .modal-product-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .modal-product-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 15px;
+        }
+
+        .modal-product-qty {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .modal-product-price {
+            font-weight: 700;
+            color: #d4af37;
+            font-size: 16px;
+        }
+
+        .modal-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            font-size: 14px;
+        }
+
+        .modal-info-label {
+            color: #999;
+        }
+
+        .modal-info-value {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .modal-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f6f0 0%, #efe9db 100%);
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .modal-total-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-total-amount {
+            font-size: 28px;
+            font-weight: 700;
+            color: #d4af37;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn-primary {
+            background: #d4af37;
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            background: #c9a027;
+        }
+
+        .modal-btn-danger {
+            background: #ffebee;
+            color: #f44336;
+        }
+
+        .modal-btn-danger:hover {
+            background: #ffcdd2;
+        }
+
+        .modal-btn-disabled {
+            background: #e8e8e8;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                padding: 30px 20px;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+            }
+
+            .modal-btn {
+                width: 100%;
+            }
+        }
+    </style>
+
+    <script is:inline>
+        // Almacenar datos de pedidos globalmente
+        window.pedidosData = {};
+
+        async function cargarCompras() {
+            const container = document.getElementById('compras-content');
+            
+            try {
+                let intentos = 0;
+                while (!window.supabaseClient && intentos < 30) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    intentos++;
+                }
+
+                if (!window.supabaseClient) {
+                    throw new Error('Error de conexión');
+                }
+
+                const supabase = window.supabaseClient;
+                const { data: { session } } = await supabase.auth.getSession();
+
+                if (!session || !session.user) {
+                    container.innerHTML = `
+                        <div class="estado-panel">
+                            <div class="estado-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 60px; height: 60px;">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                                </svg>
+                            </div>
+                            <h2>Inicia sesión para continuar</h2>
+                            <p>Para ver tu historial de compras y seguimiento de pedidos, primero debes acceder a tu cuenta.</p>
+                            <button onclick="if(window.openLoginModal) window.openLoginModal(); else window.location.href='/admin/login';" class="btn-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                                Iniciar Sesión
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const usuarioId = session.user.id;
+                const { data: pedidos, error: dbError } = await supabase
+                    .from('pedidos')
+                    .select('*')
+                    .eq('usuario_id', usuarioId)
+                    .order('fecha_creacion', { ascending: false });
+
+                if (dbError) {
+                    throw new Error('No se pudieron cargar los pedidos');
+                }
+
+                // Obtener todas las devoluciones para este usuario
+                const { data: devoluciones } = await supabase
+                    .from('devoluciones')
+                    .select('*');
+
+                // Crear un mapa de devoluciones por pedido
+                const devolucionesPorPedido = {};
+                if (devoluciones) {
+                    devoluciones.forEach(dev => {
+                        devolucionesPorPedido[dev.pedido_id] = dev;
+                    });
+                }
+
+                if (!pedidos || pedidos.length === 0) {
+                    container.innerHTML = `
+                        <div class="estado-panel">
+                            <div class="estado-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 60px; height: 60px;">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                </svg>
+                            </div>
+                            <h2>Tu historial está vacío</h2>
+                            <p>Aún no has realizado ninguna compra. Descubre nuestra exclusiva colección de joyas artesanales.</p>
+                            <a href="/productos" class="btn-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                Explorar Colección
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = `<div class="pedidos-grid" id="pedidos-grid">`;
+                const ITEMS_POR_PAGINA = 10;
+                let paginaActual = 1;
+                const totalPaginas = Math.ceil(pedidos.length / ITEMS_POR_PAGINA);
+
+                // Buscar todas las imágenes de productos
+                let productosPorNombre = {};
+                const { data: todosProductos } = await supabase
+                    .from('products')
+                    .select('id, imagen_url, nombre');
+                
+                if (todosProductos) {
+                    todosProductos.forEach(p => {
+                        let imgUrl = '';
+                        if (p.imagen_url) {
+                            try {
+                                const imagenes = JSON.parse(p.imagen_url);
+                                imgUrl = Array.isArray(imagenes) && imagenes.length > 0 ? imagenes[0] : p.imagen_url;
+                            } catch {
+                                imgUrl = p.imagen_url;
+                            }
+                        }
+                        if (p.nombre) {
+                            productosPorNombre[p.nombre.toLowerCase().trim()] = imgUrl;
+                        }
+                    });
+                }
+
+                // Ordenar pedidos por fecha (más reciente primero)
+                pedidos.sort((a, b) => {
+                    return new Date(b.fecha_creacion) - new Date(a.fecha_creacion);
+                });
+
+                for (let indice = 0; indice < pedidos.length; indice++) {
+                    const pedido = pedidos[indice];
+                    // Calcular página para este pedido (1-indexed)
+                    const paginaPedido = Math.floor(indice / ITEMS_POR_PAGINA) + 1;
+                    const esProximaPagina = indice >= ITEMS_POR_PAGINA;
+                    
+                    // Cerrar grid anterior si es nueva página
+                    if (esProximaPagina && indice % ITEMS_POR_PAGINA === 0) {
+                        html += `</div><div class="pedidos-grid" id="pagina-${paginaPedido}" style="display: none;">`;
+                    }
+                    const fecha = new Date(pedido.fecha_creacion).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+
+                    // Intentar obtener items de diferentes campos posibles
+                    let items = [];
+                    if (pedido.items) {
+                        items = typeof pedido.items === 'string' ? JSON.parse(pedido.items) : pedido.items;
+                    } else if (pedido.productos_json) {
+                        items = typeof pedido.productos_json === 'string' ? JSON.parse(pedido.productos_json) : pedido.productos_json;
+                    }
+
+                    // Enriquecer items con imágenes
+                    items = items.map(item => {
+                        let imagen = item.imagen || item.imagen_url || item.image || '';
+                        if (!imagen) {
+                            const nombreBuscar = item.nombre ? item.nombre.toLowerCase().trim() : '';
+                            imagen = productosPorNombre[nombreBuscar] || '';
+                        }
+                        return {
+                            ...item,
+                            imagen: imagen
+                        };
+                    });
+
+                    // Obtener primera imagen del pedido
+                    let imagenPrincipal = '';
+                    if (items.length > 0) {
+                        imagenPrincipal = items[0].imagen || '';
+                    }
+
+                    const estadoRaw = pedido.estado ? pedido.estado.toLowerCase().replace(/\s+/g, '_') : 'pendiente';
+                    
+                    // Verificar si hay devolución para este pedido
+                    const devolucion = devolucionesPorPedido[pedido.id];
+                    let estadoFinal = estadoRaw;
+                    let estadoTexto = '';
+                    
+                    // Si hay devolución, usar su estado en lugar del del pedido
+                    if (devolucion) {
+                        if (devolucion.estado === 'confirmada') {
+                            estadoFinal = 'devolucion_aceptada';
+                            estadoTexto = 'Devolución Aceptada';
+                        } else if (devolucion.estado === 'rechazada') {
+                            estadoFinal = 'devolucion_cancelada';
+                            estadoTexto = 'Devolución Cancelada';
+                        } else if (devolucion.estado === 'procesado') {
+                            estadoFinal = 'devolucion_proceso';
+                            estadoTexto = 'Devolución en Proceso';
+                        }
+                    } else {
+                        // Mapeo de estados si no hay devolución
+                        const estadosMap = {
+                            'confirmado': 'Confirmado',
+                            'enviado': 'Enviado',
+                            'entregado': 'Entregado',
+                            'cancelado': 'Cancelado',
+                            'devolucion_proceso': 'Devolución en Proceso',
+                            'pendiente': 'Pendiente'
+                        };
+                        estadoTexto = estadosMap[estadoRaw] || (pedido.estado ? pedido.estado.charAt(0).toUpperCase() + pedido.estado.slice(1) : 'Pendiente');
+                    }
+                    
+                    // Verificar si se puede cancelar
+                    const fechaCreacion = new Date(pedido.fecha_creacion);
+                    const ahora = new Date();
+                    const diferenciaMilisegundos = ahora - fechaCreacion;
+                    const diferenciasHoras = diferenciaMilisegundos / (1000 * 60 * 60);
+                    const diferenciaDias = diferenciaMilisegundos / (1000 * 60 * 60 * 24);
+                    const puedeCancelar = estadoRaw === 'confirmado' && diferenciasHoras < 2;
+                    const puedeSolicitarDevolucion = estadoRaw === 'entregado' && diferenciaDias < 15;
+                    
+                    // Almacenar datos del pedido en variable global
+                    window.pedidosData[pedido.id] = {
+                        id: pedido.id,
+                        estado: estadoFinal,
+                        estado_texto: estadoTexto,
+                        fecha: fecha,
+                        fecha_creacion: pedido.fecha_creacion,
+                        items: items,
+                        total: pedido.total,
+                        subtotal: pedido.subtotal,
+                        envio: pedido.envio,
+                        email: pedido.email,
+                        nombre: pedido.nombre,
+                        devolucion: devolucion || null
+                    };
+                    
+                    let botonCancelarHtml = '';
+                    if (puedeCancelar) {
+                        botonCancelarHtml = `
+                            <button class="btn-cancelar-tarjeta" onclick="event.stopPropagation(); cancelarPedidoConfirmar(${pedido.id}, '${pedido.email}', '${pedido.nombre}')">
+                                Cancelar Pedido
+                            </button>
+                        `;
+                    }
+
+                    let botonDevolucionHtml = '';
+                    if (puedeSolicitarDevolucion) {
+                        botonDevolucionHtml = `
+                            <button class="btn-devolucion-tarjeta" onclick="event.stopPropagation(); solicitarDevolucionConfirmar(${pedido.id}, '${pedido.email}', '${pedido.nombre}')">
+                                Solicitar Devolución
+                            </button>
+                        `;
+                    }
+                    
+                    html += `
+                        <article class="pedido-card" onclick="abrirDetallesPedido(${pedido.id})">
+                            <div class="pedido-media">
+                                ${imagenPrincipal ? `<img src="${imagenPrincipal}" alt="Pedido #${pedido.id}" loading="lazy" />` : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 50px; height: 50px; color: #d4af37;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg></div>`}
+                            </div>
+                            <div class="pedido-body">
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; color: #333; margin-bottom: 8px; font-size: 15px;">Pedido #${pedido.id}</div>
+                                    <div style="font-size: 13px; color: #999; margin-bottom: 8px;">${fecha}</div>
+                                    <span class="pedido-status status-${estadoFinal}" style="text-transform: none;">${estadoTexto}</span>
+                                    <div style="font-size: 13px; color: #999; margin-top: 8px;">
+                                        ${items.length} producto${items.length !== 1 ? 's' : ''}
+                                    </div>
+                                </div>
+                                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                                    <div class="pedido-precio">
+                                        €${pedido.total.toFixed(2)}
+                                    </div>
+                                    ${botonCancelarHtml}
+                                    ${botonDevolucionHtml}
+                                </div>
+                            </div>
+                        </article>
+                    `;
+                }
+
+                html += `</div>`;
+                
+                // Agregar controles de paginación si hay más de una página
+                if (totalPaginas > 1) {
+                    html += `
+                        <div id="pagination-controls" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 40px; flex-wrap: wrap;">
+                            <button id="prev-btn" onclick="cambiarPagina(-1)" style="padding: 10px 16px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                                Anterior
+                            </button>
+                            <div id="pagination-info" style="font-size: 14px; color: #666; min-width: 120px; text-align: center;">
+                                Página <span id="current-page">1</span> de ${totalPaginas}
+                            </div>
+                            <button id="next-btn" onclick="cambiarPagina(1)" style="padding: 10px 16px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                                Siguiente
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                container.innerHTML = html;
+                
+                // Guardar información de paginación en window
+                window.paginacionInfo = {
+                    paginaActual: 1,
+                    totalPaginas: totalPaginas,
+                    itemsPorPagina: ITEMS_POR_PAGINA
+                };
+
+                // Corregir textos de estado en las tarjetas
+                const statusBadges = document.querySelectorAll('.pedido-status');
+                statusBadges.forEach(badge => {
+                    const text = badge.textContent.trim();
+                    const classMatch = badge.className.match(/status-(\w+)/);
+                    if (classMatch) {
+                        const estadoRaw = classMatch[1];
+                        const estadosMap = {
+                            'confirmado': 'Confirmado',
+                            'enviado': 'Enviado',
+                            'entregado': 'Entregado',
+                            'cancelado': 'Cancelado',
+                            'devolucion_proceso': 'Devolución en Proceso',
+                            'devolucion_aceptada': 'Devolución Aceptada',
+                            'devolucion_cancelada': 'Devolución Cancelada',
+                            'pendiente': 'Pendiente'
+                        };
+                        const textoCorreo = estadosMap[estadoRaw] || text;
+                        badge.textContent = textoCorreo;
+                    }
+                });
+
+            } catch (err) {
+                container.innerHTML = `
+                    <div class="estado-panel">
+                        <div class="estado-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 60px; height: 60px;">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                            </svg>
+                        </div>
+                        <h2>Algo salió mal</h2>
+                        <p>${err.message}. Por favor, inténtalo de nuevo más tarde.</p>
+                        <a href="/" class="btn-primary">Volver al inicio</a>
+                    </div>
+                `;
+            }
+        }
+
+        // Función para cambiar de página
+        function cambiarPagina(direccion) {
+            if (!window.paginacionInfo) return;
+            
+            const nuevaPagina = window.paginacionInfo.paginaActual + direccion;
+            
+            // Validar que esté dentro del rango
+            if (nuevaPagina < 1 || nuevaPagina > window.paginacionInfo.totalPaginas) return;
+            
+            // Ocultar página actual
+            const gridActual = document.getElementById('pagina-' + window.paginacionInfo.paginaActual);
+            if (!gridActual && window.paginacionInfo.paginaActual === 1) {
+                document.getElementById('pedidos-grid').style.display = 'none';
+            } else if (gridActual) {
+                gridActual.style.display = 'none';
+            }
+            
+            // Mostrar nueva página
+            const gridNuevo = document.getElementById('pagina-' + nuevaPagina);
+            if (!gridNuevo && nuevaPagina === 1) {
+                document.getElementById('pedidos-grid').style.display = 'grid';
+            } else if (gridNuevo) {
+                gridNuevo.style.display = 'grid';
+            }
+            
+            // Actualizar info de paginación
+            window.paginacionInfo.paginaActual = nuevaPagina;
+            document.getElementById('current-page').textContent = nuevaPagina;
+            
+            // Actualizar estado de botones
+            document.getElementById('prev-btn').disabled = nuevaPagina === 1;
+            document.getElementById('next-btn').disabled = nuevaPagina === window.paginacionInfo.totalPaginas;
+            
+            // Hacer scroll hacia arriba
+            document.getElementById('compras-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', cargarCompras);
+        } else {
+            cargarCompras();
+        }
+
+        // Función para filtrar y buscar pedidos
+        function aplicarFiltrosYBusqueda() {
+            const busquedaInput = document.getElementById('busqueda-pedidos');
+            const filtroEstadoSelect = document.getElementById('filtro-estado');
+            const tarjetas = document.querySelectorAll('.pedido-card');
+            const ITEMS_POR_PAGINA = 10;
+
+            if (!busquedaInput || !filtroEstadoSelect) return;
+
+            const busqueda = busquedaInput.value.toLowerCase().trim();
+            const estadoFiltro = filtroEstadoSelect.value.toLowerCase().trim();
+
+            let visibles = 0;
+            const tarjetasFiltradas = [];
+
+            tarjetas.forEach(tarjeta => {
+                const onclick = tarjeta.getAttribute('onclick');
+                const match = onclick.match(/abrirDetallesPedido\((\d+)\)/);
+                if (!match) return;
+
+                const pedidoId = parseInt(match[1]);
+                const pedidoData = window.pedidosData[pedidoId];
+
+                if (!pedidoData) {
+                    tarjeta.style.display = 'none';
+                    return;
+                }
+
+                // Filtrar por estado
+                const cumpleEstado = !estadoFiltro || pedidoData.estado === estadoFiltro;
+
+                // Filtrar por búsqueda (ID o cliente)
+                const cumplebusqueda =
+                    !busqueda ||
+                    pedidoData.id.toString().includes(busqueda) ||
+                    pedidoData.nombre.toLowerCase().includes(busqueda);
+
+                if (cumpleEstado && cumplebusqueda) {
+                    tarjetasFiltradas.push(tarjeta);
+                    visibles++;
+                }
+            });
+
+            // Recalcular paginación basándose en los resultados filtrados
+            const totalPaginasCalculadas = Math.ceil(visibles / ITEMS_POR_PAGINA);
+            
+            // Ocultar todas las tarjetas y grillas de página
+            tarjetas.forEach(tarjeta => {
+                tarjeta.style.display = 'none';
+            });
+            
+            const todasLasGrillas = document.querySelectorAll('[id^="pagina-"]');
+            todasLasGrillas.forEach(grilla => {
+                grilla.style.display = 'none';
+            });
+
+            // Mostrar solo tarjetas filtradas y reorganizar en páginas
+            if (visibles > 0) {
+                // Reorganizar tarjetas filtradas en páginas
+                for (let i = 0; i < tarjetasFiltradas.length; i++) {
+                    const numeroPagina = Math.floor(i / ITEMS_POR_PAGINA);
+                    const grilla = document.getElementById(`pagina-${numeroPagina}`);
+                    
+                    if (grilla) {
+                        if (grilla.style.display === 'none') {
+                            grilla.style.display = 'grid';
+                        }
+                    }
+                    
+                    tarjetasFiltradas[i].style.display = 'flex';
+                }
+
+                // Actualizar información de paginación
+                window.paginacionInfo = {
+                    paginaActual: 1,
+                    totalPaginas: totalPaginasCalculadas,
+                    itemsPorPagina: ITEMS_POR_PAGINA
+                };
+
+                // Mostrar solo la página 1
+                todasLasGrillas.forEach((grilla, index) => {
+                    if (index === 0) {
+                        grilla.style.display = 'grid';
+                    } else {
+                        grilla.style.display = 'none';
+                    }
+                });
+
+                // Actualizar controles de paginación
+                const paginationControls = document.getElementById('pagination-controls');
+                const currentPageSpan = document.getElementById('current-page');
+                
+                if (paginationControls && currentPageSpan) {
+                    if (totalPaginasCalculadas > 1) {
+                        paginationControls.style.display = 'flex';
+                        currentPageSpan.textContent = '1';
+                        
+                        const paginationInfo = paginationControls.querySelector('#pagination-info');
+                        if (paginationInfo) {
+                            paginationInfo.innerHTML = `Página <span id="current-page">1</span> de ${totalPaginasCalculadas}`;
+                        }
+
+                        // Actualizar estado de botones
+                        const prevBtn = document.getElementById('prev-btn');
+                        const nextBtn = document.getElementById('next-btn');
+                        
+                        if (prevBtn) prevBtn.disabled = true;
+                        if (nextBtn) nextBtn.disabled = totalPaginasCalculadas === 1;
+                    } else {
+                        paginationControls.style.display = 'none';
+                    }
+                }
+            }
+
+            // Mostrar mensaje si no hay resultados
+            const container = document.getElementById('compras-content');
+            let mensajeNoResultados = document.getElementById('no-resultados');
+
+            if (visibles === 0) {
+                if (!mensajeNoResultados) {
+                    mensajeNoResultados = document.createElement('div');
+                    mensajeNoResultados.id = 'no-resultados';
+                    mensajeNoResultados.className = 'estado-panel';
+                    mensajeNoResultados.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 48px; height: 48px; margin: 0 auto 16px;">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <h2>No se encontraron pedidos</h2>
+                        <p>Intenta con otros términos de búsqueda o cambia los filtros.</p>
+                    `;
+                    container.parentElement.insertBefore(mensajeNoResultados, container.nextSibling);
+                }
+                mensajeNoResultados.style.display = 'block';
+            } else {
+                if (mensajeNoResultados) {
+                    mensajeNoResultados.style.display = 'none';
+                }
+            }
+        }
+
+        // Event listeners para filtro y búsqueda
+        document.addEventListener('DOMContentLoaded', () => {
+            const busquedaInput = document.getElementById('busqueda-pedidos');
+            const filtroEstadoSelect = document.getElementById('filtro-estado');
+
+            if (busquedaInput) {
+                busquedaInput.addEventListener('input', aplicarFiltrosYBusqueda);
+            }
+
+            if (filtroEstadoSelect) {
+                filtroEstadoSelect.addEventListener('change', aplicarFiltrosYBusqueda);
+            }
+        });
+
+        // Abrir modal con detalles del pedido
+        function abrirDetallesPedido(pedidoId) {
+            const pedidoData = window.pedidosData[pedidoId];
+
+            if (!pedidoData) {
+                console.error('Pedido no encontrado:', pedidoId);
+                return;
+            }
+
+            // Generar contenido del modal
+            let productosHtml = '';
+            pedidoData.items.forEach(item => {
+                const precio = (item.precio || 0).toFixed(2);
+                const cantidad = item.cantidad || 1;
+                let imagenProducto = '';
+                
+                // Obtener imagen del producto
+                if (item.imagen || item.imagen_url || item.image) {
+                    imagenProducto = item.imagen || item.imagen_url || item.image;
+                }
+                
+                productosHtml += `
+                    <div class="modal-product-item">
+                        ${imagenProducto ? `<img src="${imagenProducto}" alt="${item.nombre}" class="modal-product-img" />` : ''}
+                        <div class="modal-product-details">
+                            <div class="modal-product-name">${item.nombre}</div>
+                            <div class="modal-product-qty">Cantidad: ${cantidad}</div>
+                            ${item.talla ? `<div class="modal-product-qty" style="font-size: 0.9rem; color: #666;">Talla: <strong>${item.talla}</strong></div>` : ''}
+                            <div class="modal-product-price">€${precio}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Verificar si se puede cancelar (confirmado y menos de 2 horas)
+            const fechaCreacion = new Date(pedidoData.fecha_creacion);
+            const ahora = new Date();
+            const diferenciaMilisegundos = ahora - fechaCreacion;
+            const diferenciasHoras = diferenciaMilisegundos / (1000 * 60 * 60);
+            const puedeCancelar = pedidoData.estado === 'confirmado' && diferenciasHoras < 2;
+
+            let botonesHtml = `
+                <div class="modal-actions">
+                    <button class="modal-btn modal-btn-primary" onclick="cerrarDetallesPedido()">
+                        Cerrar
+                    </button>
+            `;
+
+            if (puedeCancelar) {
+                botonesHtml += `
+                    <button class="modal-btn modal-btn-danger" onclick="cancelarPedidoConfirmar(${pedidoId}, '${pedidoData.email}', '${pedidoData.nombre}')">
+                        Cancelar Pedido
+                    </button>
+                `;
+            }
+
+            botonesHtml += `
+                </div>
+            `;
+
+            const modalBody = document.getElementById('modal-body');
+            
+            // Agregar información de devolución si existe
+            let devolucionHtml = '';
+            if (pedidoData.devolucion) {
+                const dev = pedidoData.devolucion;
+                devolucionHtml = `
+                    <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #d4af37;">
+                        <div style="font-weight: 600; color: #333; margin-bottom: 10px;">Información de Devolución</div>
+                        <div class="modal-info-row">
+                            <span class="modal-info-label">Estado de Devolución</span>
+                            <span class="modal-info-value">${dev.estado === 'confirmada' ? 'Aceptada' : dev.estado === 'rechazada' ? 'Cancelada' : 'En Proceso'}</span>
+                        </div>
+                        <div class="modal-info-row">
+                            <span class="modal-info-label">Motivo Solicitud</span>
+                            <span class="modal-info-value">${dev.motivo_solicitud}</span>
+                        </div>
+                        ${dev.estado === 'rechazada' ? `
+                            <div class="modal-info-row">
+                                <span class="modal-info-label">Motivo de Cancelación</span>
+                                <span class="modal-info-value">${dev.motivo_rechazo}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            
+            modalBody.innerHTML = `
+                <div class="modal-header">
+                    <div>
+                        <div class="modal-order-id">Pedido #${pedidoData.id}</div>
+                        <span class="modal-order-status ${pedidoData.estado}" style="text-transform: none;">${pedidoData.estado_texto}</span>
+                    </div>
+                </div>
+
+                <div class="modal-info-row">
+                    <span class="modal-info-label">Fecha de Pedido</span>
+                    <span class="modal-info-value">${pedidoData.fecha}</span>
+                </div>
+
+                <div class="modal-info-row">
+                    <span class="modal-info-label">Cliente</span>
+                    <span class="modal-info-value">${pedidoData.nombre}</span>
+                </div>
+
+                <div class="modal-products">
+                    ${productosHtml}
+                </div>
+
+                <div class="modal-info-row">
+                    <span class="modal-info-label">Subtotal</span>
+                    <span class="modal-info-value">€${(pedidoData.subtotal || 0).toFixed(2)}</span>
+                </div>
+
+                <div class="modal-info-row">
+                    <span class="modal-info-label">Envío</span>
+                    <span class="modal-info-value">€${(pedidoData.envio || 0).toFixed(2)}</span>
+                </div>
+
+                <div class="modal-total">
+                    <span class="modal-total-label">Total</span>
+                    <span class="modal-total-amount">€${pedidoData.total.toFixed(2)}</span>
+                </div>
+
+                ${devolucionHtml}
+
+                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                    <button onclick="descargarFactura(${pedidoData.id})" style="flex: 1; padding: 12px; background: #d4af37; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="13" x2="12" y2="19"></line><polyline points="9 16 12 13 15 16"></polyline>
+                        </svg>
+                        Descargar Factura
+                    </button>
+                    ${botonesHtml}
+                </div>
+            `;
+
+            // Mostrar modal
+            document.getElementById('modal-detalles').style.display = 'flex';
+            // Congelar página de fondo
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Cerrar modal
+        function cerrarDetallesPedido() {
+            document.getElementById('modal-detalles').style.display = 'none';
+            // Descongelar página de fondo
+            document.body.style.overflow = 'auto';
+        }
+
+        // Cancelar pedido con confirmación
+        function cancelarPedidoConfirmar(pedidoId, email, nombre) {
+            // Mostrar modal de confirmación
+            const modalConfirm = document.getElementById('modal-confirm-cancelar');
+            if (!modalConfirm) return;
+            
+            // Guardar datos para cuando se confirme
+            modalConfirm.dataset.pedidoId = pedidoId;
+            modalConfirm.dataset.email = email;
+            modalConfirm.dataset.nombre = nombre;
+            
+            modalConfirm.style.display = 'flex';
+        }
+
+        // Confirmar cancelación
+        function confirmarCancelacion() {
+            const modalConfirm = document.getElementById('modal-confirm-cancelar');
+            const pedidoId = modalConfirm.dataset.pedidoId;
+            const email = modalConfirm.dataset.email;
+            const nombre = modalConfirm.dataset.nombre;
+            
+            modalConfirm.style.display = 'none';
+            cancelarPedido(pedidoId, email, nombre);
+        }
+
+        // Cerrar modal de confirmación
+        function cerrarConfirmacionCancelacion() {
+            const modalConfirm = document.getElementById('modal-confirm-cancelar');
+            modalConfirm.style.display = 'none';
+        }
+
+        // Cancelar pedido
+        async function cancelarPedido(pedidoId, email, nombre) {
+            try {
+                const response = await fetch('/api/cancel-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        pedidoId: parseInt(pedidoId),
+                        email: email,
+                        nombre: nombre
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Mostrar modal de éxito
+                    mostrarModalExito('Pedido cancelado exitosamente. Te hemos enviado una confirmación por email.');
+                } else {
+                    mostrarModalError('Error: ' + (data.message || 'No se pudo cancelar el pedido'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarModalError('Error al cancelar el pedido. Intenta más tarde.');
+            }
+        }
+
+        // Solicitar devolución con confirmación
+        function solicitarDevolucionConfirmar(pedidoId, email, nombre) {
+            // Mostrar modal de confirmación
+            const modalConfirm = document.getElementById('modal-confirm-devolucion');
+            if (!modalConfirm) return;
+            
+            // Guardar datos para cuando se confirme
+            modalConfirm.dataset.pedidoId = pedidoId;
+            modalConfirm.dataset.email = email;
+            modalConfirm.dataset.nombre = nombre;
+            
+            modalConfirm.style.display = 'flex';
+        }
+
+        // Confirmar devolución
+        function confirmarDevolucion() {
+            const modalConfirm = document.getElementById('modal-confirm-devolucion');
+            const motivoInput = document.getElementById('motivo-devolucion');
+            const motivo = motivoInput.value.trim();
+            const errorDiv = document.getElementById('error-motivo');
+            
+            // Validar motivo
+            if (!motivo) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'Por favor, ingresa un motivo para la devolución';
+                return;
+            }
+            
+            if (motivo.length < 10) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'El motivo debe tener al menos 10 caracteres';
+                return;
+            }
+            
+            const pedidoId = modalConfirm.dataset.pedidoId;
+            const email = modalConfirm.dataset.email;
+            const nombre = modalConfirm.dataset.nombre;
+            
+            errorDiv.style.display = 'none';
+            modalConfirm.style.display = 'none';
+            procesarDevolucion(pedidoId, email, nombre, motivo);
+        }
+
+        // Descargar factura en PDF desde el servidor
+        async function descargarFactura(pedidoId) {
+            try {
+                console.log('[mis-compras] Descargando factura para pedido:', pedidoId);
+                
+                // Llamar a la API de descargar facturas
+                const response = await fetch(`/api/download-invoice?id=${pedidoId}`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Error ${response.status}: ${errorData.error}`);
+                }
+
+                // Obtener el contenido como blob
+                const blob = await response.blob();
+                
+                // Crear un URL temporal y descargar
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `factura-pedido-${pedidoId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                
+                // Limpiar
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                console.log('[mis-compras] ✅ Factura descargada exitosamente');
+            } catch (error) {
+                console.error('[mis-compras] Error descargando factura:', error);
+                mostrarModalError('Error al descargar la factura. Por favor, intenta de nuevo.');
+            }
+        }
+
+        // Cerrar modal de confirmación de devolución
+        function cerrarConfirmacionDevolucion() {
+            const modalConfirm = document.getElementById('modal-confirm-devolucion');
+            modalConfirm.style.display = 'none';
+        }
+
+        // Procesar devolución
+        async function procesarDevolucion(pedidoId, email, nombre, motivo) {
+            try {
+                const response = await fetch('/api/request-return', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        pedidoId: parseInt(pedidoId),
+                        email: email,
+                        nombre: nombre,
+                        motivo: motivo
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Mostrar modal de éxito
+                    mostrarModalExito('Tu solicitud de devolución ha sido registrada exitosamente. Te hemos enviado un email confirmando que tu devolución está en proceso. El equipo de Joyería Galiana se pondrá en contacto contigo dentro de 24 horas.');
+                } else {
+                    mostrarModalError('Error: ' + (data.message || 'No se pudo procesar la devolución'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarModalError('Error al procesar la devolución. Intenta más tarde.');
+            }
+        }
+
+        // Modal de éxito
+        function mostrarModalExito(mensaje) {
+            const html = `
+                <div id="modal-exito" class="modal" style="display: flex;">
+                    <div class="modal-overlay" onclick="cerrarModalExito()"></div>
+                    <div class="modal-content" style="text-align: center;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 64px; height: 64px; color: #4caf50;">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <h2 style="color: #4caf50; margin-bottom: 16px;">¡Éxito!</h2>
+                        <p style="color: #666; margin-bottom: 24px;">${mensaje}</p>
+                        <button class="modal-btn modal-btn-primary" onclick="cerrarModalExito(); window.location.reload();">
+                            Aceptar
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', html);
+            document.getElementById('modal-exito').style.display = 'flex';
+        }
+
+        // Cerrar modal de éxito
+        function cerrarModalExito() {
+            const modal = document.getElementById('modal-exito');
+            if (modal) modal.remove();
+        }
+
+        // Modal de error
+        function mostrarModalError(mensaje) {
+            const html = `
+                <div id="modal-error" class="modal" style="display: flex;">
+                    <div class="modal-overlay" onclick="cerrarModalError()"></div>
+                    <div class="modal-content" style="text-align: center;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">✕</div>
+                        <h2 style="color: #f44336; margin-bottom: 16px;">Error</h2>
+                        <p style="color: #666; margin-bottom: 24px;">${mensaje}</p>
+                        <button class="modal-btn modal-btn-primary" onclick="cerrarModalError();">
+                            Aceptar
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', html);
+            document.getElementById('modal-error').style.display = 'flex';
+        }
+
+        // Cerrar modal de error
+        function cerrarModalError() {
+            const modal = document.getElementById('modal-error');
+            if (modal) modal.remove();
+        }
+
+        // Cerrar modal al hacer click fuera
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('modal-detalles');
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        cerrarDetallesPedido();
+                    }
+                });
+            }
+        });
+    </script>
+</PublicLayout>

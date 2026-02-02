@@ -1,0 +1,385 @@
+---
+import PublicLayout from "../../layouts/PublicLayout.astro";
+---
+
+<PublicLayout title="Todos los Productos - Joyería Galiana">
+  <!-- Modal de Login y Registro -->
+  <div id="login-modal" class="modal" style="display: none;">
+    <div class="modal-content auth-modal">
+      <span class="close" onclick="window.closeLoginModal()">&times;</span>
+      
+      <!-- Tabs de navegación -->
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" data-tab="login">Iniciar Sesión</button>
+        <button type="button" class="auth-tab" data-tab="register">Registrarse</button>
+      </div>
+      
+      <!-- Formulario de Login -->
+      <form id="login-form" class="auth-form active">
+        <h2>Iniciar Sesión</h2>
+        <div class="form-group">
+          <label for="login-email">Email:</label>
+          <input type="email" id="login-email" required />
+        </div>
+        <div class="form-group">
+          <label for="login-password">Contraseña:</label>
+          <input type="password" id="login-password" required />
+        </div>
+        <div class="forgot-password-link">
+          <a href="#" onclick="abrirModalRecuperacion(event)">¿Olvidaste tu contraseña?</a>
+        </div>
+        <button type="submit" class="btn-principal">Iniciar Sesión</button>
+      </form>
+      
+      <!-- Formulario de Registro -->
+      <form id="register-form" class="auth-form">
+        <h2>Registrarse</h2>
+        <div class="form-group">
+          <label for="register-nombre">Nombre:</label>
+          <input type="text" id="register-nombre" required />
+        </div>
+        <div class="form-group">
+          <label for="register-apellido">Apellidos:</label>
+          <input type="text" id="register-apellido" />
+        </div>
+        <div class="form-group">
+          <label for="register-email">Email:</label>
+          <input type="email" id="register-email" required />
+        </div>
+        <div class="form-group">
+          <label for="register-telefono">Teléfono:</label>
+          <input type="tel" id="register-telefono" />
+        </div>
+        <div class="form-group">
+          <label for="register-direccion">Dirección:</label>
+          <input type="text" id="register-direccion" />
+        </div>
+        <div class="form-group">
+          <label for="register-ciudad">Ciudad:</label>
+          <input type="text" id="register-ciudad" />
+        </div>
+        <div class="form-group">
+          <label for="register-codigo-postal">Código Postal:</label>
+          <input type="text" id="register-codigo-postal" />
+        </div>
+        <div class="form-group">
+          <label for="register-password">Contraseña:</label>
+          <input type="password" id="register-password" required />
+        </div>
+        <div class="form-group">
+          <label for="register-confirm-password">Confirmar Contraseña:</label>
+          <input type="password" id="register-confirm-password" required />
+        </div>
+        <button type="submit" class="btn-principal">Registrarse</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Recuperar Contraseña (FUERA del login-modal) -->
+  <div id="recuperacion-modal" class="modal" style="display: none;">
+    <div class="modal-content auth-modal" style="max-width: 420px;">
+      <button class="btn-close-modal" onclick="cerrarModalRecuperacion()" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      
+      <div style="text-align: center; margin-bottom: 30px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8B1538" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block; margin-bottom: 15px;">
+          <path d="M12 1v6m0 6v6"></path>
+          <rect x="5" y="9" width="14" height="12" rx="2" ry="2"></rect>
+          <path d="M8 14h8"></path>
+        </svg>
+        <h2 style="color: #8B1538; margin: 0; font-size: 24px;">Recuperar Contraseña</h2>
+        <p style="color: #666; margin: 10px 0 0 0; font-size: 14px;">Ingresa tu email para recibir un enlace de recuperación</p>
+      </div>
+
+      <form id="form-recuperacion">
+        <div class="form-group">
+          <label for="recuperacion-email" style="font-weight: 600; color: #333;">Correo Electrónico</label>
+          <input type="email" id="recuperacion-email" required placeholder="tu@email.com" style="width: 100%; padding: 12px; border: 2px solid #d4af37; border-radius: 6px; font-size: 14px;" />
+        </div>
+        <button type="submit" class="btn-principal" id="btn-recuperacion-submit" style="width: 100%; margin-top: 20px;">Enviar Enlace</button>
+        <div id="recuperacion-message" class="message" style="margin-top: 15px; padding: 12px; border-radius: 6px; text-align: center;"></div>
+        <div style="text-align: center; margin-top: 20px;">
+          <button type="button" class="btn-volver-recuperacion" onclick="cerrarModalRecuperacion()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline; margin-right: 6px; vertical-align: middle;">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Volver
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sección de Todos los Productos -->
+  <section class="productos-page">
+    <div class="container">
+      <h2>Nuestros Productos</h2>
+
+      <!-- Buscador -->
+      <div
+        class="buscador-container"
+        style="margin: 30px 0; text-align: center;"
+      >
+        <input
+          type="text"
+          id="buscador-productos"
+          placeholder="Buscar por nombre..."
+          style="
+                    padding: 12px 20px;
+                    width: 100%;
+                    max-width: 500px;
+                    border: 2px solid var(--color-secundario);
+                    border-radius: 25px;
+                    font-size: 1em;
+                    outline: none;
+                    transition: border-color 0.3s;
+                "
+          onkeyup="filtrarPorBusquedaProductos()"
+        />
+      </div>
+
+      <!-- Filtros -->
+      <div
+        class="filtros-productos"
+        style="margin: 30px 0; text-align: center;"
+      >
+        <button
+          class="filtro-btn activo"
+          onclick="aplicarFiltroProductos('Todos')">Todos</button
+        >
+        <button class="filtro-btn" onclick="aplicarFiltroProductos('Ofertas')"
+          >Ofertas</button
+        >
+        <button class="filtro-btn" onclick="aplicarFiltroProductos('Anillos')"
+          >Anillos</button
+        >
+        <button class="filtro-btn" onclick="aplicarFiltroProductos('Collares')"
+          >Collares</button
+        >
+        <button
+          class="filtro-btn"
+          onclick="aplicarFiltroProductos('Pendientes')">Pendientes</button
+        >
+        <button class="filtro-btn" onclick="aplicarFiltroProductos('Pulseras')"
+          >Pulseras</button
+        >
+        <button class="filtro-btn" onclick="aplicarFiltroProductos('Relojes')"
+          >Relojes</button
+        >
+        <button class="filtro-btn" onclick="aplicarFiltroProductos('Medallas')"
+          >Medallas</button
+        >
+      </div>
+
+      <!-- Filtros de Subcategorías -->
+      <div 
+        id="filtro-subcategoria-container" 
+        style="margin: 20px 0; text-align: center; min-height: 50px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;"
+      >
+        <!-- Se cargará dinámicamente -->
+      </div>
+
+      <!-- Grid de Productos -->
+      <div class="productos-grid" style="margin: 40px 0;">
+        <!-- Los productos se cargarán aquí dinámicamente -->
+      </div>
+    </div>
+  </section>
+
+  <script src="/js/productos.js?v=10" is:inline></script>
+  
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Esperar a que todo esté listo
+      setTimeout(function() {
+        const botones = document.querySelectorAll('.filtros-productos .filtro-btn');
+        botones.forEach(btn => {
+          btn.addEventListener('click', function() {
+            const cat = this.textContent.trim();
+            console.log('Categoría clickeada:', cat);
+            cargarSubcats(cat);
+          });
+        });
+      }, 500);
+    });
+    
+    let subcatActual = null;
+    
+    async function cargarSubcats(categoria) {
+      console.log('Cargando subcategorías para:', categoria);
+      const container = document.getElementById('filtro-subcategoria-container');
+      container.innerHTML = '';
+      
+      if (categoria === 'Todos' || categoria === 'Ofertas' || categoria === 'Relojes' || categoria === 'Medallas') {
+        console.log('Sin subcategorías para esta categoría');
+        return;
+      }
+      
+      // Esperar supabase
+      if (!window.supabaseClient) {
+        console.log('Esperando Supabase...');
+        await new Promise(r => setTimeout(r, 1000));
+      }
+      
+      if (!window.supabaseClient) {
+        console.error('Supabase no disponible');
+        return;
+      }
+      
+      console.log('Consultando subcategorias...');
+      const { data, error } = await window.supabaseClient
+        .from('subcategorias')
+        .select('*')
+        .ilike('categoria', categoria);
+      
+      console.log('Resultado:', data, error);
+      
+      if (error) {
+        console.error('Error:', error);
+        return;
+      }
+      
+      if (!data || data.length === 0) {
+        console.log('No hay subcategorías');
+        return;
+      }
+      
+      // Botón Ver Todos
+      const btnAll = document.createElement('button');
+      btnAll.innerText = 'Ver Todos';
+      btnAll.className = 'subcat-btn-todos';
+      btnAll.style = 'padding:8px 18px;border:2px solid #d4af37;background:#d4af37;color:#1a1a1a;border-radius:20px;cursor:pointer;font-weight:600;margin:5px;';
+      btnAll.onclick = () => filtrarSubcat(categoria, null, container);
+      container.appendChild(btnAll);
+      
+      // Botones subcategorías
+      data.forEach(s => {
+        const btn = document.createElement('button');
+        btn.innerText = s.nombre;
+        btn.className = 'subcat-btn';
+        btn.dataset.id = s.id;
+        btn.style = 'padding:8px 18px;border:2px solid #ccc;background:#fff;color:#333;border-radius:20px;cursor:pointer;font-weight:500;margin:5px;';
+        btn.onclick = () => filtrarSubcat(categoria, s.id, container);
+        container.appendChild(btn);
+      });
+      
+      console.log('Botones creados:', data.length + 1);
+    }
+    
+    function filtrarSubcat(cat, subcatId, container) {
+      subcatActual = subcatId;
+      
+      // Resetear todos los botones a blanco
+      container.querySelectorAll('button').forEach(b => {
+        b.style.background = '#fff';
+        b.style.borderColor = '#ccc';
+        b.style.color = '#333';
+        b.style.fontWeight = '500';
+      });
+      
+      // Poner en dorado el seleccionado
+      if (!subcatId) {
+        // "Ver Todos" - es el primero
+        const btnTodos = container.querySelector('.subcat-btn-todos');
+        if (btnTodos) {
+          btnTodos.style.background = '#d4af37';
+          btnTodos.style.borderColor = '#d4af37';
+          btnTodos.style.color = '#1a1a1a';
+          btnTodos.style.fontWeight = '600';
+        }
+      } else {
+        // Buscar por dataset.id
+        const btnSel = container.querySelector(`button[data-id="${subcatId}"]`);
+        if (btnSel) {
+          btnSel.style.background = '#d4af37';
+          btnSel.style.borderColor = '#d4af37';
+          btnSel.style.color = '#1a1a1a';
+          btnSel.style.fontWeight = '600';
+        }
+      }
+      
+      // Filtrar productos
+      let prods = allProductosPage.filter(p => p.categoria === cat && p.stock > 0);
+      if (subcatId) {
+        prods = prods.filter(p => p.subcategoria_id === subcatId);
+      }
+      mostrarProductos(prods);
+    }
+
+    // Funciones para modal de recuperación
+    window.abrirModalRecuperacion = function(e) {
+      e.preventDefault();
+      document.getElementById('login-modal').style.display = 'none';
+      document.getElementById('recuperacion-modal').style.display = 'flex';
+    };
+
+    window.cerrarModalRecuperacion = function() {
+      document.getElementById('recuperacion-modal').style.display = 'none';
+      document.getElementById('login-modal').style.display = 'flex';
+      const form = document.getElementById('form-recuperacion');
+      if (form) form.reset();
+      const msg = document.getElementById('recuperacion-message');
+      if (msg) msg.textContent = '';
+    };
+
+    // Manejar envío de recuperación
+    const formRecuperacion = document.getElementById('form-recuperacion');
+    console.log('📋 form-recuperacion encontrado:', !!formRecuperacion);
+    
+    if (formRecuperacion) {
+      formRecuperacion.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        console.log('📨 Enviando recuperación de contraseña...');
+        
+        const email = document.getElementById('recuperacion-email').value.trim();
+        const messageDiv = document.getElementById('recuperacion-message');
+        const btnSubmit = document.getElementById('btn-recuperacion-submit');
+
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = 'Enviando...';
+
+        try {
+          console.log('🔗 Llamando API con email:', email);
+          const response = await fetch('/api/request-password-reset', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+          });
+
+          console.log('✅ Response status:', response.status);
+          const data = await response.json();
+          console.log('📦 Response data:', data);
+
+          if (!response.ok) {
+            throw new Error(data.error || 'Error al solicitar reset');
+          }
+
+					messageDiv.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline; margin-right: 8px; vertical-align: middle; color: #28a745;"><polyline points="20 6 9 17 4 12"></polyline></svg>Enlace enviado a tu correo. Revisa tu bandeja de entrada.';
+          messageDiv.className = 'message success';
+          formRecuperacion.reset();
+
+          setTimeout(() => {
+            window.cerrarModalRecuperacion();
+          }, 2000);
+
+        } catch (err) {
+          console.error('❌ Error:', err.message);
+          messageDiv.textContent = err.message || 'Error desconocido';
+          messageDiv.className = 'message error';
+        } finally {
+          btnSubmit.disabled = false;
+          btnSubmit.textContent = 'Enviar Enlace';
+        }
+      });
+    } else {
+      console.error('❌ form-recuperacion NO encontrado');
+    }
+  </script>
+</PublicLayout>

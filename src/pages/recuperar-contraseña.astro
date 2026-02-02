@@ -1,0 +1,236 @@
+---
+import PublicLayout from "../layouts/PublicLayout.astro";
+---
+
+<PublicLayout title="Recuperar Contraseña">
+  <div class="recuperar-container">
+    <div class="recuperar-card">
+      <h1>Recuperar Contraseña</h1>
+      <p class="descripcion">Ingresa tu email para recibir un enlace de recuperación</p>
+
+      <form id="recuperarForm" class="recuperar-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="tu@email.com"
+            required
+          />
+        </div>
+
+        <button type="submit" class="btn-recuperar">Enviar Enlace</button>
+      </form>
+
+      <div id="mensajeExito" class="mensaje-exito" style="display: none;">
+        <h3>✅ Enlace enviado</h3>
+        <p>Revisa tu email para el enlace de recuperación. Expira en 24 horas.</p>
+        <a href="/admin-login.html">Volver al login</a>
+      </div>
+
+      <div id="mensajeError" class="mensaje-error" style="display: none;">
+        <p id="textoError"></p>
+      </div>
+
+      <p class="link-login">
+        ¿Recuerdas tu contraseña? <a href="/admin-login.html">Inicia sesión</a>
+      </p>
+    </div>
+  </div>
+</PublicLayout>
+
+<style>
+  .recuperar-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+  }
+
+  .recuperar-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    padding: 40px;
+    max-width: 400px;
+    width: 100%;
+  }
+
+  h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 24px;
+  }
+
+  .descripcion {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 14px;
+  }
+
+  .recuperar-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  label {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+  }
+
+  input {
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+
+  .btn-recuperar {
+    padding: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .btn-recuperar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+  }
+
+  .btn-recuperar:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .mensaje-exito {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 5px;
+    padding: 20px;
+    color: #155724;
+    text-align: center;
+  }
+
+  .mensaje-exito h3 {
+    margin: 0 0 10px 0;
+    color: #155724;
+  }
+
+  .mensaje-exito p {
+    margin: 0 0 15px 0;
+    font-size: 14px;
+  }
+
+  .mensaje-exito a {
+    color: #155724;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .mensaje-error {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+    padding: 15px;
+    color: #721c24;
+    font-size: 14px;
+  }
+
+  .link-login {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #666;
+  }
+
+  .link-login a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .link-login a:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<script>
+  const form = document.getElementById('recuperarForm');
+  const mensajeExito = document.getElementById('mensajeExito');
+  const mensajeError = document.getElementById('mensajeError');
+  const textoError = document.getElementById('textoError');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById('email').value.trim();
+    const btn = form.querySelector('.btn-recuperar');
+
+    // Validar email
+    if (!email || !email.includes('@')) {
+      textoError.textContent = '❌ Por favor ingresa un email válido';
+      mensajeError.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    mensajeError.style.display = 'none';
+
+    try {
+      const response = await fetch('/api/request-password-reset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Éxito
+        form.style.display = 'none';
+        mensajeExito.style.display = 'block';
+        console.log('✅ Email de recuperación enviado');
+      } else {
+        // Error
+        textoError.textContent = `❌ ${data.error || 'Error al enviar el email'}`;
+        mensajeError.style.display = 'block';
+        console.error('Error:', data.error);
+      }
+    } catch (error) {
+      textoError.textContent = '❌ Error de conexión. Intenta nuevamente.';
+      mensajeError.style.display = 'block';
+      console.error('Exception:', error);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Enviar Enlace';
+    }
+  });
+</script>

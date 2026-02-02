@@ -1,0 +1,51 @@
+---
+interface Props {
+  id: string;
+  nombre: string;
+  precio: number;
+  imagen: string;
+  descripcion?: string;
+  categoria?: string;
+}
+
+const { id, nombre, precio, imagen, descripcion, categoria } = Astro.props;
+---
+
+<article class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+  <div class="relative h-64 overflow-hidden bg-gray-100">
+    <img 
+      src={imagen} 
+      alt={nombre}
+      class="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+    />
+    {categoria && (
+      <span class="absolute top-2 right-2 bg-amber-900 text-white text-xs px-2 py-1 rounded">
+        {categoria}
+      </span>
+    )}
+  </div>
+  
+  <div class="p-4">
+    <h3 class="font-serif text-lg font-bold text-gray-900 mb-2">
+      {nombre}
+    </h3>
+    
+    {descripcion && (
+      <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+        {descripcion}
+      </p>
+    )}
+    
+    <div class="flex items-center justify-between">
+      <span class="text-amber-900 font-bold text-lg">
+        ${precio.toFixed(2)}
+      </span>
+      <a 
+        href={`/productos/${id}`}
+        class="inline-block bg-amber-900 text-white px-4 py-2 rounded text-sm hover:bg-amber-800 transition-colors"
+      >
+        Ver detalles
+      </a>
+    </div>
+  </div>
+</article>

@@ -1,0 +1,142 @@
+---
+import PublicLayout from "../layouts/PublicLayout.astro";
+---
+
+<PublicLayout title="Mi Carrito - Joyería Galiana">
+  <link rel="stylesheet" href="/css/carrito.css?v=1" slot="head" />
+
+  <!-- Carrito -->
+  <main class="carrito-container">
+    <div class="container">
+      <h1>Mi Carrito de Compras</h1>
+
+      <div class="carrito-content">
+        <!-- Tabla de productos -->
+        <div class="carrito-items">
+          <!-- Timer de expiración del carrito -->
+          <div id="carrito-timer" class="carrito-timer" style="display: none;">
+            <div class="timer-content">
+              <span class="timer-label">⏱ Reserva válida por:</span>
+              <span id="carrito-timer-valor" class="timer-value"></span>
+            </div>
+          </div>
+
+          <table id="carrito-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="carrito-tbody">
+              <!-- Se cargará dinámicamente -->
+            </tbody>
+          </table>
+
+          <!-- Carrito vacío -->
+          <div id="carrito-vacio" class="carrito-vacio" style="display: none;">
+            <div class="empty-state">
+              <svg
+                class="empty-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                width="80"
+                height="80"
+              >
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path
+                  d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
+                ></path>
+              </svg>
+              <h2>Tu carrito está vacío</h2>
+              <p>¿Qué esperas? ¡Ve a comprar algunas joyas hermosas!</p>
+              <a href="/" class="btn-principal">Continuar Comprando</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen de compra -->
+        <aside class="carrito-summary">
+          <h2>Resumen de Compra</h2>
+
+          <div class="summary-row">
+            <span>Subtotal:</span>
+            <span id="subtotal">€0.00</span>
+          </div>
+
+          <div class="summary-row" id="envio-row">
+            <span>Envío:</span>
+            <span id="envio">€0.00</span>
+          </div>
+
+          <div
+            class="summary-row discount"
+            id="descuento-row"
+            style="display: none;"
+          >
+            <span>Descuento:</span>
+            <span id="descuento-amount">-€0.00</span>
+          </div>
+
+          <div class="summary-divider"></div>
+
+          <div class="summary-row total">
+            <span>Total:</span>
+            <span id="total">€0.00</span>
+          </div>
+
+          <!-- Código de descuento -->
+          <div class="descuento-input">
+            <input
+              type="text"
+              id="codigo-descuento"
+              placeholder="Código de descuento"
+            />
+            <button onclick="aplicarDescuento()" class="btn-secundario"
+              >Aplicar</button
+            >
+          </div>
+
+          <!-- Botones -->
+          <div class="carrito-actions">
+            <button class="btn-principal btn-block" onclick="irACheckout()"
+              >Proceder al Pago</button
+            >
+            <button
+              class="btn-secundario btn-block"
+              onclick="window.location.href='/'">Continuar Comprando</button
+            >
+          </div>
+
+          <!-- Info de envío -->
+          <div class="shipping-info">
+            <p>✓ Envío gratis en compras mayores a €100</p>
+            <p>✓ Entrega en 2-3 días laborales</p>
+            <p>✓ Garantía de 2 años en todas las joyas</p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- ⚠️ carrito.js ya está cargado en PublicLayout.astro -->
+  <script src="/js/descuentos.js?v=1" is:inline></script>
+  
+  <!-- ⏱️ REANUDAR TEMPORIZADOR CUANDO VOLVEMOS AL CARRITO -->
+  <script is:inline>
+    // Reanudar el temporizador cuando volvemos a carrito (salimos de checkout/pago)
+    if (window.reanudarTemporizador) {
+        window.reanudarTemporizador();
+        console.log('[carrito] Temporizador reanudado - salimos de checkout/pago');
+    }
+  </script>
+</PublicLayout>

@@ -1,0 +1,42 @@
+---
+interface Props {
+  images: string[];
+  title: string;
+}
+
+const { images, title } = Astro.props;
+---
+
+<div class="space-y-4">
+  <div class="relative bg-gray-100 rounded-lg overflow-hidden h-96">
+    <img 
+      id="main-image"
+      src={images[0]} 
+      alt={title}
+      class="w-full h-full object-cover"
+    />
+  </div>
+  
+  <div class="flex gap-2 overflow-x-auto pb-2">
+    {images.map((img, idx) => (
+      <button
+        key={idx}
+        class="flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 border-transparent hover:border-amber-900 transition-colors cursor-pointer"
+        onclick={`document.getElementById('main-image').src = '${img}'`}
+      >
+        <img src={img} alt={`${title} ${idx + 1}`} class="w-full h-full object-cover" />
+      </button>
+    ))}
+  </div>
+</div>
+
+<script>
+  // Ensure buttons are clickable even in static mode
+  document.querySelectorAll('[id^="gallery-btn"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const src = (e.target as HTMLImageElement).src;
+      const mainImg = document.getElementById('main-image') as HTMLImageElement;
+      if (mainImg) mainImg.src = src;
+    });
+  });
+</script>

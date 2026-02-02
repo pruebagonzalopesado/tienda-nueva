@@ -1,0 +1,372 @@
+---
+import PublicLayout from "../layouts/PublicLayout.astro";
+---
+
+<PublicLayout title="Checkout - Joyería Galiana">
+    <link rel="stylesheet" href="/css/checkout.css?v=1" slot="head" />
+
+    <!-- Checkout -->
+    <main class="checkout-container">
+        <div class="container">
+            <h1>Datos del Pedido</h1>
+
+            <div class="checkout-content">
+                <!-- Formulario de datos -->
+                <div class="checkout-form">
+                    <form id="checkout-form" onsubmit="continuarAPago(event)">
+                        <!-- Información de Cliente -->
+                        <fieldset>
+                            <legend>Información de Contacto</legend>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="nombre">Nombre Completo:</label>
+                                    <input type="text" id="nombre" required />
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">Email:</label>
+                                    <input type="email" id="email" required />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="telefono">Teléfono:</label>
+                                <input type="tel" id="telefono" required />
+                            </div>
+                        </fieldset>
+
+                        <!-- Dirección de Envío -->
+                        <fieldset>
+                            <legend>Dirección de Envío</legend>
+
+                            <div class="form-group">
+                                <label for="direccion">Calle y Número:</label>
+                                <input type="text" id="direccion" required />
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="ciudad">Ciudad:</label>
+                                    <input type="text" id="ciudad" required />
+                                </div>
+                                <div class="form-group">
+                                    <label for="codigo-postal">Código Postal:</label>
+                                    <input type="text" id="codigo-postal" required />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="pais">País:</label>
+                                <input type="text" id="pais" value="España" required />
+                            </div>
+                        </fieldset>
+
+                        <!-- Botón Continuar -->
+                        <button type="submit" class="btn-principal btn-block">
+                            Continuar al Pago →
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Resumen de Pedido -->
+                <aside class="checkout-summary">
+                    <h2>Resumen del Pedido</h2>
+
+                    <div class="order-items" id="order-items">
+                        <!-- Se cargará aquí -->
+                    </div>
+
+                    <div class="summary-divider"></div>
+
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span id="checkout-subtotal">€0.00</span>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Envío:</span>
+                        <span id="checkout-envio">€0.00</span>
+                    </div>
+
+                    <div class="summary-row" id="checkout-descuento-row" style="display: none;">
+                        <span>Descuento:</span>
+                        <span id="checkout-descuento">-€0.00</span>
+                    </div>
+
+                    <div class="summary-divider"></div>
+
+                    <div class="summary-row total">
+                        <span>Total:</span>
+                        <span id="checkout-total">€0.00</span>
+                    </div>
+
+                    <!-- Información de seguridad -->
+                    <div class="security-info">
+                        <p>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline; vertical-align: middle; margin-right: 4px;">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg> Tus datos están protegidos
+                        </p>
+                        <p>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline; vertical-align: middle; margin-right: 4px;">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg> Compra segura y garantizada
+                        </p>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <script is:inline>
+        // No declarar carrito aquí - dejar que carrito.js lo haga
+        // Usar la variable global que carga carrito.js
+        
+        // Esperar a que carrito esté disponible
+        function getCarrito() {
+            return window.carrito || [];
+        }
+
+        // Usar window para descuentoAplicado
+        if (window.descuentoAplicado === undefined) {
+            window.descuentoAplicado = 0;
+        }
+
+        // Cargar datos del checkout
+        async function cargarCheckout() {
+            // Intentar cargar del sessionStorage primero (desde carrito)
+            let carritoData = sessionStorage.getItem('carrito-checkout');
+            
+            // Si no hay en sessionStorage, intentar desde localStorage
+            if (!carritoData) {
+                carritoData = localStorage.getItem('carrito');
+            }
+            
+            // Usar getCarrito() en lugar de la variable global directa
+            let carritoLocal = carritoData ? JSON.parse(carritoData) : getCarrito();
+            window.descuentoAplicado = parseInt(sessionStorage.getItem('descuento') || '0');
+            
+            if (carritoLocal.length === 0) {
+                window.location.href = '/carrito';
+                return;
+            }
+            
+            // Guardar en sessionStorage para la página de pago
+            sessionStorage.setItem('carrito-checkout', JSON.stringify(carritoLocal));
+            
+            // Guardar en una variable de scope local para esta función
+            window._checkoutCarrito = carritoLocal;
+            
+            // Cargar datos previos si existen (ahora es asincrónico)
+            await cargarDatosPrevios();
+            
+            renderizarOrden();
+        }
+
+        // Cargar datos previos del cliente si existen
+        async function cargarDatosPrevios() {
+            console.log('[checkout] Iniciando carga de datos previos...');
+            
+            // Intentar obtener usuario logueado desde localStorage (Supabase Auth)
+            try {
+                const sessionStr = localStorage.getItem('sb-tvzvuotqdtwmssxfnyqc-auth-token');
+                console.log('[checkout] Session en localStorage:', !!sessionStr);
+                
+                if (sessionStr) {
+                    const session = JSON.parse(sessionStr);
+                    console.log('[checkout] Sesión parseada. Estructura:', Object.keys(session));
+                    console.log('[checkout] Contenido completo:', JSON.stringify(session, null, 2));
+                    
+                    // La sesión puede venir en diferentes formatos
+                    // Intenta obtener el usuario y el token de acceso
+                    let user = session.user || session;
+                    let accessToken = session.session?.access_token || session.access_token;
+                    let userEmail = user.email;
+                    
+                    console.log('[checkout] Email encontrado:', userEmail);
+                    console.log('[checkout] Access token disponible:', !!accessToken);
+                    
+                    if (userEmail && accessToken) {
+                        // Pre-llenar con email del usuario
+                        const emailInput = document.getElementById('email');
+                        if (emailInput) {
+                            emailInput.value = userEmail || '';
+                            console.log('[checkout] Email pre-llenado:', userEmail);
+                        }
+                        
+                        // Obtener datos adicionales del usuario desde la tabla usuarios via API endpoint
+                        try {
+                            console.log('[checkout] Llamando /api/get-user-data con token...');
+                            const response = await fetch('/api/get-user-data', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${accessToken}`
+                                },
+                                body: JSON.stringify({})
+                            });
+                            
+                            console.log('[checkout] Status de respuesta:', response.status);
+                            const resultado = await response.json();
+                            console.log('[checkout] Respuesta completa:', resultado);
+                            
+                            if (resultado.usuarioData) {
+                                const usuarioData = resultado.usuarioData;
+                                console.log('[checkout] ✓ Datos del usuario recibidos:', Object.keys(usuarioData));
+                                
+                                // Pre-llenar TODOS los campos con datos de la BD
+                                const campos = {
+                                    'nombre': usuarioData.nombre,
+                                    'email': usuarioData.email,
+                                    'telefono': usuarioData.telefono,
+                                    'direccion': usuarioData.direccion,
+                                    'ciudad': usuarioData.ciudad,
+                                    'codigo-postal': usuarioData.codigo_postal,
+                                    'pais': usuarioData.pais || 'España'
+                                };
+                                
+                                let camposRellenados = 0;
+                                for (const [id, valor] of Object.entries(campos)) {
+                                    const input = document.getElementById(id);
+                                    console.log(`[checkout] Campo ${id}:`, input ? 'encontrado' : 'NO ENCONTRADO', 'valor:', valor);
+                                    
+                                    if (input && valor) {
+                                        input.value = valor;
+                                        camposRellenados++;
+                                        console.log(`[checkout] ✓ ${id} = ${valor}`);
+                                    }
+                                }
+                                
+                                console.log(`[checkout] ✅ ${camposRellenados} campos pre-llenados correctamente`);
+                            } else {
+                                console.log('[checkout] ❌ No hay usuarioData en respuesta');
+                                console.log('[checkout] Respuesta completa:', JSON.stringify(resultado, null, 2));
+                            }
+                        } catch (error) {
+                            console.error('[checkout] ❌ Error llamando /api/get-user-data:', error);
+                        }
+                        
+                        return;
+                    } else {
+                        console.log('[checkout] ❌ Falta email o accessToken');
+                        console.log('[checkout] Email:', userEmail, 'Token:', !!accessToken);
+                    }
+                } else {
+                    console.log('[checkout] ❌ No hay sesión en localStorage');
+                }
+            } catch (error) {
+                console.log('[checkout] ❌ Error procesando sesión:', error);
+            }
+
+            console.log('[checkout] No hay usuario logueado, buscando datos previos guardados...');
+            
+            // Si no hay usuario logueado, intentar cargar datos previos guardados
+            const datosGuardados = sessionStorage.getItem('datos-cliente');
+            if (datosGuardados) {
+                try {
+                    const datos = JSON.parse(datosGuardados);
+                    document.getElementById('nombre').value = datos.nombre || '';
+                    document.getElementById('email').value = datos.email || '';
+                    document.getElementById('telefono').value = datos.telefono || '';
+                    document.getElementById('direccion').value = datos.direccion || '';
+                    document.getElementById('ciudad').value = datos.ciudad || '';
+                    document.getElementById('codigo-postal').value = datos.codigoPostal || '';
+                    document.getElementById('pais').value = datos.pais || 'España';
+                    console.log('[checkout] Datos previos cargados desde sesión');
+                } catch (e) {
+                    console.log('[checkout] Error cargando datos previos:', e);
+                }
+            }
+        }
+
+        // Renderizar orden
+        function renderizarOrden() {
+            let subtotal = 0;
+            const orderItems = document.getElementById('order-items');
+            orderItems.innerHTML = '';
+            
+            (window._checkoutCarrito || []).forEach(item => {
+                const itemTotal = item.precio * item.cantidad;
+                subtotal += itemTotal;
+                
+                const itemEl = document.createElement('div');
+                itemEl.className = 'order-item';
+                itemEl.innerHTML = `
+                    <span class="order-item-name">${item.nombre}</span>
+                    <span class="order-item-qty">x${item.cantidad}</span>
+                    <span class="order-item-price">€${itemTotal.toFixed(2)}</span>
+                `;
+                orderItems.appendChild(itemEl);
+            });
+            
+            // Calcular totales
+            const envio = subtotal > 100 ? 0 : 3;
+            const descuento = subtotal * ((window.descuentoAplicado || 0) / 100);
+            const total = subtotal + envio - descuento;
+            
+            document.getElementById('checkout-subtotal').textContent = `€${subtotal.toFixed(2)}`;
+            document.getElementById('checkout-envio').textContent = envio > 0 ? `€${envio.toFixed(2)}` : 'Gratis';
+            
+            if ((window.descuentoAplicado || 0) > 0) {
+                document.getElementById('checkout-descuento-row').style.display = 'flex';
+                document.getElementById('checkout-descuento').textContent = `-€${descuento.toFixed(2)}`;
+            }
+            
+            document.getElementById('checkout-total').textContent = `€${total.toFixed(2)}`;
+        }
+
+        // Continuar a página de pago
+        function continuarAPago(e) {
+            e.preventDefault();
+            
+            // Validar datos
+            const nombre = document.getElementById('nombre').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const telefono = document.getElementById('telefono').value.trim();
+            const direccion = document.getElementById('direccion').value.trim();
+            const ciudad = document.getElementById('ciudad').value.trim();
+            const codigoPostal = document.getElementById('codigo-postal').value.trim();
+            const pais = document.getElementById('pais').value.trim();
+            
+            if (!nombre || !email || !telefono || !direccion || !ciudad || !codigoPostal || !pais) {
+                alert('Por favor completa todos los campos');
+                return;
+            }
+            
+            // Guardar datos del cliente
+            const datosCliente = {
+                nombre,
+                email,
+                telefono,
+                direccion,
+                ciudad,
+                codigoPostal,
+                pais
+            };
+            
+            sessionStorage.setItem('datos-cliente', JSON.stringify(datosCliente));
+            
+            // Ir a la página de pago
+            window.location.href = '/pago';
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarCheckout();
+        });
+
+        // Hacer función global para el form
+        window.continuarAPago = continuarAPago;
+    </script>
+    <script src="/js/descuentos.js" is:inline></script>
+    
+    <!-- ⏸️ PAUSAR TEMPORIZADOR DEL CARRITO EN CHECKOUT -->
+    <script is:inline>
+        // Pausar el temporizador cuando entramos a checkout
+        if (window.pausarTemporizador) {
+            window.pausarTemporizador();
+            console.log('[checkout] Temporizador pausado - estamos en checkout');
+        }
+    </script>
+</PublicLayout>

@@ -1,0 +1,173 @@
+/* Notificación de Reserva de Stock */
+
+.stock-reservation-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-left: 5px solid #27ae60;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    max-width: 400px;
+    z-index: 10000;
+    animation: slideIn 0.3s ease-out;
+}
+
+.stock-reservation-notification.fade-out {
+    animation: fadeOut 0.5s ease-out forwards;
+}
+
+.stock-reservation-notification.expired {
+    border-left-color: #e74c3c;
+    background-color: #fff5f5;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(450px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(450px);
+    }
+}
+
+.notification-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notification-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #27ae60;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+    padding: 0;
+    margin: -4px;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.notification-close:hover {
+    color: #333;
+}
+
+.notification-message {
+    margin: 0;
+    font-size: 14px;
+    color: #333;
+    line-height: 1.5;
+}
+
+.reservation-timer {
+    padding-top: 8px;
+    border-top: 1px solid #eee;
+}
+
+.timer-bar {
+    height: 4px;
+    background: linear-gradient(90deg, #27ae60, #2ecc71);
+    border-radius: 2px;
+    margin-bottom: 8px;
+    transition: width 0.1s linear;
+}
+
+.timer-text {
+    margin: 0;
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+    text-align: right;
+}
+
+.stock-reservation-notification.expired .timer-text {
+    color: #e74c3c;
+}
+
+/* Badge de temporizador en el carrito */
+.reservation-timer-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+    white-space: nowrap;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .stock-reservation-notification {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    .reservation-timer-badge {
+        display: block;
+        margin-left: 0;
+        margin-top: 4px;
+    }
+}
+
+.timer-text {
+    margin: 0;
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+    text-align: right;
+}
+
+.stock-reservation-notification.expired .timer-text {
+    color: #e74c3c;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .stock-reservation-notification {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}

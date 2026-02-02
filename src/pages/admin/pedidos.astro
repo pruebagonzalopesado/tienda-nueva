@@ -1,0 +1,1550 @@
+---
+// Este archivo renderiza la página de gestión de pedidos
+// La validación de sesión ocurre en el cliente con JavaScript
+---
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Pedidos - Joyería Galiana</title>
+    <link rel="stylesheet" href="/css/admin-styles.css?v=7">
+    <style>
+        /* FORZAR COLORES CORRECTOS */
+        :root {
+            --color-principal: #d4af37 !important;
+            --color-secundario: #720916 !important;
+            --color-fondo: #f8f6f3 !important;
+            --color-texto: #333 !important;
+            --color-luz: #ffffff !important;
+        }
+        .admin-header {
+            background: linear-gradient(135deg, #720916 0%, #501429 100%) !important;
+            border-bottom: 4px solid #d4af37 !important;
+        }
+        .admin-sidebar {
+            background: #720916 !important;
+        }
+        .admin-sidebar .nav-link:hover,
+        .admin-sidebar .nav-link.active {
+            background: rgba(212, 175, 55, 0.2) !important;
+            border-left-color: #d4af37 !important;
+            color: #d4af37 !important;
+        }
+        .btn-logout {
+            background: #d4af37 !important;
+            color: #720916 !important;
+        }
+        .btn-back {
+            color: #d4af37 !important;
+            border-color: #d4af37 !important;
+        }
+        .pedidos-table thead {
+            background: #d4af37 !important;
+        }
+        .btn-principal {
+            background: linear-gradient(135deg, #d4af37, #E5C158) !important;
+            color: #720916 !important;
+        }
+        
+        .pedidos-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .pedidos-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .pedidos-table thead {
+            background: var(--color-principal);
+            color: white;
+        }
+
+        .pedidos-table th {
+            padding: 1.2rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--color-principal);
+        }
+
+        .pedidos-table tbody tr {
+            border-bottom: 1px solid #e0e0e0;
+            transition: background 0.3s ease;
+        }
+
+        .pedidos-table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .pedidos-table td {
+            padding: 1rem 1.2rem;
+        }
+
+        .pedido-id {
+            font-weight: 600;
+            color: var(--color-principal);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .pedido-id:hover {
+            color: var(--color-secundario);
+        }
+
+        .estado-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .estado-pendiente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .estado-confirmado {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .estado-enviado {
+            background: #cfe2ff;
+            color: #084298;
+        }
+
+        .estado-entregado {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .estado-cancelado {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .pagination button,
+        .pagination a {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--color-principal);
+            background: white;
+            color: var(--color-principal);
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .pagination button:hover:not(:disabled),
+        .pagination a:hover {
+            background: var(--color-principal);
+            color: white;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .active {
+            background: var(--color-principal);
+            color: white;
+        }
+
+        /* Modal de detalles */
+        .modal-detalle {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .modal-detalle.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--color-principal);
+            padding-bottom: 1rem;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--color-principal);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: var(--color-principal);
+        }
+
+        .detalle-section {
+            margin-bottom: 2rem;
+        }
+
+        .detalle-section h3 {
+            color: var(--color-principal);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .detalle-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .detalle-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detalle-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .detalle-value {
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .productos-list {
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .producto-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f9f9f9;
+        }
+
+        .producto-item:last-child {
+            border-bottom: none;
+        }
+
+        .producto-info {
+            flex: 1;
+        }
+
+        .producto-nombre {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.3rem;
+        }
+
+        .producto-detalle {
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .producto-precio {
+            text-align: right;
+            font-weight: 600;
+            color: var(--color-principal);
+            font-size: 1.1rem;
+        }
+
+        .resumen-pedido {
+            background: #f9f9f9;
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 4px solid var(--color-principal);
+        }
+
+        .resumen-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .resumen-total {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--color-principal);
+            border-top: 2px solid #ddd;
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+
+        .estado-select {
+            padding: 0.75rem;
+            border: 1px solid var(--color-principal);
+            border-radius: 4px;
+            font-size: 1rem;
+            color: #333;
+            background: white;
+            cursor: pointer;
+            width: 200px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            justify-content: flex-end;
+            border-top: 2px solid #e0e0e0;
+            padding-top: 1rem;
+        }
+
+        .btn-actualizar,
+        .btn-descargar,
+        .btn-cerrar {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-actualizar {
+            background: var(--color-principal);
+            color: white;
+        }
+
+        .btn-actualizar:hover {
+            background: var(--color-secundario);
+            transform: translateY(-2px);
+        }
+
+        .btn-descargar {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-descargar:hover {
+            background: #0b7dda;
+            transform: translateY(-2px);
+        }
+
+        .btn-cerrar {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-cerrar:hover {
+            background: #ccc;
+        }
+
+        .search-container {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-input {
+            padding: 0.75rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .no-pedidos {
+            text-align: center;
+            padding: 3rem;
+            color: #999;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #999;
+        }
+
+        :root {
+            --color-principal: #8b5cf6;
+            --color-secundario: #7c3aed;
+            --color-luz: #f3f4f6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header del Admin -->
+    <header class="admin-header">
+        <div class="container">
+            <h1>
+                <img src="/images/logo.png" alt="Joyería Galiana" style="height: 60px; vertical-align: middle; margin-right: 15px;">
+                Gestión de Pedidos
+            </h1>
+            <div class="user-info">
+                <span id="user-email"></span>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <div class="admin-container">
+        <aside class="admin-sidebar">
+            <nav>
+                <ul>
+                    <li><a href="/admin/panel" class="nav-link">📊 Dashboard</a></li>
+                    <li><a href="/admin/panel" class="nav-link">💎 Productos</a></li>
+                    <li><a href="/admin/panel" class="nav-link">🎁 Ofertas</a></li>
+                    <li><a href="/admin/panel" class="nav-link">🖼️ Galería</a></li>
+                    <li><a href="#" class="nav-link active" onclick="showSection(event, 'pedidos')">📦 Pedidos</a></li>
+                    <li><a href="#" class="nav-link" onclick="showSection(event, 'devoluciones')">↩️ Devoluciones</a></li>
+                    <li><a href="#" class="nav-link" onclick="showSection(event, 'newsletter')">📧 Newsletter</a></li>
+                </ul>
+            </nav>
+            <a href="/" class="btn-back">← Volver a la Web</a>
+        </aside>
+
+        <main class="admin-content">
+            <section class="admin-section active" id="pedidos-section">
+                <div class="section-header">
+                    <h2>Lista de Pedidos</h2>
+                </div>
+
+                <div class="search-container">
+                    <input type="text" id="search-input" class="search-input" placeholder="Buscar por email o ID del pedido...">
+                    <select id="filter-estado" class="search-input" style="max-width: 200px;">
+                        <option value="">Todos los estados</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="confirmado">Confirmado</option>
+                        <option value="enviado">Enviado</option>
+                        <option value="entregado">Entregado</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+
+                <div class="tabla-container">
+                    <table class="pedidos-table">
+                        <thead>
+                            <tr>
+                                <th>ID Pedido</th>
+                                <th>Cliente</th>
+                                <th>Email</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pedidos-tbody">
+                            <tr>
+                                <td colspan="7" class="loading">Cargando pedidos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" id="pagination"></div>
+            </section>
+
+            <section class="admin-section" id="newsletter-section">
+                <div class="section-header">
+                    <h2>Gestión de Newsletter</h2>
+                </div>
+
+                <div class="newsletter-admin-container">
+                    <div class="newsletter-top">
+                        <div class="stat-box">
+                            <div class="stat-label">Suscriptores Activos</div>
+                            <div class="stat-value" id="subscriber-count">-</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Últimos Envíos</div>
+                            <div class="stat-value" id="last-sends-count">-</div>
+                        </div>
+                    </div>
+
+                    <div class="newsletter-form-section">
+                        <h3>Enviar Newsletter</h3>
+                        <form id="newsletter-send-form" onsubmit="sendNewsletterEmail(event)">
+                            <div class="form-group">
+                                <label for="newsletter-subject">Asunto:</label>
+                                <input 
+                                    type="text" 
+                                    id="newsletter-subject" 
+                                    placeholder="Ej: Nueva colección de primavera"
+                                    required
+                                />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="newsletter-content">Contenido (HTML):</label>
+                                <textarea 
+                                    id="newsletter-content" 
+                                    placeholder="Escribe el contenido del email..."
+                                    rows="10"
+                                    required
+                                ></textarea>
+                            </div>
+
+                            <div class="form-group checkbox-group">
+                                <label>
+                                    <input type="checkbox" id="confirm-send" required />
+                                    <span>Confirmo el envío a todos los suscriptores</span>
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn-principal">Enviar Newsletter</button>
+                        </form>
+                        <p class="form-info" style="margin-top: 15px; padding: 10px; background: #fff3cd; border-left: 4px solid #d4af37; color: #666; font-size: 0.9rem;">
+                            💡 Tip: Puedes usar HTML básico para formatear tu email. Ej: &lt;b&gt;texto&lt;/b&gt;, &lt;a href="url"&gt;enlace&lt;/a&gt;, etc.
+                        </p>
+                    </div>
+
+                    <div class="newsletter-history-section">
+                        <h3>Historial de Envíos</h3>
+                        <table class="newsletter-table">
+                            <thead>
+                                <tr>
+                                    <th>Asunto</th>
+                                    <th>Destinatarios</th>
+                                    <th>Enviados</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody id="newsletter-history-tbody">
+                                <tr>
+                                    <td colspan="4" class="loading">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección de Devoluciones -->
+            <section class="admin-section" id="devoluciones-section">
+                <div class="section-header">
+                    <h2>Gestión de Devoluciones</h2>
+                </div>
+
+                <div class="search-container">
+                    <input type="text" id="search-devoluciones" class="search-input" placeholder="Buscar por email o ID de pedido...">
+                    <select id="filter-devolucion-estado" class="search-input" style="max-width: 200px;">
+                        <option value="">Todos los estados</option>
+                        <option value="procesado">Procesado</option>
+                        <option value="confirmada">Confirmada</option>
+                        <option value="rechazada">Rechazada</option>
+                    </select>
+                </div>
+
+                <div class="tabla-container">
+                    <table class="pedidos-table">
+                        <thead>
+                            <tr>
+                                <th>ID Dev.</th>
+                                <th>Pedido</th>
+                                <th>Cliente</th>
+                                <th>Email</th>
+                                <th>Motivo</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="devoluciones-tbody">
+                            <tr>
+                                <td colspan="8" class="loading">Cargando devoluciones...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal de Gestión de Devoluciones -->
+    <div id="modal-devolucion" class="modal-detalle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Gestionar Devolución <span id="modal-dev-id"></span></h2>
+                <button class="modal-close" onclick="closeDevolucionModal()">&times;</button>
+            </div>
+
+            <div class="detalle-section">
+                <h3>Información de la Devolución</h3>
+                <div class="detalle-row">
+                    <div class="detalle-item">
+                        <span class="detalle-label">ID Devolución</span>
+                        <span class="detalle-value" id="dev-id">-</span>
+                    </div>
+                    <div class="detalle-item">
+                        <span class="detalle-label">ID Pedido</span>
+                        <span class="detalle-value" id="dev-pedido-id">-</span>
+                    </div>
+                </div>
+                <div class="detalle-row">
+                    <div class="detalle-item">
+                        <span class="detalle-label">Cliente</span>
+                        <span class="detalle-value" id="dev-cliente">-</span>
+                    </div>
+                    <div class="detalle-item">
+                        <span class="detalle-label">Email</span>
+                        <span class="detalle-value" id="dev-email">-</span>
+                    </div>
+                </div>
+                <div class="detalle-item">
+                    <span class="detalle-label">Motivo de Devolución</span>
+                    <span class="detalle-value" id="dev-motivo">-</span>
+                </div>
+                <div class="detalle-item">
+                    <span class="detalle-label">Estado Actual</span>
+                    <span class="detalle-value" id="dev-estado-actual">-</span>
+                </div>
+            </div>
+
+            <div class="detalle-section" id="dev-acciones">
+                <h3>Acciones</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="confirmarDevolucion()" class="btn-principal" style="background: #28a745; flex: 1; min-width: 150px;">
+                        ✅ Confirmar Devolución
+                    </button>
+                    <button onclick="abrirModalRechazo()" class="btn-principal" style="background: #f44336; flex: 1; min-width: 150px;">
+                        ❌ Rechazar Devolución
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal de Rechazo -->
+            <div id="modal-rechazo" style="display: none; margin-top: 20px; padding: 20px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                <h4 style="color: #856404; margin-top: 0;">Motivo del Rechazo</h4>
+                <textarea 
+                    id="motivo-rechazo" 
+                    placeholder="Ingresa el motivo del rechazo..."
+                    style="width: 100%; min-height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: Arial; box-sizing: border-box;"
+                ></textarea>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button onclick="enviarRechazo()" class="btn-principal" style="background: #f44336; flex: 1;">
+                        Confirmar Rechazo
+                    </button>
+                    <button onclick="cerrarModalRechazo()" class="btn-principal" style="background: #999; flex: 1;">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalles del Pedido -->
+    <div id="modal-detalle" class="modal-detalle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Detalles del Pedido <span id="modal-pedido-id"></span></h2>
+                <button class="close-modal" onclick="cerrarModal()">&times;</button>
+            </div>
+
+            <!-- Información del Cliente -->
+            <div class="detalle-section">
+                <h3>Información del Cliente</h3>
+                <div class="detalle-row">
+                    <div class="detalle-item">
+                        <span class="detalle-label">Nombre</span>
+                        <span class="detalle-value" id="detalle-nombre">-</span>
+                    </div>
+                    <div class="detalle-item">
+                        <span class="detalle-label">Email</span>
+                        <span class="detalle-value" id="detalle-email">-</span>
+                    </div>
+                </div>
+                <div class="detalle-row">
+                    <div class="detalle-item">
+                        <span class="detalle-label">Teléfono</span>
+                        <span class="detalle-value" id="detalle-telefono">-</span>
+                    </div>
+                    <div class="detalle-item">
+                        <span class="detalle-label">Ciudad</span>
+                        <span class="detalle-value" id="detalle-ciudad">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dirección de Entrega -->
+            <div class="detalle-section">
+                <h3>Dirección de Entrega</h3>
+                <div class="detalle-item">
+                    <span class="detalle-label">Dirección</span>
+                    <span class="detalle-value" id="detalle-direccion">-</span>
+                </div>
+                <div class="detalle-row">
+                    <div class="detalle-item">
+                        <span class="detalle-label">Código Postal</span>
+                        <span class="detalle-value" id="detalle-codigo-postal">-</span>
+                    </div>
+                    <div class="detalle-item">
+                        <span class="detalle-label">País</span>
+                        <span class="detalle-value" id="detalle-pais">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Productos -->
+            <div class="detalle-section">
+                <h3>Productos</h3>
+                <div class="productos-list" id="detalle-productos">
+                </div>
+            </div>
+
+            <!-- Resumen Económico -->
+            <div class="detalle-section">
+                <h3>Resumen del Pedido</h3>
+                <div class="resumen-pedido">
+                    <div class="resumen-row">
+                        <span>Subtotal:</span>
+                        <span id="resumen-subtotal">€0.00</span>
+                    </div>
+                    <div class="resumen-row">
+                        <span>Envío:</span>
+                        <span id="resumen-envio">€0.00</span>
+                    </div>
+                    <div class="resumen-row" id="resumen-descuento-row" style="display: none;">
+                        <span>Descuento:</span>
+                        <span id="resumen-descuento">€0.00</span>
+                    </div>
+                    <div class="resumen-row resumen-total">
+                        <span>Total:</span>
+                        <span id="resumen-total">€0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estado del Pedido -->
+            <div class="detalle-section">
+                <h3>Estado del Pedido</h3>
+                <div class="detalle-row">
+                    <div class="detalle-item">
+                        <span class="detalle-label">Estado Actual</span>
+                        <select id="select-estado" class="estado-select">
+                            <option value="pendiente">Pendiente</option>
+                            <option value="confirmado">Confirmado</option>
+                            <option value="enviado">Enviado</option>
+                            <option value="entregado">Entregado</option>
+                            <option value="cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                    <div class="detalle-item">
+                        <span class="detalle-label">Fecha de Creación</span>
+                        <span class="detalle-value" id="detalle-fecha">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Método de Pago -->
+            <div class="detalle-section">
+                <div class="detalle-row">
+                    <div class="detalle-item">
+                        <span class="detalle-label">Método de Pago</span>
+                        <span class="detalle-value" id="detalle-metodo-pago">-</span>
+                    </div>
+                    <div class="detalle-item">
+                        <span class="detalle-label">ID Sesión Stripe</span>
+                        <span class="detalle-value" id="detalle-stripe-id">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="modal-actions">
+                <button class="btn-descargar" onclick="descargarFactura()">Descargar Factura</button>
+                <button class="btn-actualizar" onclick="actualizarEstadoPedido()">Actualizar Estado</button>
+                <button class="btn-cerrar" onclick="cerrarModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script is:inline>
+        // Configuración de Supabase
+        const SUPABASE_URL = 'https://tvzvuotqdtwmssxfnyqc.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_-XIdhOUa5OOaLbF45xNgzg_72CYzEw3';
+        window.SUPABASE_URL = SUPABASE_URL;
+        window.SUPABASE_ANON_KEY = SUPABASE_KEY;
+        function initSupabase() {
+            if (typeof window.supabase === 'undefined') {
+                setTimeout(initSupabase, 100);
+                return;
+            }
+            window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initSupabase);
+        } else {
+            initSupabase();
+        }
+    </script>
+    <script is:inline>
+        let supabaseAdmin = null;
+        let paginaActual = 1;
+        const itemsPorPagina = 10;
+        let pedidoActualDetalle = null;
+        let filtroEstado = '';
+        let filtroBusqueda = '';
+
+        // Inicializar Supabase
+        async function inicializarSupabase() {
+            // Esperar a que window.supabase esté disponible
+            while (!window.supabase) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            const { createClient } = window.supabase;
+            supabaseAdmin = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+            console.log('Supabase inicializado');
+        }
+
+        // Validar sesión
+        function validarSesion() {
+            const authSession = localStorage.getItem('authSession');
+            const currentUser = localStorage.getItem('currentUser');
+
+            // Si no hay sesión, no redirijir, solo no mostrar email
+            const userEmailEl = document.getElementById('user-email');
+            if (authSession && currentUser) {
+                try {
+                    const user = JSON.parse(currentUser);
+                    if (userEmailEl) {
+                        userEmailEl.textContent = user.email;
+                    }
+                } catch (e) {
+                    console.error('Error parsing user:', e);
+                }
+            } else if (userEmailEl) {
+                userEmailEl.textContent = 'Admin';
+            }
+        }
+
+        // Cargar pedidos
+        async function cargarPedidos(pagina = 1) {
+            paginaActual = pagina;
+            const offset = (pagina - 1) * itemsPorPagina;
+
+            try {
+                const url = new URL('/api/admin/get-pedidos', window.location.origin);
+                url.searchParams.append('page', pagina.toString());
+                url.searchParams.append('pageSize', itemsPorPagina.toString());
+
+                const response = await fetch(url.toString());
+                if (!response.ok) {
+                    throw new Error('Error al cargar pedidos');
+                }
+
+                const data = await response.json();
+                let pedidos = data.pedidos || [];
+
+                // Filtrar por búsqueda
+                if (filtroBusqueda) {
+                    pedidos = pedidos.filter(p =>
+                        p.email.toLowerCase().includes(filtroBusqueda.toLowerCase()) ||
+                        p.id.toString().includes(filtroBusqueda)
+                    );
+                }
+
+                // Filtrar por estado
+                if (filtroEstado) {
+                    pedidos = pedidos.filter(p => p.estado === filtroEstado);
+                }
+
+                renderizarPedidos(pedidos, data.total);
+                renderizarPaginacion(Math.ceil(data.total / itemsPorPagina));
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('pedidos-tbody').innerHTML = `
+                    <tr>
+                        <td colspan="7" class="loading">Error al cargar pedidos</td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Renderizar tabla de pedidos
+        function renderizarPedidos(pedidos, total) {
+            const tbody = document.getElementById('pedidos-tbody');
+
+            if (pedidos.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="no-pedidos">No se encontraron pedidos</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = pedidos.map(pedido => `
+                <tr>
+                    <td><span class="pedido-id" data-pedido-id="${pedido.id}">${String(pedido.id).substring(0, 8)}...</span></td>
+                    <td>${pedido.nombre || '-'}</td>
+                    <td>${pedido.email || '-'}</td>
+                    <td>€${parseFloat(pedido.total || 0).toFixed(2)}</td>
+                    <td><span class="estado-badge estado-${pedido.estado}">${capitalizar(pedido.estado)}</span></td>
+                    <td>${formatearFecha(pedido.fecha_creacion)}</td>
+                    <td>
+                        <button class="btn-principal btn-ver-pedido" data-pedido-id="${pedido.id}" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                            Ver
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            // Event delegation para los botones Ver
+            document.querySelectorAll('.btn-ver-pedido').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const pedidoId = e.target.closest('button').getAttribute('data-pedido-id');
+                    abrirDetalles(pedidoId);
+                });
+            });
+            
+            // Event delegation para los IDs de pedido
+            document.querySelectorAll('.pedido-id[data-pedido-id]').forEach(span => {
+                span.addEventListener('click', (e) => {
+                    const pedidoId = e.target.getAttribute('data-pedido-id');
+                    abrirDetalles(pedidoId);
+                });
+            });
+        }
+
+        // Renderizar paginación
+        function renderizarPaginacion(totalPaginas) {
+            const container = document.getElementById('pagination');
+
+            if (totalPaginas <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            // Botón anterior
+            if (paginaActual > 1) {
+                html += `<button onclick="cargarPedidos(${paginaActual - 1})">← Anterior</button>`;
+            }
+
+            // Números de página
+            for (let i = 1; i <= totalPaginas; i++) {
+                if (i === paginaActual) {
+                    html += `<button class="active">${i}</button>`;
+                } else {
+                    html += `<button onclick="cargarPedidos(${i})">${i}</button>`;
+                }
+            }
+
+            // Botón siguiente
+            if (paginaActual < totalPaginas) {
+                html += `<button onclick="cargarPedidos(${paginaActual + 1})">Siguiente →</button>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Abrir detalles del pedido
+        async function abrirDetalles(pedidoId) {
+            try {
+                const response = await fetch(`/api/admin/get-pedido-detalle?id=${pedidoId}`);
+                if (!response.ok) {
+                    alert('Error al cargar los detalles del pedido');
+                    return;
+                }
+
+                const pedido = await response.json();
+                pedidoActualDetalle = pedido;
+
+                // Llenar modal
+                document.getElementById('modal-pedido-id').textContent = String(pedido.id).substring(0, 8) + '...';
+                document.getElementById('detalle-nombre').textContent = pedido.nombre_cliente || pedido.nombre || '-';
+                document.getElementById('detalle-email').textContent = pedido.email || '-';
+                document.getElementById('detalle-telefono').textContent = pedido.telefono || '-';
+                document.getElementById('detalle-ciudad').textContent = pedido.ciudad || '-';
+                document.getElementById('detalle-direccion').textContent = pedido.direccion || '-';
+                document.getElementById('detalle-codigo-postal').textContent = pedido.codigo_postal || '-';
+                document.getElementById('detalle-pais').textContent = pedido.pais || '-';
+                document.getElementById('detalle-fecha').textContent = formatearFecha(pedido.fecha_creacion);
+                document.getElementById('detalle-metodo-pago').textContent = capitalizar(pedido.metodo_pago || '-');
+                document.getElementById('detalle-stripe-id').textContent = pedido.stripe_session_id ? pedido.stripe_session_id.substring(0, 20) + '...' : '-';
+
+                // Renderizar productos
+                const productosDiv = document.getElementById('detalle-productos');
+                if (pedido.productos && pedido.productos.length > 0) {
+                    productosDiv.innerHTML = pedido.productos.map(prod => `
+                        <div class="producto-item">
+                            <div class="producto-info">
+                                <div class="producto-nombre">${prod.nombre}</div>
+                                <div class="producto-detalle">Ref: ${prod.referencia || 'N/A'} | Talla: ${prod.talla || '-'} | Cantidad: ${prod.cantidad} x €${parseFloat(prod.precio).toFixed(2)}</div>
+                            </div>
+                            <div class="producto-precio">€${parseFloat(prod.subtotal || prod.precio * prod.cantidad).toFixed(2)}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    productosDiv.innerHTML = '<div class="producto-item" style="background: #f9f9f9;">Sin productos</div>';
+                }
+
+                // Resumen económico
+                document.getElementById('resumen-subtotal').textContent = '€' + parseFloat(pedido.subtotal || 0).toFixed(2);
+                document.getElementById('resumen-envio').textContent = '€' + parseFloat(pedido.envio || 0).toFixed(2);
+                document.getElementById('resumen-total').textContent = '€' + parseFloat(pedido.total || 0).toFixed(2);
+
+                // Mostrar descuento si existe
+                if (pedido.descuento && pedido.descuento > 0) {
+                    document.getElementById('resumen-descuento').textContent = '-€' + parseFloat(pedido.descuento).toFixed(2);
+                    document.getElementById('resumen-descuento-row').style.display = 'flex';
+                } else {
+                    document.getElementById('resumen-descuento-row').style.display = 'none';
+                }
+
+                // Establecer estado actual
+                document.getElementById('select-estado').value = pedido.estado || 'pendiente';
+
+                // Mostrar modal
+                document.getElementById('modal-detalle').classList.add('active');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar los detalles del pedido');
+            }
+        }
+
+        // Cerrar modal
+        function cerrarModal() {
+            document.getElementById('modal-detalle').classList.remove('active');
+            pedidoActualDetalle = null;
+        }
+
+        // Descargar factura del pedido
+        async function descargarFactura() {
+            if (!pedidoActualDetalle) {
+                alert('No hay pedido seleccionado');
+                return;
+            }
+
+            try {
+                console.log('[admin/pedidos] Descargando factura para pedido:', pedidoActualDetalle.id);
+                
+                const response = await fetch(`/api/admin/download-invoice?id=${pedidoActualDetalle.id}`);
+                
+                if (!response.ok) {
+                    throw new Error('Error al descargar la factura');
+                }
+
+                // Crear blob y descargar
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `factura_${pedidoActualDetalle.id}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                console.log('[admin/pedidos] ✅ Factura descargada exitosamente');
+            } catch (error) {
+                console.error('[admin/pedidos] Error al descargar factura:', error);
+                alert('Error al descargar la factura');
+            }
+        }
+
+        // Actualizar estado del pedido
+        async function actualizarEstadoPedido() {
+            if (!pedidoActualDetalle) return;
+
+            const nuevoEstado = document.getElementById('select-estado').value;
+
+            try {
+                const response = await fetch('/api/admin/update-pedido-estado', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        pedidoId: pedidoActualDetalle.id,
+                        estado: nuevoEstado
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al actualizar el pedido');
+                }
+
+                alert('Estado del pedido actualizado correctamente');
+                cerrarModal();
+                cargarPedidos(paginaActual);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al actualizar el estado del pedido');
+            }
+        }
+
+        // Filtros
+        document.addEventListener('DOMContentLoaded', () => {
+            inicializarSupabase();
+            validarSesion();
+            cargarPedidos();
+
+            // Búsqueda
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    filtroBusqueda = e.target.value;
+                    cargarPedidos(1);
+                });
+            }
+
+            // Filtro por estado
+            const filterEstado = document.getElementById('filter-estado');
+            if (filterEstado) {
+                filterEstado.addEventListener('change', (e) => {
+                    filtroEstado = e.target.value;
+                    cargarPedidos(1);
+                });
+            }
+        });
+
+        // Funciones auxiliares
+        function formatearFecha(fecha) {
+            if (!fecha) return '-';
+            const d = new Date(fecha);
+            return d.toLocaleDateString('es-ES') + ' ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function capitalizar(texto) {
+            if (!texto) return '-';
+            return texto.charAt(0).toUpperCase() + texto.slice(1);
+        }
+
+        // Logout
+        async function logout() {
+            localStorage.removeItem('authSession');
+            localStorage.removeItem('currentUser');
+            window.location.href = '/admin/admin-login';
+        }
+
+        // Cerrar modal al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            const modal = document.getElementById('modal-detalle');
+            if (e.target === modal) {
+                cerrarModal();
+            }
+        });
+
+        // ========== NEWSLETTER ==========
+        function showSection(e, sectionId) {
+            e.preventDefault();
+            
+            // Ocultar todas las secciones
+            document.querySelectorAll('.admin-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Mostrar la sección seleccionada
+            const section = document.getElementById(sectionId + '-section');
+            if (section) {
+                section.classList.add('active');
+            }
+            
+            // Actualizar enlace activo
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            e.target.classList.add('active');
+            
+            // Si es newsletter, cargar datos
+            if (sectionId === 'newsletter') {
+                loadNewsletterData();
+            }
+            
+            // Si es devoluciones, cargar datos
+            if (sectionId === 'devoluciones') {
+                cargarDevoluciones();
+            }
+        }
+
+        async function loadNewsletterData() {
+            try {
+                // Verificar que supabaseClient existe
+                if (!window.supabaseClient) {
+                    console.error('Supabase client no inicializado');
+                    return;
+                }
+
+                // Cargar suscriptores
+                const { data: subscribers, error: subError } = await window.supabaseClient
+                    .from('newsletter_subscribers')
+                    .select('*', { count: 'exact' })
+                    .eq('status', 'activo');
+                
+                if (subError) {
+                    console.error('Error cargando suscriptores:', subError);
+                } else if (subscribers) {
+                    document.getElementById('subscriber-count').textContent = subscribers.length;
+                }
+                
+                // Cargar historial de envíos
+                const { data: logs, error: logsError } = await window.supabaseClient
+                    .from('newsletter_logs')
+                    .select('*')
+                    .order('sent_at', { ascending: false })
+                    .limit(10);
+                
+                if (logsError) {
+                    console.error('Error cargando logs:', logsError);
+                    // Si la tabla no existe, mostrar 0
+                    document.getElementById('last-sends-count').textContent = '0';
+                } else if (logs) {
+                    document.getElementById('last-sends-count').textContent = logs.length;
+                    renderNewsletterHistory(logs);
+                }
+            } catch (error) {
+                console.error('Error loading newsletter data:', error);
+            }
+        }
+
+        function renderNewsletterHistory(logs) {
+            const tbody = document.getElementById('newsletter-history-tbody');
+            
+            if (!logs || logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No hay historial de envíos</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = logs.map(log => {
+                const fecha = new Date(log.sent_at).toLocaleDateString('es-ES') + ' ' + 
+                              new Date(log.sent_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                return `
+                    <tr>
+                        <td>${log.subject}</td>
+                        <td>${log.total_recipients}</td>
+                        <td>${log.emails_sent}</td>
+                        <td>${fecha}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function sendNewsletterEmail(e) {
+            e.preventDefault();
+            
+            const subject = document.getElementById('newsletter-subject').value;
+            const content = document.getElementById('newsletter-content').value;
+            const confirmCheckbox = document.getElementById('confirm-send').checked;
+            const button = e.target.querySelector('button[type="submit"]');
+            
+            if (!confirmCheckbox) {
+                alert('Debes confirmar que deseas enviar el newsletter');
+                return;
+            }
+            
+            try {
+                button.disabled = true;
+                button.textContent = 'Enviando...';
+                
+                const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                
+                const response = await fetch('/api/send-newsletter', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        subject: subject,
+                        htmlContent: content,
+                        adminEmail: currentUser.email || 'admin@joyeriagaliana.es',
+                        adminId: currentUser.id
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    alert(`Newsletter enviado exitosamente a ${result.emailsSent} suscriptores`);
+                    
+                    // Limpiar formulario
+                    document.getElementById('newsletter-send-form').reset();
+                    
+                    // Recargar datos
+                    loadNewsletterData();
+                } else {
+                    alert('Error al enviar newsletter: ' + (result.error || 'Error desconocido'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al enviar newsletter');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Enviar Newsletter';
+            }
+        }
+
+        // Cargar datos al iniciar
+        window.addEventListener('load', () => {
+            // El resto del código ya se carga
+        });
+
+        // ===== FUNCIONES PARA DEVOLUCIONES =====
+
+        let devolucionActual = null;
+
+        async function cargarDevoluciones() {
+            try {
+                const response = await fetch('/api/admin/manage-returns', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'listar' })
+                });
+
+                const data = await response.json();
+                if (!data.success) throw new Error('Error al cargar devoluciones');
+
+                let devoluciones = data.devoluciones || [];
+
+                // Aplicar filtros
+                const searchTerm = document.getElementById('search-devoluciones')?.value.toLowerCase() || '';
+                const estadoFilter = document.getElementById('filter-devolucion-estado')?.value || '';
+
+                if (searchTerm) {
+                    devoluciones = devoluciones.filter(d =>
+                        d.usuario_email.toLowerCase().includes(searchTerm) ||
+                        d.pedido_id.toString().includes(searchTerm)
+                    );
+                }
+
+                if (estadoFilter) {
+                    devoluciones = devoluciones.filter(d => d.estado === estadoFilter);
+                }
+
+                renderizarDevoluciones(devoluciones);
+            } catch (error) {
+                console.error('Error cargando devoluciones:', error);
+                document.getElementById('devoluciones-tbody').innerHTML = `
+                    <tr><td colspan="8" class="error">Error al cargar devoluciones</td></tr>
+                `;
+            }
+        }
+
+        function renderizarDevoluciones(devoluciones) {
+            const tbody = document.getElementById('devoluciones-tbody');
+            
+            if (!devoluciones || devoluciones.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="loading">No hay devoluciones</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = devoluciones.map(dev => {
+                const estadoBadge = {
+                    'procesado': '<span class="estado-badge estado-pendiente">⏳ Procesado</span>',
+                    'confirmada': '<span class="estado-badge estado-enviado">✅ Confirmada</span>',
+                    'rechazada': '<span class="estado-badge estado-cancelado">❌ Rechazada</span>'
+                };
+
+                const fechaFormato = new Date(dev.created_at).toLocaleDateString('es-ES');
+                const motivo = dev.motivo_solicitud.substring(0, 30) + (dev.motivo_solicitud.length > 30 ? '...' : '');
+
+                return `
+                    <tr>
+                        <td>${dev.id}</td>
+                        <td><a href="#" onclick="verPedido(${dev.pedido_id}); return false;" style="color: #d4af37; text-decoration: underline;">#${dev.pedido_id}</a></td>
+                        <td>${dev.usuario_nombre}</td>
+                        <td>${dev.usuario_email}</td>
+                        <td title="${dev.motivo_solicitud}">${motivo}</td>
+                        <td>${estadoBadge[dev.estado] || dev.estado}</td>
+                        <td>${fechaFormato}</td>
+                        <td>
+                            <button onclick="abrirDevolucion(${dev.id})" class="btn-action" style="background: #2196f3; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+                                Gestionar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function abrirDevolucion(devolucionId) {
+            const devolucion = document.querySelector(`tr:has(button[onclick*="${devolucionId}"])`)?.dataset;
+            
+            // Obtener datos vía API
+            fetch('/api/admin/manage-returns', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'listar' })
+            })
+            .then(r => r.json())
+            .then(data => {
+                const dev = data.devoluciones.find(d => d.id == devolucionId);
+                if (!dev) return;
+
+                devolucionActual = dev;
+                
+                document.getElementById('modal-dev-id').textContent = `#${dev.id}`;
+                document.getElementById('dev-id').textContent = dev.id;
+                document.getElementById('dev-pedido-id').textContent = dev.pedido_id;
+                document.getElementById('dev-cliente').textContent = dev.usuario_nombre;
+                document.getElementById('dev-email').textContent = dev.usuario_email;
+                document.getElementById('dev-motivo').textContent = dev.motivo_solicitud;
+                
+                const estadoTexto = {
+                    'procesado': '⏳ Procesado (Pendiente de revisar)',
+                    'confirmada': '✅ Confirmada',
+                    'rechazada': '❌ Rechazada'
+                };
+                document.getElementById('dev-estado-actual').textContent = estadoTexto[dev.estado] || dev.estado;
+
+                // Mostrar/ocultar acciones según estado
+                const acciones = document.getElementById('dev-acciones');
+                if (dev.estado === 'procesado') {
+                    acciones.style.display = 'block';
+                } else {
+                    acciones.style.display = 'none';
+                }
+
+                // Limpiar modal de rechazo
+                cerrarModalRechazo();
+
+                document.getElementById('modal-devolucion').classList.add('active');
+            });
+        }
+
+        function closeDevolucionModal() {
+            document.getElementById('modal-devolucion').classList.remove('active');
+            devolucionActual = null;
+        }
+
+        async function confirmarDevolucion() {
+            if (!devolucionActual) return;
+
+            if (!confirm('¿Confirmar esta devolución? Se procesará el reembolso automáticamente.')) return;
+
+            try {
+                const response = await fetch('/api/admin/manage-returns', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        devolucionId: devolucionActual.id,
+                        action: 'confirmar'
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ Devolución confirmada. Se ha procesado el reembolso y se envió un email al cliente.');
+                    closeDevolucionModal();
+                    cargarDevoluciones();
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error al procesar');
+            }
+        }
+
+        function abrirModalRechazo() {
+            document.getElementById('modal-rechazo').style.display = 'block';
+            document.getElementById('motivo-rechazo').focus();
+        }
+
+        function cerrarModalRechazo() {
+            document.getElementById('modal-rechazo').style.display = 'none';
+            document.getElementById('motivo-rechazo').value = '';
+        }
+
+        async function enviarRechazo() {
+            if (!devolucionActual) return;
+
+            const motivo = document.getElementById('motivo-rechazo').value.trim();
+            if (!motivo) {
+                alert('Por favor, ingresa un motivo de rechazo');
+                return;
+            }
+
+            if (!confirm('¿Rechazar esta devolución? Se enviará una notificación al cliente.')) return;
+
+            try {
+                const response = await fetch('/api/admin/manage-returns', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        devolucionId: devolucionActual.id,
+                        action: 'rechazar',
+                        motivo_rechazo: motivo
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('❌ Devolución rechazada. Se envió un email de notificación al cliente.');
+                    closeDevolucionModal();
+                    cargarDevoluciones();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al procesar el rechazo');
+            }
+        }
+
+        // Event listeners para filtros de devoluciones
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('search-devoluciones')?.addEventListener('keyup', cargarDevoluciones);
+            document.getElementById('filter-devolucion-estado')?.addEventListener('change', cargarDevoluciones);
+            
+            // Cargar devoluciones cuando se acceda a la sección
+            const interval = setInterval(() => {
+                if (document.getElementById('devoluciones-section')?.classList.contains('active')) {
+                    cargarDevoluciones();
+                    clearInterval(interval);
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>

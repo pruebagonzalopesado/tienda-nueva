@@ -1,0 +1,107 @@
+---
+/**
+ * Componente Form Input genérico reutilizable
+ * Soporta: text, email, number, password, textarea, select
+ */
+
+export interface InputProps {
+  name: string;
+  label?: string;
+  type?: 'text' | 'email' | 'number' | 'password' | 'tel' | 'url';
+  placeholder?: string;
+  value?: string | number;
+  required?: boolean;
+  min?: number | string;
+  max?: number | string;
+  step?: number | string;
+  pattern?: string;
+  error?: string;
+  help?: string;
+}
+
+export interface TextAreaProps extends InputProps {
+  rows?: number;
+  maxLength?: number;
+}
+
+export interface SelectProps extends InputProps {
+  options: Array<{ value: string; label: string }>;
+}
+
+interface Props {
+  type?: 'input' | 'textarea' | 'select';
+  props: InputProps | TextAreaProps | SelectProps;
+}
+
+const { type = 'input', props } = Astro.props as Props;
+const {
+  name,
+  label,
+  placeholder,
+  value = '',
+  required = false,
+  error,
+  help,
+  ...rest
+} = props;
+
+const baseClasses =
+  'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-navy focus:ring-2 outline-none transition';
+const errorClasses = error ? 'border-red-500 focus:ring-red-500' : '';
+const classes = `${baseClasses} ${errorClasses}`;
+---
+
+<div class="mb-4">
+  {label && (
+    <label for={name} class="block font-semibold text-gray-900 mb-2">
+      {label}
+      {required && <span class="text-red-500">*</span>}
+    </label>
+  )}
+
+  {type === 'input' && (
+    <input
+      id={name}
+      name={name}
+      class={classes}
+      placeholder={placeholder}
+      value={value}
+      required={required}
+      {...rest}
+    />
+  )}
+
+  {type === 'textarea' && (
+    <textarea
+      id={name}
+      name={name}
+      class={classes}
+      placeholder={placeholder}
+      value={value}
+      required={required}
+      rows={(props as TextAreaProps).rows || 4}
+      {...rest}
+    ></textarea>
+  )}
+
+  {type === 'select' && (
+    <select
+      id={name}
+      name={name}
+      class={classes}
+      value={value}
+      required={required}
+      {...rest}
+    >
+      <option value="">Selecciona una opción</option>
+      {(props as SelectProps).options.map((opt) => (
+        <option value={opt.value} selected={opt.value === value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  )}
+
+  {error && <p class="text-red-500 text-sm mt-1">{error}</p>}
+  {help && <p class="text-gray-500 text-xs mt-1">{help}</p>}
+</div>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - Joyería Galiana</title>
+    <link rel="stylesheet" href="/css/admin-styles.css?v=2">
+</head>
+
+<body>
+    <header class="admin-header">
+        <div class="container">
+            <h1><img src="/images/logo.png" alt="Joyería Galiana" style="height: 60px; vertical-align: middle; margin-right: 15px;">Panel Admin</h1>
+            <div class="user-info">
+                <span id="user-email"></span>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <aside class="admin-sidebar">
+            <nav>
+                <ul>
+                    <li><a href="#" data-section="dashboard" class="nav-link active">📊 Dashboard</a></li>
+                    <li><a href="#" data-section="productos" class="nav-link">💎 Productos</a></li>
+                    <li><a href="#" data-section="ofertas" class="nav-link">🎁 Ofertas</a></li>
+                    <li><a href="#" data-section="galeria" class="nav-link">🖼️ Galería</a></li>
+                </ul>
+            </nav>
+            <a href="/" class="btn-back">← Volver a la Web</a>
+        </aside>
+
+        <main class="admin-content">
+            <section id="dashboard" class="admin-section active">
+                <h2>Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Productos</h3>
+                        <p id="stat-productos">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Ofertas</h3>
+                        <p id="stat-ofertas">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Slides Galería</h3>
+                        <p id="stat-galeria">0</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="productos" class="admin-section">
+                <div class="section-header">
+                    <h2>Gestión de Productos</h2>
+                    <button onclick="abrirFormularioProducto()" class="btn-principal">+ Nuevo Producto</button>
+                </div>
+
+                <div id="formulario-producto" class="formulario-admin" style="display: none;">
+                    <h3 id="formulario-titulo">Agregar Nuevo Producto</h3>
+                    <form id="form-producto" onsubmit="guardarProducto(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nombre:</label>
+                                <input type="text" id="prod-nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Precio (€):</label>
+                                <input type="number" id="prod-precio" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Categoría:</label>
+                                <select id="prod-categoria">
+                                    <option>Anillos</option>
+                                    <option>Collares</option>
+                                    <option>Pendientes</option>
+                                    <option>Pulseras</option>
+                                    <option>Relojes</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Etiqueta:</label>
+                                <select id="prod-etiqueta">
+                                    <option value="">Sin etiqueta</option>
+                                    <option>NUEVO</option>
+                                    <option>DESTACADO</option>
+                                    <option>OFERTA</option>
+                                    <option>LIMITADA</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción:</label>
+                            <textarea id="prod-descripcion" rows="4"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Imágenes del Producto:</label>
+                            <input type="file" id="prod-imagen-file" accept="image/*" multiple>
+                            <small>Selecciona una o varias imágenes</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Stock:</label>
+                            <input type="number" id="prod-stock" value="0">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-principal">Guardar Producto</button>
+                            <button type="button" onclick="cerrarFormularioProducto()" class="btn-secundario">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="tabla-container">
+                    <table id="tabla-productos">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Precio</th>
+                                <th>Categoría</th>
+                                <th>Stock</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productos-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="ofertas" class="admin-section">
+                <div class="section-header">
+                    <h2>Gestión de Ofertas</h2>
+                    <button onclick="abrirFormularioOferta()" class="btn-principal">+ Nueva Oferta</button>
+                </div>
+
+                <div id="formulario-oferta" class="formulario-admin" style="display: none;">
+                    <h3 id="oferta-titulo">Agregar Oferta a Producto</h3>
+                    <form id="form-oferta" onsubmit="guardarOferta(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Producto:</label>
+                                <select id="oferta-producto" required>
+                                    <option value="">Selecciona un producto</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Descuento (%):</label>
+                                <input type="number" id="oferta-descuento" min="1" max="100" required>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-principal">Guardar Oferta</button>
+                            <button type="button" onclick="cerrarFormularioOferta()" class="btn-secundario">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="tabla-container">
+                    <table id="tabla-ofertas">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Descuento</th>
+                                <th>Precio Original</th>
+                                <th>Precio con Descuento</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ofertas-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="galeria" class="admin-section">
+                <div class="section-header">
+                    <h2>Gestión de Galería (Hero)</h2>
+                    <button onclick="abrirFormularioSlide()" class="btn-principal">+ Nuevo Slide</button>
+                </div>
+
+                <div id="formulario-slide" class="formulario-admin" style="display: none;">
+                    <h3 id="slide-titulo">Agregar Nuevo Slide</h3>
+                    <form id="form-slide" onsubmit="guardarSlide(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Título:</label>
+                                <input type="text" id="slide-titulo-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Orden:</label>
+                                <input type="number" id="slide-orden" value="1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción:</label>
+                            <textarea id="slide-descripcion" rows="4"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Imagen del Slide:</label>
+                            <input type="file" id="slide-imagen-file" accept="image/*">
+                            <small>O usa URL si prefieres:</small>
+                            <input type="url" id="slide-imagen" placeholder="https://ejemplo.com/imagen.jpg">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="slide-activo" checked>
+                                Activo
+                            </label>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-principal">Guardar Slide</button>
+                            <button type="button" onclick="cerrarFormularioSlide()" class="btn-secundario">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="galeria-grid" class="galeria-grid">
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase-init.js?v=2"></script>
+    <script src="/js/supabase-config.js"></script>
+    <script src="/js/admin.js"></script>
+</body>
+
+</html>

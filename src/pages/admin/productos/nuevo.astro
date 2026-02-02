@@ -1,0 +1,115 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Nuevo Producto">
+  <div class="space-y-6">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Crear Nuevo Producto</h1>
+      <p class="text-gray-600 mt-1">Agrega un nuevo producto a tu tienda</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+      <form class="space-y-6" id="product-form">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Nombre del Producto
+            </label>
+            <input
+              type="text"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-900"
+              placeholder="Ej: Collar Minimalista"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Categoría
+            </label>
+            <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-900">
+              <option>Collares</option>
+              <option>Anillos</option>
+              <option>Pulseras</option>
+              <option>Aretes</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Precio
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-900"
+              placeholder="299.99"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Stock
+            </label>
+            <input
+              type="number"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-900"
+              placeholder="10"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Descripción
+          </label>
+          <textarea
+            rows={4}
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-900"
+            placeholder="Describe tu producto..."
+          ></textarea>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Imágenes
+          </label>
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+          />
+        </div>
+
+        <div class="flex gap-4">
+          <button
+            type="submit"
+            class="px-6 py-2 bg-amber-900 text-white rounded-lg hover:bg-amber-800 font-medium"
+          >
+            Crear Producto
+          </button>
+          <a
+            href="/admin/productos"
+            class="px-6 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 font-medium"
+          >
+            Cancelar
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('product-form');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert('Producto creado exitosamente');
+      // Aquí iría la lógica de envío a Supabase
+    });
+  </script>
+</AdminLayout>
