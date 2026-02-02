@@ -583,46 +583,113 @@ function updateAuthUI() {
 
     if (currentUser && currentUserData) {
         const displayName = currentUserData.nombre || currentUserData.email.split('@')[0];
-        authBtn.innerHTML = `
-            <div class="user-menu" style="display: flex; align-items: center; position: relative;">
-                <button id="user-info-btn" class="btn-usuario" style="background: rgba(255, 255, 255, 0.1); color: white; border: 2px solid var(--color-principal); padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>${displayName}</button>
-                <div id="user-dropdown" class="user-dropdown" style="display:none; position: absolute; top: 100%; right: 0; background: var(--color-secundario); border: 2px solid var(--color-principal); border-radius: 5px; min-width: 200px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2); z-index: 1001; margin-top: 5px;">
-                    <div class="user-info-dropdown" style="padding: 12px 15px; border-bottom: 1px solid rgba(212, 175, 55, 0.3); color: var(--color-principal);">
-                        <strong style="display: block; margin-bottom: 5px; font-size: 14px;">${displayName}</strong>
-                        <small style="display: block; font-size: 12px; color: rgba(255, 255, 255, 0.7);">${currentUserData.email}</small>
+        const isMobile = window.innerWidth <= 640;
+        
+        if (isMobile) {
+            // Móvil: ocultar completamente el auth-button y mostrar opciones
+            authBtn.style.display = 'none';
+            authBtn.innerHTML = '';
+            
+            // Mostrar el email del usuario debajo del logo
+            const userEmailDiv = document.getElementById('nav-user-email');
+            if (userEmailDiv) {
+                userEmailDiv.style.display = 'block';
+                userEmailDiv.textContent = currentUserData.email;
+            }
+            
+            // Limpiar opciones viejas si existen
+            const oldMiPerfil = document.getElementById('mobile-mi-perfil');
+            const oldMisCompras = document.getElementById('mobile-mis-compras');
+            const oldAdmin = document.getElementById('mobile-admin-link');
+            const oldLogout = document.getElementById('mobile-logout-link');
+            if (oldMiPerfil) oldMiPerfil.remove();
+            if (oldMisCompras) oldMisCompras.remove();
+            if (oldAdmin) oldAdmin.remove();
+            if (oldLogout) oldLogout.remove();
+            
+            // Agregar Mi Perfil
+            const miPerfilLi = document.createElement('li');
+            miPerfilLi.id = 'mobile-mi-perfil';
+            miPerfilLi.innerHTML = '<a href="#" onclick="window.openEditPerfilModal(); closeMobileMenu(); return false;">Mi Perfil</a>';
+            authBtn.parentElement.appendChild(miPerfilLi);
+            
+            // Agregar Mis Compras
+            const misComprasLi = document.createElement('li');
+            misComprasLi.id = 'mobile-mis-compras';
+            misComprasLi.innerHTML = '<a href="/mis-compras" onclick="closeMobileMenu()">Mis Compras</a>';
+            authBtn.parentElement.appendChild(misComprasLi);
+            
+            // Agregar Panel Admin si es admin
+            if (currentUserData.rol === 'admin') {
+                const adminLi = document.createElement('li');
+                adminLi.id = 'mobile-admin-link';
+                adminLi.innerHTML = '<a href="/admin-panel.html" onclick="closeMobileMenu()">Panel Admin</a>';
+                authBtn.parentElement.appendChild(adminLi);
+            }
+            
+            // Agregar Cerrar Sesión
+            const logoutLi = document.createElement('li');
+            logoutLi.id = 'mobile-logout-link';
+            logoutLi.innerHTML = '<a href="#" onclick="window.doLogout(); return false;">Cerrar Sesión</a>';
+            authBtn.parentElement.appendChild(logoutLi);
+        } else {
+            // Desktop: mostrar dropdown como está ahora
+            authBtn.style.display = '';
+            
+            // Ocultar el email en desktop
+            const userEmailDiv = document.getElementById('nav-user-email');
+            if (userEmailDiv) {
+                userEmailDiv.style.display = 'none';
+            }
+            
+            authBtn.innerHTML = `
+                <div class="user-menu" style="display: flex; align-items: center; position: relative;">
+                    <button id="user-info-btn" class="btn-usuario" style="background: rgba(255, 255, 255, 0.1); color: white; border: 2px solid var(--color-principal); padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>${displayName}</button>
+                    <div id="user-dropdown" class="user-dropdown" style="display:none; position: absolute; top: 100%; right: 0; background: var(--color-secundario); border: 2px solid var(--color-principal); border-radius: 5px; min-width: 200px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2); z-index: 1001; margin-top: 5px;">
+                        <div class="user-info-dropdown" style="padding: 12px 15px; border-bottom: 1px solid rgba(212, 175, 55, 0.3); color: var(--color-principal);">
+                            <strong style="display: block; margin-bottom: 5px; font-size: 14px;">${displayName}</strong>
+                            <small style="display: block; font-size: 12px; color: rgba(255, 255, 255, 0.7);">${currentUserData.email}</small>
+                        </div>
+                        <button type="button" onclick="window.openEditPerfilModal()" style="display: block; width: 100%; padding: 12px 15px; color: #d4af37; font-size: 14px; font-weight: bold; text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; transition: all 0.3s ease;">Mi Perfil</button>
+                        <a href="/mis-compras" class="dropdown-item" style="display: block; width: 100%; padding: 12px 15px; color: #d4af37; font-size: 14px; text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; transition: all 0.3s ease;">Mis Compras</a>
+                        ${currentUserData.rol === 'admin' ? '<a href="/admin-panel.html" class="dropdown-item" style="display: block; width: 100%; padding: 12px 15px; color: #d4af37; font-size: 14px; text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; transition: all 0.3s ease;">Panel Admin</a>' : ''}
+                        <button type="button" onclick="doLogout()" style="display: block; width: 100%; padding: 12px 15px; color: #ff4444; font-size: 14px; font-weight: bold; text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; transition: all 0.3s ease;">Cerrar Sesión</button>
                     </div>
-                    <button type="button" onclick="window.openEditPerfilModal()" style="display: block; width: 100%; padding: 12px 15px; color: #d4af37; font-size: 14px; font-weight: bold; text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; transition: all 0.3s ease;">Mi Perfil</button>
-                    <a href="/mis-compras" class="dropdown-item" style="display: block; width: 100%; padding: 12px 15px; color: #d4af37; font-size: 14px; text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; transition: all 0.3s ease;">Mis Compras</a>
-                    ${currentUserData.rol === 'admin' ? '<a href="/admin-panel.html" class="dropdown-item" style="display: block; width: 100%; padding: 12px 15px; color: #d4af37; font-size: 14px; text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; transition: all 0.3s ease;">Panel Admin</a>' : ''}
-                    <button type="button" onclick="doLogout()" style="display: block; width: 100%; padding: 12px 15px; color: #ff4444; font-size: 14px; font-weight: bold; text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; transition: all 0.3s ease;">Cerrar Sesión</button>
                 </div>
-            </div>
-        `;
+            `;
 
-        // Agregar eventos con delay más largo
-        setTimeout(() => {
-            const userBtn = document.getElementById('user-info-btn');
-            const dropdown = document.getElementById('user-dropdown');
+            // Agregar eventos con delay más largo
+            setTimeout(() => {
+                const userBtn = document.getElementById('user-info-btn');
+                const dropdown = document.getElementById('user-dropdown');
 
-            if (userBtn && dropdown) {
-                userBtn.onclick = function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Click en user-info-btn');
-                    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-                };
-            }
-        }, 50);
+                if (userBtn && dropdown) {
+                    userBtn.onclick = function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Click en user-info-btn');
+                        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                    };
+                }
+            }, 50);
 
-        // Cerrar dropdown al clickear fuera
-        document.addEventListener('click', function (e) {
-            const dropdown = document.getElementById('user-dropdown');
-            const userMenu = document.querySelector('.user-menu');
-            if (dropdown && userMenu && !userMenu.contains(e.target)) {
-                dropdown.style.display = 'none';
-            }
-        });
+            // Cerrar dropdown al clickear fuera
+            document.addEventListener('click', function (e) {
+                const dropdown = document.getElementById('user-dropdown');
+                const userMenu = document.querySelector('.user-menu');
+                if (dropdown && userMenu && !userMenu.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
+        }
     } else {
+        // Sin usuario logueado
+        // Ocultar el email en móvil si no hay usuario
+        const userEmailDiv = document.getElementById('nav-user-email');
+        if (userEmailDiv) {
+            userEmailDiv.style.display = 'none';
+        }
+        
         authBtn.innerHTML = `<a href="#" onclick="window.openLoginModal(); return false;" style="color: var(--color-principal); text-decoration: none; font-weight: 600;">Iniciar Sesión</a>`;
     }
 }
@@ -652,3 +719,8 @@ if (document.readyState === 'loading') {
 } else {
     init();
 }
+
+// Actualizar UI cuando cambia el tamaño de la ventana
+window.addEventListener('resize', function() {
+    updateAuthUI();
+});

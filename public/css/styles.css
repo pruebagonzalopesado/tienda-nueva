@@ -2201,6 +2201,79 @@ a[href^="sms:"] {
         display: block !important;
     }
 
+    /* Nombre del usuario en menú móvil */
+    #auth-button {
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        height: auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    #auth-button.mobile-hidden {
+        display: none !important;
+        height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+    }
+
+    #auth-button a {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 15px 20px !important;
+        color: #d4af37 !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        width: 100% !important;
+        cursor: default !important;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.3) !important;
+    }
+
+    #auth-button > div {
+        width: 100%;
+    }
+
+    #mobile-mi-perfil,
+    #mobile-mis-compras,
+    #mobile-admin-link,
+    #mobile-logout-link {
+        list-style: none !important;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.2) !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 50px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    #mobile-mi-perfil a,
+    #mobile-mis-compras a,
+    #mobile-admin-link a,
+    #mobile-logout-link a {
+        display: block !important;
+        padding: 0px 20px !important;
+        margin: 0 !important;
+        font-size: 1.1rem !important;
+        line-height: 1 !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        color: #d4af37 !important;
+        text-decoration: none !important;
+        width: 100% !important;
+    }
+
+    #mobile-mi-perfil a:active,
+    #mobile-mis-compras a:active,
+    #mobile-admin-link a:active,
+    #mobile-logout-link a:active {
+        background: rgba(212, 175, 55, 0.1) !important;
+    }
+
     /* Usuario dropdown responsive */
     .user-menu {
         position: relative;

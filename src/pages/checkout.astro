@@ -330,7 +330,7 @@ import PublicLayout from "../layouts/PublicLayout.astro";
             const pais = document.getElementById('pais').value.trim();
             
             if (!nombre || !email || !telefono || !direccion || !ciudad || !codigoPostal || !pais) {
-                alert('Por favor completa todos los campos');
+                mostrarModalError('Campos Incompletos', 'Por favor completa todos los campos requeridos para continuar.');
                 return;
             }
             

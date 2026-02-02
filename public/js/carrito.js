@@ -430,7 +430,7 @@ function renderizarCarrito() {
                     const now = Date.now();
                     const timeLeft = Math.max(0, reservations[key].expiresAt - now);
                     const minutesLeft = Math.ceil(timeLeft / 60000);
-                    timerBadge = `<span class="reservation-timer-badge" data-product-id="${item.id}" data-expires="${reservations[key].expiresAt}">⏱ ${minutesLeft}m</span>`;
+                    timerBadge = `<span class="reservation-timer-badge" data-product-id="${item.id}" data-expires="${reservations[key].expiresAt}">${minutesLeft}m</span>`;
                 }
             }
         }
@@ -923,7 +923,7 @@ async function aplicarDescuento() {
         document.getElementById('codigo-descuento').disabled = true;
         document.getElementById('codigo-descuento').value = resultado.codigo;
         boton.disabled = true;
-        boton.textContent = '✓ Aplicado';
+        boton.textContent = 'Aplicado';
         boton.style.opacity = '0.6';
 
         calcularTotales();

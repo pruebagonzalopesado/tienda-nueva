@@ -2,6 +2,109 @@
 console.log('checkout.js cargado');
 console.log('window.STRIPE_PUBLIC_KEY al cargar:', window.STRIPE_PUBLIC_KEY);
 
+// Función para mostrar modal de error profesional
+function mostrarModalError(titulo, mensaje) {
+    // Crear contenedor del modal
+    let modal = document.getElementById('checkout-error-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'checkout-error-modal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // Crear contenido del modal
+    modal.innerHTML = `
+        <div style="
+            background: white;
+            border-radius: 8px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideInModal 0.3s ease-out;
+        ">
+            <div style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 16px;
+            ">
+                <div style="
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    background: #ff6b6b;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                ">
+                    <span style="color: white; font-size: 24px; font-weight: bold;">!</span>
+                </div>
+                <h2 style="
+                    margin: 0;
+                    color: #333;
+                    font-size: 20px;
+                    font-weight: 600;
+                ">${titulo}</h2>
+            </div>
+            <p style="
+                color: #666;
+                font-size: 16px;
+                line-height: 1.5;
+                margin: 16px 0 24px 0;
+            ">${mensaje}</p>
+            <button onclick="document.getElementById('checkout-error-modal').style.display = 'none'" style="
+                width: 100%;
+                padding: 12px 24px;
+                background: #d4af37;
+                color: #1a1a1a;
+                border: none;
+                border-radius: 4px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: background 0.3s;
+            " onmouseover="this.style.background='#c99f2e'" onmouseout="this.style.background='#d4af37'">
+                Entendido
+            </button>
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+    
+    // Agregar estilos de animación
+    if (!document.getElementById('checkout-modal-styles')) {
+        const style = document.createElement('style');
+        style.id = 'checkout-modal-styles';
+        style.textContent = `
+            @keyframes slideInModal {
+                from {
+                    transform: translateY(-30px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
 // Usar window para evitar conflicto con carrito.js
 if (!window.carritoCheckout) {
     window.carritoCheckout = [];
@@ -239,12 +342,12 @@ async function procesarPago(e) {
     const terminos = document.getElementById('terminos').checked;
     
     if (!nombre || !email || !telefono || !direccion || !ciudad || !codigoPostal || !pais) {
-        alert('Por favor completa todos los datos de envío');
+        mostrarModalError('Campos Incompletos', 'Por favor completa todos los datos de envío requeridos.');
         return;
     }
     
     if (!terminos) {
-        alert('Debes aceptar los términos y condiciones');
+        mostrarModalError('Términos no Aceptados', 'Debes aceptar los términos y condiciones para continuar con tu compra.');
         return;
     }
     

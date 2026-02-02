@@ -595,7 +595,7 @@ function renderRelatedProducts(products) {
 
         card.innerHTML = `
             <div class="producto-imagen">
-                ${imagenURL ? `<img src="${imagenURL}" alt="${product.nombre}">` : '📦'}
+                ${imagenURL ? `<img src="${imagenURL}" alt="${product.nombre}">` : '[Imagen no disponible]'}
             </div>
             <div class="producto-content">
                 <div class="producto-nombre">${product.nombre}</div>

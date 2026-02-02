@@ -261,33 +261,79 @@ function updateAuthUI() {
     if (!authBtn) return;
     
     if (currentUser) {
-        authBtn.innerHTML = `
-            <div class="user-menu">
-                <button id="user-info-btn" class="btn-usuario">👤 ${currentUser.email.split('@')[0]}</button>
-                <div id="user-dropdown" class="user-dropdown" style="display:none;">
-                    ${userRole === 'admin' ? '<a href="/admin">Panel Admin</a>' : ''}
-                    <button onclick="window.logout()">Cerrar Sesión</button>
-                </div>
-            </div>
-        `;
+        const userName = currentUser.email.split('@')[0];
+        const isMobile = window.innerWidth <= 640;
         
-        const userBtn = document.getElementById('user-info-btn');
-        if (userBtn) {
-            userBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
+        if (isMobile) {
+            // Móvil: ocultar completamente el auth-button con inline style
+            authBtn.style.display = 'none';
+            authBtn.innerHTML = '';
+            
+            // Limpiar opciones viejas si existen
+            const oldMiPerfil = document.getElementById('mobile-mi-perfil');
+            const oldMisCompras = document.getElementById('mobile-mis-compras');
+            const oldAdmin = document.getElementById('mobile-admin-link');
+            const oldLogout = document.getElementById('mobile-logout-link');
+            if (oldMiPerfil) oldMiPerfil.remove();
+            if (oldMisCompras) oldMisCompras.remove();
+            if (oldAdmin) oldAdmin.remove();
+            if (oldLogout) oldLogout.remove();
+            
+            // Agregar Mi Perfil
+            const miPerfilLi = document.createElement('li');
+            miPerfilLi.id = 'mobile-mi-perfil';
+            miPerfilLi.innerHTML = '<a href="#" onclick="openEditPerfilModal(); closeMobileMenu(); return false;">Mi Perfil</a>';
+            authBtn.parentElement.appendChild(miPerfilLi);
+            
+            // Agregar Mis Compras
+            const misComprasLi = document.createElement('li');
+            misComprasLi.id = 'mobile-mis-compras';
+            misComprasLi.innerHTML = '<a href="/mis-compras" onclick="closeMobileMenu()">Mis Compras</a>';
+            authBtn.parentElement.appendChild(misComprasLi);
+            
+            // Agregar Panel Admin si es admin
+            if (userRole === 'admin') {
+                const adminLi = document.createElement('li');
+                adminLi.id = 'mobile-admin-link';
+                adminLi.innerHTML = '<a href="/admin" onclick="closeMobileMenu()">Panel Admin</a>';
+                authBtn.parentElement.appendChild(adminLi);
+            }
+            
+            // Agregar Cerrar Sesión
+            const logoutLi = document.createElement('li');
+            logoutLi.id = 'mobile-logout-link';
+            logoutLi.innerHTML = '<a href="#" onclick="window.logout(); return false;">Cerrar Sesión</a>';
+            authBtn.parentElement.appendChild(logoutLi);
+        } else {
+            // Desktop: dropdown original
+            authBtn.innerHTML = `
+                <div class="user-menu">
+                    <button id="user-info-btn" class="btn-usuario">${userName}</button>
+                    <div id="user-dropdown" class="user-dropdown" style="display:none;">
+                        ${userRole === 'admin' ? '<a href="/admin">Panel Admin</a>' : ''}
+                        <button onclick="window.logout()">Cerrar Sesión</button>
+                    </div>
+                </div>
+            `;
+            
+            const userBtn = document.getElementById('user-info-btn');
+            if (userBtn) {
+                userBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const dd = document.getElementById('user-dropdown');
+                    if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+                });
+            }
+            
+            document.addEventListener('click', function(e) {
                 const dd = document.getElementById('user-dropdown');
-                if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+                if (dd && !e.target.closest('.user-menu')) {
+                    dd.style.display = 'none';
+                }
             });
         }
-        
-        document.addEventListener('click', function(e) {
-            const dd = document.getElementById('user-dropdown');
-            if (dd && !e.target.closest('.user-menu')) {
-                dd.style.display = 'none';
-            }
-        });
     } else {
-        authBtn.innerHTML = `<button onclick="window.openLoginModal()" class="btn-login">Iniciar Sesión</button>`;
+        authBtn.innerHTML = `<a href="#" id="auth-link" onclick="closeMobileMenu()">Iniciar Sesión</a>`;
     }
 }
 
@@ -297,3 +343,8 @@ if (document.readyState === 'loading') {
 } else {
     init();
 }
+
+// Actualizar UI cuando cambia el tamaño de la ventana
+window.addEventListener('resize', function() {
+    updateAuthUI();
+});

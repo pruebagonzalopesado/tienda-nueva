@@ -411,7 +411,7 @@
 }
 
 .timer-label-slide {
-    color: #0369a1;
+    color: #d4af37;
     font-weight: 600;
     white-space: nowrap;
 }
@@ -420,47 +420,47 @@
     font-size: 18px;
     font-weight: bold;
     font-family: 'Courier New', monospace;
-    color: #0369a1;
+    color: #d4af37;
     min-width: 60px;
     text-align: right;
 }
 
 /* Estados del timer del slide */
 .cart-slide-timer.timer-green .timer-value-slide {
-    color: #16a34a;
-    background: #dcfce7;
+    color: #d4af37;
+    background: rgba(212, 175, 55, 0.15);
     padding: 3px 8px;
     border-radius: 4px;
 }
 
 .cart-slide-timer.timer-green {
-    border-bottom-color: #86efac;
-    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border-bottom-color: #d4af37;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.12) 100%);
 }
 
 .cart-slide-timer.timer-orange .timer-value-slide {
-    color: #ea580c;
-    background: #fed7aa;
+    color: #d4af37;
+    background: rgba(212, 175, 55, 0.15);
     padding: 3px 8px;
     border-radius: 4px;
 }
 
 .cart-slide-timer.timer-orange {
-    border-bottom-color: #fdba74;
-    background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+    border-bottom-color: #d4af37;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.12) 100%);
 }
 
 .cart-slide-timer.timer-red .timer-value-slide {
-    color: #dc2626;
-    background: #fecaca;
+    color: #d4af37;
+    background: rgba(212, 175, 55, 0.2);
     padding: 3px 8px;
     border-radius: 4px;
     animation: pulse 1s infinite;
 }
 
 .cart-slide-timer.timer-red {
-    border-bottom-color: #fca5a5;
-    background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+    border-bottom-color: #d4af37;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.15) 100%);
 }
 
 @media (max-width: 600px) {

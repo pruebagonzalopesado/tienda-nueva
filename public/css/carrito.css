@@ -575,7 +575,7 @@
 }
 
 .timer-label {
-    color: #0369a1;
+    color: #d4af37;
     font-weight: 600;
     font-size: 14px;
 }
@@ -584,47 +584,47 @@
     font-size: 24px;
     font-weight: bold;
     font-family: 'Courier New', monospace;
-    color: #0369a1;
+    color: #d4af37;
     min-width: 80px;
     text-align: right;
 }
 
 /* Estados del timer */
 .carrito-timer.timer-green .timer-value {
-    color: #16a34a;
-    background: #dcfce7;
+    color: #d4af37;
+    background: rgba(212, 175, 55, 0.15);
     padding: 4px 12px;
     border-radius: 4px;
 }
 
 .carrito-timer.timer-green {
-    border-color: #86efac;
-    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border-color: #d4af37;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.12) 100%);
 }
 
 .carrito-timer.timer-orange .timer-value {
-    color: #ea580c;
-    background: #fed7aa;
+    color: #d4af37;
+    background: rgba(212, 175, 55, 0.15);
     padding: 4px 12px;
     border-radius: 4px;
 }
 
 .carrito-timer.timer-orange {
-    border-color: #fdba74;
-    background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+    border-color: #d4af37;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.12) 100%);
 }
 
 .carrito-timer.timer-red .timer-value {
-    color: #dc2626;
-    background: #fecaca;
+    color: #d4af37;
+    background: rgba(212, 175, 55, 0.2);
     padding: 4px 12px;
     border-radius: 4px;
     animation: pulse 1s infinite;
 }
 
 .carrito-timer.timer-red {
-    border-color: #fca5a5;
-    background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+    border-color: #d4af37;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.15) 100%);
 }
 
 @keyframes pulse {

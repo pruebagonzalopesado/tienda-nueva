@@ -73,7 +73,7 @@ function setupContactForm(contactForm) {
             if (response.ok && result.success) {
                 console.log('✅ Mensaje enviado exitosamente');
                 // Mostrar mensaje de éxito
-                statusDiv.innerHTML = '<span style="color: #4CAF50; font-weight: 600;">✓ Mensaje enviado correctamente. Nos pondremos en contacto pronto.</span>';
+                statusDiv.innerHTML = '<span style="color: #4CAF50; font-weight: 600;">Mensaje enviado correctamente. Nos pondremos en contacto pronto.</span>';
                 
                 // Limpiar formulario
                 contactForm.reset();
