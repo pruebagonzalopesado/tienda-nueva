@@ -356,8 +356,8 @@ export async function sendPaymentSuccessEmail(
                         ` : ''}
 
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="http://localhost:4321/seguimiento-paquetes" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #c9a324 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 14px; transition: all 0.3s ease;">
-                                📦 Seguir mi Pedido
+                            <a href="https://galiana.victoriafp.online/seguimiento-paquetes" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #c9a324 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 14px; transition: all 0.3s ease;">
+                                Seguir mi Pedido
                             </a>
                             <p style="font-size: 12px; color: #999; margin-top: 10px;">Ingresa tu email y número de pedido para ver el estado</p>
                         </div>
