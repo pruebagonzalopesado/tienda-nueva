@@ -445,12 +445,12 @@ async function cargarSlidesBD() {
         const slideEl = document.createElement('div');
         slideEl.className = `galeria-slide ${index === 0 ? 'activo' : ''}`;
         slideEl.innerHTML = `
+            ${slide.imagen_url ? `<img src="${slide.imagen_url}" alt="${slide.titulo}" class="slide-image">` : '<div class="slide-bg" style="background: linear-gradient(135deg, var(--color-secundario) 0%, #501429 100%);"></div>'}
             <div class="slide-content">
                 <h2>${slide.titulo}</h2>
                 <p>${slide.descripcion || ''}</p>
                 <button class="btn-principal" onclick="irAGaleria('${slide.enlace_url || ''}')" style="cursor: pointer;">Ver Más</button>
             </div>
-            ${slide.imagen_url ? `<img src="${slide.imagen_url}" alt="${slide.titulo}" style="position: absolute; width: 100%; height: 100%; object-fit: cover; top: 0; left: 0; z-index: -1;">` : '<div class="slide-bg" style="background: linear-gradient(135deg, var(--color-secundario) 0%, #501429 100%);"></div>'}
         `;
         container.appendChild(slideEl);
     });

@@ -20,14 +20,17 @@
 			>
 		</div>
 		<nav class="nav" id="nav-menu">
+			<div class="nav-logo">
+				<img src="/images/logo.png" alt="Joyería Galiana" />
+			</div>
 			<ul>
-				<li><a href="/#inicio">Inicio</a></li>
-				<li><a href="/productos">Productos</a></li>
-				<li><a href="/#categorias">Categorías</a></li>
-				<li><a href="/#sobre-nosotros">Sobre Nosotros</a></li>
-				<li><a href="/#contacto">Contacto</a></li>
+				<li><a href="/#inicio" onclick="closeMobileMenu()">Inicio</a></li>
+				<li><a href="/productos" onclick="closeMobileMenu()">Productos</a></li>
+				<li><a href="/#categorias" onclick="closeMobileMenu()">Categorías</a></li>
+				<li><a href="/#sobre-nosotros" onclick="closeMobileMenu()">Sobre Nosotros</a></li>
+				<li><a href="/#contacto" onclick="closeMobileMenu()">Contacto</a></li>
 				<li id="auth-button">
-					<a href="#" id="auth-link">Iniciar Sesión</a>
+					<a href="#" id="auth-link" onclick="closeMobileMenu()">Iniciar Sesión</a>
 				</li>
 			</ul>
 		</nav>
@@ -63,15 +66,78 @@
 </header>
 
 <script>
-	// Manejar click en el botón de auth
-	document.addEventListener('DOMContentLoaded', function() {
-		const authLink = document.getElementById('auth-link');
+	// Función para cerrar el menú
+	window.closeMobileMenu = function() {
+		const hamburger = document.getElementById('hamburger');
+		const nav = document.getElementById('nav-menu');
+		const overlay = document.getElementById('nav-overlay');
 		
+		if (hamburger) hamburger.classList.remove('active');
+		if (nav) nav.classList.remove('active');
+		if (overlay) overlay.classList.remove('active');
+		document.body.style.overflow = '';
+	};
+
+	// Función para toggle del menú
+	window.toggleMobileMenu = function() {
+		const hamburger = document.getElementById('hamburger');
+		const nav = document.getElementById('nav-menu');
+		let overlay = document.getElementById('nav-overlay');
+		
+		if (!hamburger || !nav) return;
+		
+		hamburger.classList.toggle('active');
+		nav.classList.toggle('active');
+		
+		// Congelar/descongelar página
+		if (nav.classList.contains('active')) {
+			document.body.style.overflow = 'hidden';
+		} else {
+			document.body.style.overflow = '';
+		}
+		
+		if (!overlay) {
+			overlay = document.createElement('div');
+			overlay.id = 'nav-overlay';
+			overlay.className = 'nav-overlay';
+			document.body.appendChild(overlay);
+			setupOverlay(overlay);
+		}
+		
+		overlay.classList.toggle('active');
+	};
+
+	function setupOverlay(overlay) {
+		// Solo cerrar si el click es exactamente en el overlay, no en elementos dentro
+		overlay.addEventListener('click', function(e) {
+			if (e.target === overlay) {
+				console.log('Overlay clicked - closing menu');
+				window.closeMobileMenu();
+			}
+		}, false);
+	}
+
+	// Ejecutar al cargar
+	document.addEventListener('DOMContentLoaded', function() {
+		console.log('Header DOMContentLoaded');
+		
+		// Crear overlay
+		let overlay = document.getElementById('nav-overlay');
+		if (!overlay) {
+			overlay = document.createElement('div');
+			overlay.id = 'nav-overlay';
+			overlay.className = 'nav-overlay';
+			document.body.appendChild(overlay);
+			setupOverlay(overlay);
+		}
+
+		// Auth link handler
+		const authLink = document.getElementById('auth-link');
 		if (authLink) {
 			authLink.addEventListener('click', function(e) {
 				e.preventDefault();
+				window.closeMobileMenu();
 				
-				// Verificar en el momento del click si hay sesión
 				const currentUser = localStorage.getItem('currentUser');
 				let isAdmin = false;
 				
@@ -82,12 +148,9 @@
 					} catch(err) {}
 				}
 				
-				// También verificar si window.currentUserData está disponible (auth-new.js)
 				if (!isAdmin && window.currentUserData) {
 					isAdmin = window.currentUserData.rol === 'admin';
 				}
-				
-				console.log('Auth click - isAdmin:', isAdmin, 'currentUser:', currentUser);
 				
 				if (isAdmin) {
 					window.location.href = '/admin-panel.html';
