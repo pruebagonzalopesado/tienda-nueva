@@ -54,7 +54,7 @@ export const POST: APIRoute = async ({ request }) => {
         nombre,
         ...metadata,
       },
-      statement_descriptor: 'GALIANA JEWELRY',
+      statement_descriptor_suffix: 'GALIANA',
     });
 
     console.log('[create-payment-intent] ✅ Payment Intent creado:', paymentIntent.id);
