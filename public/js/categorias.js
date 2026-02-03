@@ -221,10 +221,10 @@ function aplicarFiltros() {
 
 // Función global para agregar al carrito
 window.agregarAlCarrito = function (producto) {
-    // Verificar si el producto tiene stock
+    // Verificar si el producto tiene stock en BD (verificación local primero)
     const productoEnBD = productosActuales.find(p => p.id === producto.id);
-    if (!productoEnBD || productoEnBD.stock <= 0) {
-        mostrarMensajeErrorStock('Lo siento, este producto no tiene stock disponible en este momento.');
+    if (!productoEnBD) {
+        mostrarMensajeErrorStock('Producto no encontrado');
         return;
     }
 
@@ -234,64 +234,108 @@ window.agregarAlCarrito = function (producto) {
         return;
     }
 
-    let cart = JSON.parse(localStorage.getItem('carrito') || '[]');
+    // Validar con el servidor para evitar race conditions
+    validarYAgregarAlCarrito(producto);
+};
 
-    const item = {
-        id: producto.id,
-        nombre: producto.nombre,
-        precio: producto.precio,
-        cantidad: 1,
-        imagen: producto.imagen || '',
-        tiempoAgregado: Date.now() // Timestamp cuando se agrega
-    };
-
-    const existingItem = cart.find(i => i.id === item.id);
-    
-    // NUEVA VALIDACIÓN: Verificar que la cantidad total no supere el stock
-    let cantidadEnCarrito = existingItem ? existingItem.cantidad : 0;
-    let cantidadTotal = cantidadEnCarrito + 1;
-    
-    if (cantidadTotal > productoEnBD.stock) {
-        const stockDisponible = productoEnBD.stock - cantidadEnCarrito;
-        mostrarMensajeErrorStock(`No hay suficiente stock disponible.\n\nYa tienes ${cantidadEnCarrito} en el carrito.\nStock disponible: ${stockDisponible}`);
-        return;
-    }
-
-    if (existingItem) {
-        existingItem.cantidad += 1;
-    } else {
-        cart.push(item);
-    }
-
-    localStorage.setItem('carrito', JSON.stringify(cart));
-    updateCartCount();
-    
-    // Restar stock de la base de datos
-    if (window.supabaseClient) {
-        fetch('/api/update-cart-stock', {
+// Función para validar stock con el servidor
+async function validarYAgregarAlCarrito(producto) {
+    try {
+        const response = await fetch('/api/add-to-cart-validated', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                productId: item.id,
-                cantidad: 1,
-                accion: 'restar'
+                productId: producto.id,
+                cantidad: 1
             })
-        })
-        .then(res => {
-            if (!res.ok) {
-                console.warn('[categorias agregarAlCarrito] API error:', res.status);
-                return null;
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            // Stock insuficiente o error
+            mostrarMensajeErrorStock(data.error || 'Error al agregar al carrito');
+            
+            // Actualizar el stock en la UI si es necesario
+            if (data.stockDisponible >= 0) {
+                const productoEnBD = productosActuales.find(p => p.id === producto.id);
+                if (productoEnBD) {
+                    productoEnBD.stock = data.stockDisponible;
+                    renderizarProductos(productosActuales);
+                }
             }
-            return res.json();
-        })
-        .then(data => {
-            if (data?.success) {
-                console.log('[categorias agregarAlCarrito] Stock actualizado:', data);
-            }
-        })
-        .catch(err => console.warn('[categorias agregarAlCarrito] Error actualizando stock:', err));
+            return;
+        }
+
+        // Stock validado correctamente, agregar al carrito local
+        let cart = JSON.parse(localStorage.getItem('carrito') || '[]');
+
+        const item = {
+            id: producto.id,
+            nombre: producto.nombre,
+            precio: producto.precio,
+            cantidad: 1,
+            imagen: producto.imagen || '',
+            tiempoAgregado: Date.now()
+        };
+
+        const existingItem = cart.find(i => i.id === item.id);
+        
+        if (existingItem) {
+            existingItem.cantidad += 1;
+        } else {
+            cart.push(item);
+        }
+
+        localStorage.setItem('carrito', JSON.stringify(cart));
+        updateCartCount();
+
+        // Actualizar stock en la UI
+        const productoEnBD = productosActuales.find(p => p.id === producto.id);
+        if (productoEnBD) {
+            productoEnBD.stock = data.producto.stockDisponible;
+            renderizarProductos(productosActuales);
+        }
+
+        console.log('[agregarAlCarrito] ✅', data.mensaje);
+        mostrarMensajeExito(data.mensaje);
+
+    } catch (error) {
+        console.error('[validarYAgregarAlCarrito] Error:', error);
+        mostrarMensajeErrorStock('Error al validar stock. Intenta nuevamente.');
     }
-};
+}
+
+// Mostrar mensaje de éxito
+function mostrarMensajeExito(mensaje) {
+    let exitoDiv = document.getElementById('exito-stock-categorias');
+    if (!exitoDiv) {
+        exitoDiv = document.createElement('div');
+        exitoDiv.id = 'exito-stock-categorias';
+        document.body.appendChild(exitoDiv);
+    }
+
+    exitoDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4caf50;
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        z-index: 10000;
+        max-width: 400px;
+        word-wrap: break-word;
+        animation: slideInRight 0.3s ease;
+    `;
+
+    exitoDiv.textContent = mensaje;
+
+    setTimeout(() => {
+        exitoDiv.remove();
+    }, 3000);
+}
 
 // Mostrar mensaje de error de stock
 function mostrarMensajeErrorStock(mensaje) {

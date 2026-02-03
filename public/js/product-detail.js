@@ -398,15 +398,10 @@ function decreaseQuantity() {
 // Agregar al carrito
 async function agregarAlCarritoDetalle() {
     if (!currentProduct) return;
-    // Guardar el ID del producto para referencia posterior
+    
     const productId = currentProduct.id;
     if (!productId) {
-        console.error('[agregarAlCarrito] productId no disponible');
-        return;
-    }
-    // Verificar si hay stock
-    if (currentProduct.stock <= 0) {
-        alert('Lo siento, este producto no tiene stock disponible en este momento.');
+        console.error('[agregarAlCarritoDetalle] productId no disponible');
         return;
     }
 
@@ -418,116 +413,103 @@ async function agregarAlCarritoDetalle() {
 
     const quantity = parseInt(document.getElementById('quantity').value);
 
-    // Calcular precio final (con descuento si aplica)
-    let precioFinal = currentProduct.precio;
-    if (currentProduct.descuento_oferta && currentProduct.descuento_oferta > 0) {
-        precioFinal = currentProduct.precio * (1 - currentProduct.descuento_oferta / 100);
-    }
+    // Validar stock con el servidor
+    validarYAgregarAlCarritoDetalle(quantity);
+}
 
-    // Obtener carrito actual desde localStorage
-    let cart = JSON.parse(localStorage.getItem('carrito') || '[]');
-
-    // Preparar datos del item del carrito
-    const cartItem = {
-        id: currentProduct.id,
-        nombre: currentProduct.nombre,
-        precio: precioFinal,
-        cantidad: quantity,
-        imagen: (() => {
-            try {
-                const imgs = Array.isArray(currentProduct.imagen_url)
-                    ? currentProduct.imagen_url
-                    : JSON.parse(currentProduct.imagen_url || '[]');
-                return imgs[0] || '';
-            } catch {
-                return '';
-            }
-        })(),
-        tiempoAgregado: Date.now() // Timestamp cuando se agrega
-    };
-    
-    // Agregar talla si es anillo
-    if (currentProduct.categoria === 'Anillos' && selectedSize) {
-        cartItem.talla = selectedSize.textContent;
-        cartItem.tallaId = selectedSize.dataset.sizeId;
-    }
-
-    // Buscar si el producto con la misma talla ya está en el carrito
-    const existingItem = cart.find(item => 
-        item.id === currentProduct.id && 
-        (item.talla === cartItem.talla || (!item.talla && !cartItem.talla))
-    );
-
-    // NUEVA VALIDACIÓN: Verificar que la cantidad total no supere el stock
-    let cantidadEnCarrito = existingItem ? existingItem.cantidad : 0;
-    let cantidadTotal = cantidadEnCarrito + quantity;
-    
-    if (cantidadTotal > currentProduct.stock) {
-        const stockDisponible = currentProduct.stock - cantidadEnCarrito;
-        mostrarAlertaStock(cantidadEnCarrito, stockDisponible, currentProduct.nombre);
-        return;
-    }
-
-    // Calcular cantidad a restar del stock
-    const cantidadARestar = existingItem ? quantity : quantity;
-
-    if (existingItem) {
-        existingItem.cantidad += quantity;
-    } else {
-        cart.push(cartItem);
-    }
-
-    localStorage.setItem('carrito', JSON.stringify(cart));
-    updateCartCount();
-    
-    // Restar stock de la base de datos y esperar a que termine
-    return new Promise((resolve, reject) => {
-        if (window.supabaseClient) {
-            fetch('/api/update-cart-stock', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    productId: currentProduct.id,
-                    cantidad: cantidadARestar,
-                    accion: 'restar'
-                })
+// Función para validar stock y agregar al carrito desde product-detail
+async function validarYAgregarAlCarritoDetalle(quantity) {
+    try {
+        // Validar con el servidor
+        const response = await fetch('/api/add-to-cart-validated', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                productId: currentProduct.id,
+                cantidad: quantity
             })
-            .then(res => {
-                if (!res.ok) {
-                    console.warn('[agregarAlCarrito] API error:', res.status);
-                    return null;
-                }
-                return res.json();
-            })
-            .then(async data => {
-                if (data?.success) {
-                    console.log('[agregarAlCarrito] Stock actualizado:', data);
-                    // Actualizar el stock visible en la página
-                    if (window.actualizarStockDesdeModal && productId) {
-                        console.log('[agregarAlCarrito] Llamando actualizarStockDesdeModal para producto:', productId);
-                        await window.actualizarStockDesdeModal(productId);
-                    }
-                }
-                // Abrir slide-over del carrito
-                if (typeof openCartSlide === 'function') {
-                    openCartSlide();
-                }
+        });
 
-                // Resetear cantidad y talla
-                document.getElementById('quantity').value = 1;
-                if (selectedSize) {
-                    selectedSize.style.background = 'white';
-                    selectedSize.style.color = '#333';
-                    selectedSize = null;
+        const data = await response.json();
+
+        if (!response.ok) {
+            // Stock insuficiente
+            console.warn('[agregarAlCarritoDetalle] Stock insuficiente:', data);
+            mostrarAlertaStock(0, data.stockDisponible || 0, currentProduct.nombre);
+            return;
+        }
+
+        // Stock validado, agregar al carrito local
+        let precioFinal = currentProduct.precio;
+        if (currentProduct.descuento_oferta && currentProduct.descuento_oferta > 0) {
+            precioFinal = currentProduct.precio * (1 - currentProduct.descuento_oferta / 100);
+        }
+
+        let cart = JSON.parse(localStorage.getItem('carrito') || '[]');
+
+        const cartItem = {
+            id: currentProduct.id,
+            nombre: currentProduct.nombre,
+            precio: precioFinal,
+            cantidad: quantity,
+            imagen: (() => {
+                try {
+                    const imgs = Array.isArray(currentProduct.imagen_url)
+                        ? currentProduct.imagen_url
+                        : JSON.parse(currentProduct.imagen_url || '[]');
+                    return imgs[0] || '';
+                } catch {
+                    return '';
                 }
-                resolve();
-            })
-            .catch(err => {
-                console.warn('[agregarAlCarrito] Error actualizando stock:', err);
-                // Abrir slide-over del carrito igual
-                if (typeof openCartSlide === 'function') {
-                    openCartSlide();
-                }
+            })(),
+            tiempoAgregado: Date.now()
+        };
+        
+        // Agregar talla si es anillo
+        if (currentProduct.categoria === 'Anillos' && selectedSize) {
+            cartItem.talla = selectedSize.textContent;
+            cartItem.tallaId = selectedSize.dataset.sizeId;
+        }
+
+        const existingItem = cart.find(item => 
+            item.id === currentProduct.id && 
+            (item.talla === cartItem.talla || (!item.talla && !cartItem.talla))
+        );
+
+        if (existingItem) {
+            existingItem.cantidad += quantity;
+        } else {
+            cart.push(cartItem);
+        }
+
+        localStorage.setItem('carrito', JSON.stringify(cart));
+        updateCartCount();
+
+        console.log('[agregarAlCarritoDetalle] ✅ Producto agregado al carrito:', currentProduct.nombre, 'cantidad:', quantity);
+
+        // Actualizar stock en la UI
+        if (window.actualizarStockDesdeModal && currentProduct.id) {
+            await window.actualizarStockDesdeModal(currentProduct.id);
+        }
+
+        // Abrir slide-over del carrito
+        if (typeof openCartSlide === 'function') {
+            openCartSlide();
+        }
+
+        // Resetear cantidad y talla
+        document.getElementById('quantity').value = 1;
+        if (selectedSize) {
+            selectedSize.style.background = 'white';
+            selectedSize.style.color = '#333';
+            selectedSize = null;
+        }
+
+    } catch (error) {
+        console.error('[validarYAgregarAlCarritoDetalle] Error:', error);
+        alert('Error al validar stock. Intenta nuevamente.');
+    }
+}
                 document.getElementById('quantity').value = 1;
                 resolve();
             });

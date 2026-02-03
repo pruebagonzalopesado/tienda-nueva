@@ -247,77 +247,108 @@ function agregarAlCarritoConTalla() {
         talla: tallaSeleccionadaGlobal
     };
 
-    // Obtener carrito
-    let carrito = JSON.parse(localStorage.getItem('carrito') || '[]');
+    // Validar stock con el servidor
+    validarYAgregarAlCarritoConTalla(producto);
+}
 
-    // Buscar si el producto con la misma talla ya existe
-    const existe = carrito.find(i => i.id === producto.id && i.talla === producto.talla);
-    
-    // NUEVA VALIDACIÓN: Verificar que la cantidad total no supere el stock
-    let cantidadEnCarrito = existe ? existe.cantidad : 0;
-    let cantidadTotal = cantidadEnCarrito + 1;
-    let stockDisponible = (productoActualModal.stock || 0);
-    
-    if (cantidadTotal > stockDisponible) {
-        window.agregarAlCarritoEnProceso = false;
-        const disponible = stockDisponible - cantidadEnCarrito;
-        mostrarAlertaStock(cantidadEnCarrito, disponible, productoActualModal.nombre);
-        return;
-    }
-
-    if (existe) {
-        existe.cantidad += 1;
-    } else {
-        carrito.push({ ...producto, cantidad: 1, tiempoAgregado: Date.now() });
-    }
-
-    // Guardar carrito
-    localStorage.setItem('carrito', JSON.stringify(carrito));
-    
-    // 🔑 IMPORTANTE: Si es el primer item, guardar timestamp en sessionStorage
-    if (carrito.length === 1 || !sessionStorage.getItem('carritoTimestamp')) {
-        const ahora = Date.now();
-        sessionStorage.setItem('carritoTimestamp', ahora.toString());
-        window.carritoTimestamp = ahora;
-    }
-    
-    // Restar stock de la base de datos
-    if (window.supabaseClient) {
-        fetch('/api/update-cart-stock', {
+// Función para validar stock con servidor antes de agregar al carrito
+async function validarYAgregarAlCarritoConTalla(producto) {
+    try {
+        const response = await fetch('/api/add-to-cart-validated', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 productId: producto.id,
-                cantidad: 1,
-                accion: 'restar'
+                cantidad: 1
             })
-        })
-        .then(res => {
-            if (!res.ok) {
-                console.warn('[modal-seleccionar-talla] API error:', res.status);
-                return null;
-            }
-            return res.json();
-        })
-        .then(async data => {
-            if (data?.success) {
-                console.log('[modal-seleccionar-talla] Stock actualizado:', data);
-                
-                // 🔄 Refrescar stock en product-detail.js - ESPERAR A QUE TERMINE
-                if (typeof window.actualizarStockDesdeModal === 'function' && producto?.id) {
-                    console.log('[modal-seleccionar-talla] Llamando window.actualizarStockDesdeModal para producto:', producto.id);
-                    await window.actualizarStockDesdeModal(producto.id);
-                    console.log('[modal-seleccionar-talla] window.actualizarStockDesdeModal completada');
-                }
-            }
-        })
-        .catch(err => console.warn('[modal-seleccionar-talla] Error actualizando stock:', err));
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            // Stock insuficiente o error
+            window.agregarAlCarritoEnProceso = false;
+            mostrarAlertaStock(0, data.stockDisponible || 0, producto.nombre);
+            return;
+        }
+
+        // Stock validado, agregar al carrito
+        let carrito = JSON.parse(localStorage.getItem('carrito') || '[]');
+
+        // Buscar si el producto con la misma talla ya existe
+        const existe = carrito.find(i => i.id === producto.id && i.talla === producto.talla);
+
+        if (existe) {
+            existe.cantidad += 1;
+        } else {
+            carrito.push({ ...producto, cantidad: 1, tiempoAgregado: Date.now() });
+        }
+
+        // Guardar carrito
+        localStorage.setItem('carrito', JSON.stringify(carrito));
+        
+        // 🔑 IMPORTANTE: Si es el primer item, guardar timestamp en sessionStorage
+        if (carrito.length === 1 || !sessionStorage.getItem('carritoTimestamp')) {
+            const ahora = Date.now();
+            sessionStorage.setItem('carritoTimestamp', ahora.toString());
+            window.carritoTimestamp = ahora;
+        }
+
+        // Actualizar contador
+        if (typeof updateCartCount === 'function') {
+            updateCartCount();
+        }
+
+        console.log('[agregarAlCarritoConTalla] ✅ Producto con talla agregado al carrito:', producto.nombre, producto.talla);
+        
+        // Actualizar stock en UI
+        if (typeof window.actualizarStockDesdeModal === 'function' && producto?.id) {
+            await window.actualizarStockDesdeModal(producto.id);
+        }
+
+        // Cerrar modal y mostrar éxito
+        cerrarModalSeleccionarTalla();
+        mostrarMensajeExitoTalla(`${producto.nombre} (Talla ${producto.talla}) agregado al carrito`);
+
+        window.agregarAlCarritoEnProceso = false;
+
+    } catch (error) {
+        console.error('[validarYAgregarAlCarritoConTalla] Error:', error);
+        window.agregarAlCarritoEnProceso = false;
+        mostrarModalAlerta('Error', 'Error al validar stock. Intenta nuevamente.', 'error');
+    }
+}
+
+// Mostrar mensaje de éxito en modal de talla
+function mostrarMensajeExitoTalla(mensaje) {
+    let exitoDiv = document.getElementById('exito-talla');
+    if (!exitoDiv) {
+        exitoDiv = document.createElement('div');
+        exitoDiv.id = 'exito-talla';
+        document.body.appendChild(exitoDiv);
     }
 
-    // Actualizar contador
-    if (typeof updateCartCount === 'function') {
-        updateCartCount();
-    }
+    exitoDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4caf50;
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        z-index: 10000;
+        max-width: 400px;
+        word-wrap: break-word;
+        animation: slideInRight 0.3s ease;
+    `;
+
+    exitoDiv.textContent = mensaje;
+
+    setTimeout(() => {
+        exitoDiv.remove();
+    }, 3000);
+}
 
     // Abrir carrito
     if (typeof openCartSlide === 'function') {
