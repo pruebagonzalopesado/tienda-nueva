@@ -363,6 +363,9 @@ function abrirCarritoDesdeModal() {
         openCartSlide();
     }
 }
+
+// Mostrar mensaje de éxito
+function mostrarMensajeExito(mensaje) {
     let sucessDiv = document.getElementById('exito-mensaje');
     if (!sucessDiv) {
         sucessDiv = document.createElement('div');
