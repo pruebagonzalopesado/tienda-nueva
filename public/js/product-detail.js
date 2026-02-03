@@ -80,6 +80,9 @@ async function loadProduct() {
         renderProduct(product);
         loadRelatedProducts(product.categoria);
         loadAllProducts();
+        
+        // 🔄 Iniciar sincronización de stock en tiempo real
+        iniciarSincronizacionStockTiempoReal();
 
     } catch (err) {
         console.error('Error cargando producto:', err);
@@ -433,9 +436,23 @@ async function validarYAgregarAlCarritoDetalle(quantity) {
         const data = await response.json();
 
         if (!response.ok) {
-            // Stock insuficiente
-            console.warn('[agregarAlCarritoDetalle] Stock insuficiente:', data);
-            mostrarAlertaStock(0, data.stockDisponible || 0, currentProduct.nombre);
+            // Stock insuficiente o agotado
+            console.warn('[validarYAgregarAlCarritoDetalle] Stock insuficiente:', data);
+            
+            const stockDisponible = data.stockDisponible || 0;
+            let mensaje = '';
+            
+            if (stockDisponible === 0) {
+                mensaje = `Lo sentimos, el producto ${currentProduct.nombre} se ha agotado. Otro usuario lo acaba de comprar.`;
+            } else {
+                mensaje = `Stock insuficiente. Solo quedan ${stockDisponible} ${stockDisponible === 1 ? 'unidad' : 'unidades'} disponible${stockDisponible === 1 ? '' : 's'}, pero intentaste agregar ${quantity}.`;
+            }
+            
+            mostrarModalAlerta('Stock no disponible', mensaje, 'error');
+            
+            // Actualizar inmediatamente el stock en la página
+            actualizarStockDisponibleEnPagina();
+            
             return;
         }
 
@@ -829,6 +846,128 @@ setInterval(() => {
     }
 }, 500); // Verificar cada 500ms
 
+// ===== SINCRONIZACIÓN DE STOCK EN TIEMPO REAL =====
+let stockSyncInterval = null;
+
+function iniciarSincronizacionStockTiempoReal() {
+    // Limpiar intervalo anterior si existe
+    if (stockSyncInterval) {
+        clearInterval(stockSyncInterval);
+    }
+    
+    console.log('[product-detail] Iniciando sincronización de stock en tiempo real (cada 1 segundo)');
+    
+    // Sincronizar stock cada 1 segundo
+    stockSyncInterval = setInterval(async () => {
+        if (!currentProduct || !window.supabaseClient) return;
+        
+        try {
+            // Obtener stock actual de la BD
+            const { data: producto, error } = await window.supabaseClient
+                .from('products')
+                .select('stock')
+                .eq('id', currentProduct.id)
+                .single();
+            
+            if (error || !producto) {
+                console.warn('[product-detail] Error sincronizando stock:', error);
+                return;
+            }
+            
+            // Si el stock cambió, actualizar
+            if (producto.stock !== currentProduct.stock) {
+                console.log(`[product-detail] 🔄 STOCK ACTUALIZADO EN TIEMPO REAL: ${currentProduct.stock} → ${producto.stock}`);
+                currentProduct.stock = producto.stock;
+                
+                // Si se agotó, mostrar notificación
+                if (producto.stock === 0 && currentProduct.stock > 0) {
+                    console.log('[product-detail] ⚠️ PRODUCTO AGOTADO EN TIEMPO REAL');
+                    mostrarNotificacionAgotado();
+                }
+                
+                // Actualizar UI inmediatamente
+                actualizarStockDisponibleEnPagina();
+                
+                // Si se agotó, deshabilitar botones
+                if (producto.stock === 0) {
+                    const agregarBtn = document.getElementById('agregar-al-carrito-btn');
+                    const buyBtn = document.querySelector('.btn-secundario.btn-large');
+                    if (agregarBtn) {
+                        agregarBtn.disabled = true;
+                        agregarBtn.textContent = 'Agotado';
+                    }
+                    if (buyBtn) {
+                        buyBtn.disabled = true;
+                        buyBtn.style.opacity = '0.5';
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn('[product-detail] Error en sincronización:', err);
+        }
+    }, 1000); // Cada 1 segundo
+}
+
+function detenerSincronizacionStockTiempoReal() {
+    if (stockSyncInterval) {
+        clearInterval(stockSyncInterval);
+        stockSyncInterval = null;
+        console.log('[product-detail] Sincronización de stock detenida');
+    }
+}
+
+function mostrarNotificacionAgotado() {
+    // Crear notificación flotante
+    const notificacion = document.createElement('div');
+    notificacion.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #ff4444, #cc0000);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 9999;
+        animation: slideInRight 0.3s ease;
+        font-weight: 600;
+        max-width: 300px;
+    `;
+    
+    notificacion.textContent = '⚠️ ' + (currentProduct.nombre || 'Producto') + ' se ha agotado. Otro usuario lo acaba de comprar.';
+    
+    document.body.appendChild(notificacion);
+    
+    // Agregar estilos de animación si no existen
+    if (!document.getElementById('product-detail-animations')) {
+        const style = document.createElement('style');
+        style.id = 'product-detail-animations';
+        style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // Eliminar después de 5 segundos
+    setTimeout(() => {
+        notificacion.style.animation = 'slideInRight 0.3s ease reverse';
+        setTimeout(() => {
+            notificacion.remove();
+        }, 300);
+    }, 5000);
+}
+
+function detenerSincronizacionStockTiempoReal() {
+
 function actualizarStockDisponibleEnPagina() {
     if (!currentProduct) {
         console.log('[actualizarStockDisponibleEnPagina] currentProduct aún no está listo');
@@ -859,7 +998,7 @@ function actualizarStockDisponibleEnPagina() {
                 stockStatus.textContent = `${stockDisponible} unidades disponibles`;
                 stockStatus.className = 'stock-status in-stock';
             } else if (stockDisponible > 0) {
-                stockStatus.textContent = `Solo ${stockDisponible} unidades disponibles`;
+                stockStatus.textContent = `Solo ${stockDisponible} ${stockDisponible === 1 ? 'unidad' : 'unidades'} disponible${stockDisponible === 1 ? '' : 's'}`;
                 stockStatus.className = 'stock-status low-stock';
             } else {
                 stockStatus.textContent = 'Agotado';
@@ -873,9 +1012,13 @@ function actualizarStockDisponibleEnPagina() {
             if (stockDisponible <= 0) {
                 agregarBtn.disabled = true;
                 agregarBtn.textContent = 'Agotado';
+                agregarBtn.style.opacity = '0.5';
+                agregarBtn.style.cursor = 'not-allowed';
             } else {
                 agregarBtn.disabled = false;
                 agregarBtn.textContent = 'Agregar al Carrito';
+                agregarBtn.style.opacity = '1';
+                agregarBtn.style.cursor = 'pointer';
             }
         }
     } catch (err) {
