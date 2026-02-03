@@ -11,6 +11,13 @@ class NotificationSystem {
     }
 
     init() {
+        // Asegurar que el body existe antes de manipular el DOM
+        if (!document.body) {
+            // Si aún no está listo, esperar un poquito
+            setTimeout(() => this.init(), 100);
+            return;
+        }
+
         // Crear contenedor si no existe
         if (!document.getElementById('notification-container')) {
             const container = document.createElement('div');

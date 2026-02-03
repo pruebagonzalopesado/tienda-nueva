@@ -966,8 +966,6 @@ function mostrarNotificacionAgotado() {
     }, 5000);
 }
 
-function detenerSincronizacionStockTiempoReal() {
-
 function actualizarStockDisponibleEnPagina() {
     if (!currentProduct) {
         console.log('[actualizarStockDisponibleEnPagina] currentProduct aún no está listo');
