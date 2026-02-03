@@ -64,35 +64,26 @@ if (sessionId) {
         const productos: any[] = [];
         let totalEnvio = 0;
 
-        // Intentar usar los items del carrito original (con talla) desde metadata
-        let carritoOriginal: any[] = [];
-        try {
-          if (metadata.items) {
-            carritoOriginal = JSON.parse(metadata.items);
-            console.log('[pago-exitoso] ✅ Carrito original recuperado de metadata:', carritoOriginal);
-          }
-        } catch (e) {
-          console.log('[pago-exitoso] ⚠️ No se pudo parsear carrito de metadata');
-        }
-
-        // Procesar líneas
+        // Procesar líneas desde Stripe directamente
+        // No necesitamos carrito_json porque la talla está en cada line_item.price.metadata
         for (const item of lineItems) {
           const productName = item.description || 'Producto';
           const cantidad = item.quantity || 1;
           const precioUnitario = (item.price?.unit_amount || 0) / 100;
+
+          console.log('[pago-exitoso] DEBUG item.metadata:', JSON.stringify(item.metadata, null, 2));
 
           // Detectar envío
           if (productName.toLowerCase().includes('envío') || productName.toLowerCase().includes('shipping')) {
             totalEnvio = precioUnitario * cantidad;
             console.log('[pago-exitoso] Envío detectado:', totalEnvio);
           } else {
-            // Obtener product_id desde el metadata de line_item (no product_data)
+            // Obtener product_id y talla desde line_item.metadata (no price.metadata)
+            // Cuando usas price_data en checkout, el metadata va a line_items[].metadata
             const productId = item.metadata?.product_id;
-            console.log('[pago-exitoso] Producto:', productName, 'product_id:', productId, 'metadata:', item.metadata);
+            const talla = item.metadata?.talla || null;
             
-            // Buscar en carrito original para obtener talla
-            const itemDelCarrito = carritoOriginal.find((c: any) => String(c.id) === String(productId));
-            const talla = itemDelCarrito?.talla || null;
+            console.log('[pago-exitoso] Producto:', productName, 'product_id:', productId, 'talla:', talla);
             
             productos.push({
               nombre: productName,
@@ -102,6 +93,9 @@ if (sessionId) {
               subtotal: precioUnitario * cantidad,
               product_id: productId
             });
+
+            // Stock se descuenta en tiempo real vía update-cart-stock.ts
+            // No necesitamos hacerlo aquí también
           }
         }
 
@@ -289,7 +283,6 @@ if (sessionId) {
 }
 
 console.log('[pago-exitoso] END - error:', error, 'pedidoCreado:', !!pedidoCreado);
----
 ---
 
 <PublicLayout title="Pago Exitoso - Joyería Galiana">

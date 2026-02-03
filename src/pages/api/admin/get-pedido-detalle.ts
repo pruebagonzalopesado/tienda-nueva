@@ -41,13 +41,45 @@ export const GET: APIRoute = async ({ request }) => {
       );
     }
 
-    // Los productos ya vienen como array en el campo 'items'
-    let productos = pedido.items || [];
+    console.log('[get-pedido-detalle] Pedido obtenido - Keys:', Object.keys(pedido || {}));
+    console.log('[get-pedido-detalle] Pedido.items:', pedido.items);
+    console.log('[get-pedido-detalle] Pedido.productos_json:', pedido.productos_json);
+
+    // Los productos vienen como JSON en el campo 'items' o 'productos_json'
+    let productos = [];
+    
+    if (pedido.items) {
+      try {
+        const productosData = typeof pedido.items === 'string' 
+          ? JSON.parse(pedido.items) 
+          : pedido.items;
+        productos = Array.isArray(productosData) ? productosData : [];
+      } catch (e) {
+        console.error('Error parseando items:', e);
+        productos = [];
+      }
+    }
+
+    // Si no hay items, intentar con 'productos_json' (compatibilidad hacia atrás)
+    if (productos.length === 0 && pedido.productos_json) {
+      try {
+        const productosData = typeof pedido.productos_json === 'string' 
+          ? JSON.parse(pedido.productos_json) 
+          : pedido.productos_json;
+        productos = Array.isArray(productosData) ? productosData : [];
+      } catch (e) {
+        console.error('Error parseando productos_json:', e);
+        productos = [];
+      }
+    }
 
     // Obtener referencias de los productos desde la BD
     if (productos.length > 0) {
-      // Usar 'id' o 'product_id' si no existe 'id'
-      const productIds = productos.map((p: any) => p.id || p.product_id).filter(Boolean);
+      // product_id es el que viene del metadata de Stripe (string o number)
+      const productIds = productos
+        .map((p: any) => p.product_id || p.id)
+        .filter(Boolean)
+        .map(id => parseInt(String(id), 10)); // Convertir a número para la búsqueda
       
       console.log('Product IDs encontrados:', productIds);
       
@@ -62,11 +94,11 @@ export const GET: APIRoute = async ({ request }) => {
           
           // Mapear referencias a los productos
           const referenciaMap = new Map(
-            productosDb.map((p: any) => [String(p.id), p.referencia])
+            productosDb.map((p: any) => [p.id, p.referencia])
           );
           
           productos = productos.map((p: any) => {
-            const id = String(p.id || p.product_id);
+            const id = parseInt(String(p.product_id || p.id), 10);
             const ref = referenciaMap.get(id);
             console.log(`Buscando referencia para ID ${id}: ${ref}`);
             return {

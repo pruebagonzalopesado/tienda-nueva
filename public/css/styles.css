@@ -15,11 +15,20 @@
     box-sizing: border-box;
 }
 
+html {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: var(--color-texto);
     background-color: var(--color-fondo);
     line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    border: 0;
 }
 
 main {
@@ -42,6 +51,7 @@ main {
     position: sticky;
     top: 0;
     z-index: 100;
+    margin: 0;
     border-bottom: 4px solid var(--color-principal);
 }
 

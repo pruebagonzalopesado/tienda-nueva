@@ -44,29 +44,40 @@ export const POST: APIRoute = async ({ request }) => {
     console.log('Metadata:', metadata);
 
     // Procesar productos y calcular totales
-    const productos = [];
+    let productos = [];
     let totalEnvio = 0;
 
+    // Procesar desde line_items (la talla está en line_items[].price.metadata.talla)
     for (const item of lineItems) {
       const productName = item.description || 'Producto';
       const cantidad = item.quantity || 1;
       const precioUnitario = (item.price?.unit_amount || 0) / 100;
 
+      console.log('[process-order] DEBUG item.metadata:', JSON.stringify(item.metadata, null, 2));
+
       // Detectar si es envío
       if (productName.toLowerCase().includes('envío') || productName.toLowerCase().includes('shipping')) {
         totalEnvio = precioUnitario * cantidad;
       } else {
-        productos.push({
+        // Obtener product_id y talla desde line_item.metadata (no price.metadata)
+        // Cuando usas price_data en checkout, el metadata va a line_items[].metadata
+        const productId = item.metadata?.product_id;
+        const talla = item.metadata?.talla || null;
+        
+        const productoItem: any = {
           nombre: productName,
           cantidad: cantidad,
           precio: precioUnitario,
+          talla: talla,
           subtotal: precioUnitario * cantidad,
-          product_id: item.price?.metadata?.product_id
-        });
+          product_id: productId
+        };
+
+        productos.push(productoItem);
 
         // Restar stock
-        if (item.price?.metadata?.product_id) {
-          await restarStock(item.price.metadata.product_id, cantidad);
+        if (productId) {
+          await restarStock(productId, cantidad);
         }
       }
     }

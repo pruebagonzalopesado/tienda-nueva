@@ -316,6 +316,13 @@ async function validarYAgregarAlCarritoConTalla(producto) {
         // Cerrar modal y mostrar éxito
         cerrarModalSeleccionarTalla();
         mostrarMensajeExitoTalla(`${producto.nombre} (Talla ${producto.talla}) agregado al carrito`);
+        
+        // Abrir carrito slide después de mostrar el mensaje
+        setTimeout(() => {
+            if (typeof openCartSlide === 'function') {
+                openCartSlide();
+            }
+        }, 500);
 
         window.agregarAlCarritoEnProceso = false;
 

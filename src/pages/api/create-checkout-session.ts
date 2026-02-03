@@ -171,8 +171,8 @@ export const POST: APIRoute = async ({ request }) => {
         descuento: descuento?.toString() || '0',
         descuentoId: descuentoId || '',
         usuarioId: usuarioId || '',
-        // Solo guardar IDs y cantidades en metadata (más compacto, <= 500 caracteres)
-        items_summary: items.map((i: any) => `${i.id}:${i.cantidad}`).join(','),
+        // Nota: Cada producto ya tiene talla en line_items[].price.metadata.talla
+        // No guardamos carrito_json aquí porque Stripe limita metadata a 500 chars
       },
     };
 
