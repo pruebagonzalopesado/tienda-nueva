@@ -7,16 +7,27 @@ const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY);
 export const POST: APIRoute = async ({ request }) => {
   try {
     const data = await request.json();
-    const { pedidoId, email, nombre } = data;
+    const { pedidoId, email, nombre, paymentIntentId } = data;
 
     console.log('[cancel-order-mobile] Recibiendo solicitud de cancelación');
     console.log(`[cancel-order-mobile] Pedido ID: ${pedidoId}, Email: ${email}`);
+    console.log(`[cancel-order-mobile] Payment Intent ID: ${paymentIntentId}`);
 
     if (!pedidoId || !email) {
       return new Response(
         JSON.stringify({
           success: false,
           message: 'Pedido ID y Email son requeridos',
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!paymentIntentId) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: 'Payment Intent ID es requerido para procesar refund',
         }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
@@ -51,9 +62,8 @@ export const POST: APIRoute = async ({ request }) => {
 
       for (const item of items) {
         if (item.product_id) {
-          // Obtener el stock actual
           const { data: productData, error: getError } = await supabase
-            .from('products')
+            .from('productos')
             .select('stock, id')
             .eq('id', item.product_id)
             .single();
@@ -61,16 +71,13 @@ export const POST: APIRoute = async ({ request }) => {
           if (!getError && productData) {
             const nuevoStock = (productData.stock || 0) + (item.cantidad || 1);
 
-            // Actualizar stock
             const { error: updateStockError } = await supabase
-              .from('products')
+              .from('productos')
               .update({ stock: nuevoStock })
               .eq('id', item.product_id);
 
             if (!updateStockError) {
               console.log(`[cancel-order-mobile] Stock restaurado para producto ${item.product_id}: +${item.cantidad}`);
-            } else {
-              console.warn(`[cancel-order-mobile] Error al restaurar stock para producto ${item.product_id}:`, updateStockError);
             }
           }
         }
@@ -87,13 +94,6 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (updateError) {
       console.error('[cancel-order-mobile] Error al actualizar pedido:', updateError);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: 'No se pudo actualizar el estado del pedido',
-        }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
     }
 
     console.log('[cancel-order-mobile] Pedido actualizado a cancelado');
@@ -103,45 +103,27 @@ export const POST: APIRoute = async ({ request }) => {
     let refundAmount = 0;
 
     try {
-      if (pedido.stripe_payment_id) {
-        const clientSecret = pedido.stripe_payment_id;
-        console.log('[cancel-order-mobile] Client Secret:', clientSecret);
+      if (paymentIntentId) {
+        console.log('[cancel-order-mobile] Procesando refund para Payment Intent:', paymentIntentId);
 
         try {
-          // Extraer Payment Intent ID del Client Secret
-          // Formato: cs_test_... contiene el PI en el response
-          // Para reembolso, usamos el monto total directamente
+          // ✅ IMPORTANTE: PASAR payment_intent al stripe.refunds.create()
           const refund = await stripe.refunds.create({
-            amount: Math.round(pedido.total * 100), // convertir a centavos
+            payment_intent: paymentIntentId,  // ✅ AQUÍ VA EL paymentIntentId
             reason: 'requested_by_customer',
           });
 
           if (refund.id) {
             console.log('[cancel-order-mobile] ✅ Reembolso procesado:', refund.id);
             refundProcessed = true;
-            refundAmount = refund.amount / 100; // convertir de centavos a euros
+            refundAmount = refund.amount / 100;
           }
         } catch (refundError: any) {
           console.error('[cancel-order-mobile] Error procesando refund:', refundError.message);
-          // Intentar con payment_intent como fallback
-          try {
-            // Si el CS tiene un PI asociado, intentar directamente
-            const refund = await stripe.refunds.create({
-              amount: Math.round(pedido.total * 100),
-              reason: 'requested_by_customer',
-            });
-            if (refund.id) {
-              console.log('[cancel-order-mobile] ✅ Reembolso procesado (fallback):', refund.id);
-              refundProcessed = true;
-              refundAmount = refund.amount / 100;
-            }
-          } catch (fallbackError) {
-            console.warn('[cancel-order-mobile] Fallback refund también falló');
-          }
         }
       }
     } catch (refundError) {
-      console.warn('[cancel-order-mobile] ⚠️ Error al procesar reembolso de Stripe:', refundError);
+      console.warn('[cancel-order-mobile] Error al procesar reembolso de Stripe:', refundError);
     }
 
     // ===== ENVIAR EMAIL DE CANCELACIÓN =====
@@ -163,11 +145,8 @@ export const POST: APIRoute = async ({ request }) => {
                 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                   <div style="background-color: #d4edda; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745;">
                     <h1 style="color: #155724; margin-top: 0;">✅ Pedido Cancelado</h1>
-                    
                     <p>Hola <strong>${nombre}</strong>,</p>
-                    
                     <p>Tu pedido <strong>#${pedidoId}</strong> ha sido <strong>cancelado</strong> y tu reembolso ha sido <strong>procesado correctamente</strong>.</p>
-                    
                     <div style="background-color: white; padding: 15px; border-radius: 5px; margin: 20px 0;">
                       <p><strong>Detalles del Reembolso:</strong></p>
                       <p>
@@ -179,13 +158,8 @@ export const POST: APIRoute = async ({ request }) => {
                         <em>El reembolso aparecerá en tu cuenta en 5-10 días hábiles.</em>
                       </p>
                     </div>
-                    
-                    <p>Si tienes alguna pregunta sobre esta cancelación, no dudes en contactarnos.</p>
-                    
-                    <p style="color: #666; font-size: 0.9em; margin-top: 30px;">
-                      Joyería Galiana<br>
-                      info@galiana.es
-                    </p>
+                    <p>Si tienes alguna pregunta, contacta con nosotros.</p>
+                    <p style="color: #666; font-size: 0.9em; margin-top: 30px;">Joyería Galiana - info@galiana.es</p>
                   </div>
                 </body>
               </html>
@@ -194,7 +168,7 @@ export const POST: APIRoute = async ({ request }) => {
         });
 
         if (!emailResponse.ok) {
-          console.warn('[cancel-order-mobile] ⚠️ Error sending email:', emailResponse.statusText);
+          console.warn('[cancel-order-mobile] Error sending email:', emailResponse.statusText);
         } else {
           console.log('[cancel-order-mobile] ✅ Email de cancelación enviado');
         }
@@ -202,7 +176,7 @@ export const POST: APIRoute = async ({ request }) => {
         console.warn('[cancel-order-mobile] No se envía email porque el reembolso no fue procesado');
       }
     } catch (emailError) {
-      console.warn('[cancel-order-mobile] ⚠️ Error al enviar email:', emailError);
+      console.warn('[cancel-order-mobile] Error al enviar email:', emailError);
     }
 
     return new Response(
