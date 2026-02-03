@@ -47,6 +47,7 @@ export const POST: APIRoute = async ({ request }) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // Convertir euros a céntimos
       currency: currency.toLowerCase(),
+      payment_method_types: ['card', 'apple_pay', 'google_pay'],
       receipt_email: email,
       description: `Pago de ${nombre} - Joyería Galiana`,
       metadata: {
@@ -55,6 +56,9 @@ export const POST: APIRoute = async ({ request }) => {
         ...metadata,
       },
       statement_descriptor_suffix: 'GALIANA',
+      automatic_payment_methods: {
+        enabled: true,
+      },
     });
 
     console.log('[create-payment-intent] ✅ Payment Intent creado:', paymentIntent.id);
