@@ -346,11 +346,6 @@ async function procesarPago(e) {
         return;
     }
     
-    if (!terminos) {
-        notify.warning('Debes aceptar los términos y condiciones para continuar con tu compra', 'Términos no aceptados', 4000);
-        return;
-    }
-    
     // Usar Stripe siempre
     await procesarPagoConStripe({
         nombre,

@@ -245,6 +245,106 @@ import PublicLayout from "../layouts/PublicLayout.astro";
     </main>
 
     <script is:inline>
+        // Función para mostrar modal de error profesional
+        function mostrarModalError(titulo, mensaje) {
+            let modal = document.getElementById('pago-error-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'pago-error-modal';
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10000;
+                `;
+                document.body.appendChild(modal);
+            }
+            
+            modal.innerHTML = `
+                <div style="
+                    background: white;
+                    border-radius: 8px;
+                    padding: 32px;
+                    max-width: 500px;
+                    width: 90%;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                    animation: slideInModal 0.3s ease-out;
+                ">
+                    <div style="
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        margin-bottom: 16px;
+                    ">
+                        <div style="
+                            width: 40px;
+                            height: 40px;
+                            border-radius: 50%;
+                            background: #ff6b6b;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            flex-shrink: 0;
+                        ">
+                            <span style="color: white; font-size: 24px; font-weight: bold;">!</span>
+                        </div>
+                        <h2 style="
+                            margin: 0;
+                            color: #333;
+                            font-size: 20px;
+                            font-weight: 600;
+                        ">${titulo}</h2>
+                    </div>
+                    <p style="
+                        color: #666;
+                        font-size: 16px;
+                        line-height: 1.5;
+                        margin: 16px 0 24px 0;
+                    ">${mensaje}</p>
+                    <button onclick="document.getElementById('pago-error-modal').style.display = 'none'" style="
+                        width: 100%;
+                        padding: 12px 24px;
+                        background: #d4af37;
+                        color: #1a1a1a;
+                        border: none;
+                        border-radius: 4px;
+                        font-size: 16px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: background 0.3s;
+                    " onmouseover="this.style.background='#c99f2e'" onmouseout="this.style.background='#d4af37'">
+                        Entendido
+                    </button>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+            
+            if (!document.getElementById('pago-modal-styles')) {
+                const style = document.createElement('style');
+                style.id = 'pago-modal-styles';
+                style.textContent = `
+                    @keyframes slideInModal {
+                        from {
+                            transform: translateY(-30px);
+                            opacity: 0;
+                        }
+                        to {
+                            transform: translateY(0);
+                            opacity: 1;
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
         // Usar window para evitar conflictos con carrito.js que también declara estas variables
         if (typeof window.carritoLocal === 'undefined') {
             window.carritoLocal = [];
@@ -347,7 +447,7 @@ import PublicLayout from "../layouts/PublicLayout.astro";
         async function irAPasarelaPago() {
             const terminos = document.getElementById('terminos');
             if (!terminos.checked) {
-                alert('Debes aceptar los términos y condiciones');
+                mostrarModalError('Términos no aceptados', 'Debes aceptar los términos y condiciones para continuar');
                 return;
             }
 
