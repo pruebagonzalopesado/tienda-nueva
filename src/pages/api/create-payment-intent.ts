@@ -3,7 +3,6 @@ import Stripe from 'stripe';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    // Obtener clave secreta de Stripe
     const stripeKey = import.meta.env.STRIPE_SECRET_KEY;
     
     if (!stripeKey) {
@@ -14,7 +13,6 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Validar formato de clave
     if (!stripeKey.startsWith('sk_test_') && !stripeKey.startsWith('sk_live_')) {
       console.error('[create-payment-intent] Clave Stripe inválida');
       return new Response(
@@ -25,7 +23,6 @@ export const POST: APIRoute = async ({ request }) => {
 
     const stripe = new Stripe(stripeKey);
 
-    // Obtener datos de la solicitud
     const data = await request.json();
     const { amount, email, nombre, currency = 'eur', metadata = {} } = data;
 
@@ -34,7 +31,6 @@ export const POST: APIRoute = async ({ request }) => {
     console.log('[create-payment-intent]     - Email: ' + email);
     console.log('[create-payment-intent]     - Nombre: ' + nombre);
 
-    // Validar datos requeridos
     if (!amount || !email || !nombre) {
       console.error('[create-payment-intent] Datos incompletos');
       return new Response(
@@ -43,11 +39,10 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Crear Payment Intent en Stripe
+    // ✅ SIN payment_method_types - Stripe lo detecta automáticamente
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convertir euros a céntimos
+      amount: Math.round(amount * 100),
       currency: currency.toLowerCase(),
-      payment_method_types: ['card', 'apple_pay', 'google_pay'],
       receipt_email: email,
       description: `Pago de ${nombre} - Joyería Galiana`,
       metadata: {
@@ -81,7 +76,6 @@ export const POST: APIRoute = async ({ request }) => {
     );
   } catch (error: any) {
     console.error('[create-payment-intent] ❌ Error:', error.message);
-    console.error('[create-payment-intent] Stack:', error.stack);
     
     return new Response(
       JSON.stringify({
