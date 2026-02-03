@@ -357,27 +357,12 @@ function mostrarMensajeExitoTalla(mensaje) {
     }, 3000);
 }
 
-    // Abrir carrito
+// Abrir carrito (función auxiliar)
+function abrirCarritoDesdeModal() {
     if (typeof openCartSlide === 'function') {
         openCartSlide();
     }
-
-    // Guardar datos para el mensaje
-    const nombreProducto = producto.nombre;
-    const talla = producto.talla;
-
-    // Cerrar modal
-    cerrarModalSeleccionarTalla();
-
-    // 🛡️ Resetear flag de protección
-    window.agregarAlCarritoEnProceso = false;
-
-    // Mostrar mensaje de éxito
-    mostrarMensajeExito(`${nombreProducto} (Talla ${talla}) agregado al carrito`);
 }
-
-// Mostrar mensaje de éxito
-function mostrarMensajeExito(mensaje) {
     let sucessDiv = document.getElementById('exito-mensaje');
     if (!sucessDiv) {
         sucessDiv = document.createElement('div');

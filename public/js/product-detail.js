@@ -517,19 +517,6 @@ async function validarYAgregarAlCarritoDetalle(quantity) {
         alert('Error al validar stock. Intenta nuevamente.');
     }
 }
-                document.getElementById('quantity').value = 1;
-                resolve();
-            });
-        } else {
-            // Si no hay supabase, resolver igual
-            if (typeof openCartSlide === 'function') {
-                openCartSlide();
-            }
-            document.getElementById('quantity').value = 1;
-            resolve();
-        }
-    });
-}
 
 // Comprar ahora
 async function comprarAhora() {
