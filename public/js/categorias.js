@@ -302,6 +302,13 @@ async function validarYAgregarAlCarrito(producto) {
             renderizarProductos(productosActuales);
         }
 
+        // 🔁 Forzar actualización inmediata del stock en otros usuarios
+        if (typeof window.forzarActualizacionStock === 'function') {
+            setTimeout(() => {
+                window.forzarActualizacionStock();
+            }, 100);
+        }
+
         console.log('[agregarAlCarrito] ✅', data.mensaje);
         mostrarMensajeExito(data.mensaje);
 

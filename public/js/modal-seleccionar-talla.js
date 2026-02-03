@@ -306,6 +306,13 @@ async function validarYAgregarAlCarritoConTalla(producto) {
             await window.actualizarStockDesdeModal(producto.id);
         }
 
+        // 🔁 Forzar actualización inmediata del stock en otros usuarios
+        if (typeof window.forzarActualizacionStock === 'function') {
+            setTimeout(() => {
+                window.forzarActualizacionStock();
+            }, 100);
+        }
+
         // Cerrar modal y mostrar éxito
         cerrarModalSeleccionarTalla();
         mostrarMensajeExitoTalla(`${producto.nombre} (Talla ${producto.talla}) agregado al carrito`);

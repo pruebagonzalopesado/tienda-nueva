@@ -492,6 +492,13 @@ async function validarYAgregarAlCarritoDetalle(quantity) {
             await window.actualizarStockDesdeModal(currentProduct.id);
         }
 
+        // 🔁 Forzar actualización inmediata del stock en otros usuarios
+        if (typeof window.forzarActualizacionStock === 'function') {
+            setTimeout(() => {
+                window.forzarActualizacionStock();
+            }, 100);
+        }
+
         // Abrir slide-over del carrito
         if (typeof openCartSlide === 'function') {
             openCartSlide();
