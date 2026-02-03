@@ -342,12 +342,12 @@ async function procesarPago(e) {
     const terminos = document.getElementById('terminos').checked;
     
     if (!nombre || !email || !telefono || !direccion || !ciudad || !codigoPostal || !pais) {
-        mostrarModalError('Campos Incompletos', 'Por favor completa todos los datos de envío requeridos.');
+        notify.warning('Por favor completa todos los datos de envío requeridos', 'Campos incompletos', 4000);
         return;
     }
     
     if (!terminos) {
-        mostrarModalError('Términos no Aceptados', 'Debes aceptar los términos y condiciones para continuar con tu compra.');
+        notify.warning('Debes aceptar los términos y condiciones para continuar con tu compra', 'Términos no aceptados', 4000);
         return;
     }
     
