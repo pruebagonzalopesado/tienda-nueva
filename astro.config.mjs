@@ -16,6 +16,7 @@ export default defineConfig({
 			entrypoint: 'astro/assets/services/noop'
 		}
 	},
+	favicon: '/favicon.ico',
 	vite: {
 		plugins: [tailwindcss()],
 		ssr: {
