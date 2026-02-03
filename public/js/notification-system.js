@@ -364,8 +364,13 @@ class NotificationSystem {
     }
 }
 
-// Instanciar globalmente
-window.notify = new NotificationSystem();
-
-// Alias para compatibilidad
-window.showNotification = window.notify.show.bind(window.notify);
+// Instanciar globalmente cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.notify = new NotificationSystem();
+        window.showNotification = window.notify.show.bind(window.notify);
+    });
+} else {
+    window.notify = new NotificationSystem();
+    window.showNotification = window.notify.show.bind(window.notify);
+}

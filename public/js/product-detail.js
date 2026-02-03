@@ -1145,3 +1145,5 @@ window.actualizarStockDesdeModal = async function(productId) {
         console.error('[actualizarStockDesdeModal] Error:', err);
     }
 };
+
+// Fin del archivo product-detail.js
