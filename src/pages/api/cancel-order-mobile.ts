@@ -129,6 +129,8 @@ export const POST: APIRoute = async ({ request }) => {
     // ===== ENVIAR EMAIL DE CANCELACIÓN =====
     try {
       if (refundProcessed) {
+        const items = typeof pedido.items === 'string' ? JSON.parse(pedido.items) : pedido.items || [];
+        
         const emailResponse = await fetch('https://api.brevo.com/v3/smtp/email', {
           method: 'POST',
           headers: {
@@ -138,28 +140,59 @@ export const POST: APIRoute = async ({ request }) => {
           },
           body: JSON.stringify({
             to: [{ email: email, name: nombre }],
-            sender: { name: 'Joyería Galiana', email: 'noreply@galiana.es' },
+            sender: { name: 'Joyería Galiana', email: 'reportsanlucar@gmail.com' },
             subject: `Pedido Cancelado y Reembolso Procesado - Pedido #${pedidoId}`,
             htmlContent: `
               <html>
                 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                  <div style="background-color: #d4edda; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745;">
-                    <h1 style="color: #155724; margin-top: 0;">✅ Pedido Cancelado</h1>
+                  <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
+                    <h1 style="color: #8B4444; text-align: center;">Joyería Galiana</h1>
+                    <h2 style="color: #D4AF37; text-align: center;">Pedido Cancelado</h2>
+                    
                     <p>Hola <strong>${nombre}</strong>,</p>
-                    <p>Tu pedido <strong>#${pedidoId}</strong> ha sido <strong>cancelado</strong> y tu reembolso ha sido <strong>procesado correctamente</strong>.</p>
-                    <div style="background-color: white; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                      <p><strong>Detalles del Reembolso:</strong></p>
-                      <p>
-                        <strong>Monto Reembolsado:</strong> €${refundAmount.toFixed(2)}<br>
-                        <strong>Número de Pedido:</strong> #${pedidoId}<br>
-                        <strong>Fecha de Cancelación:</strong> ${new Date().toLocaleDateString('es-ES')}
-                      </p>
+                    
+                    <p>Tu pedido ha sido cancelado correctamente y tu reembolso ha sido procesado.</p>
+                    
+                    <div style="background-color: white; padding: 15px; border-left: 4px solid #D4AF37; margin: 20px 0;">
+                      <p><strong>Número de pedido:</strong> #${pedidoId}</p>
+                      <p><strong>Fecha de cancelación:</strong> ${new Date().toLocaleDateString('es-ES')}</p>
+                      <p><strong>Estado:</strong> Cancelado</p>
+                    </div>
+                    
+                    <h3 style="color: #8B4444;">Detalles del reembolso:</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                      <tr style="background-color: #f0f0f0;">
+                        <th style="padding: 10px; text-align: left;">Producto</th>
+                        <th style="padding: 10px; text-align: center;">Cantidad</th>
+                        <th style="padding: 10px; text-align: right;">Precio</th>
+                      </tr>
+                      ${items
+                        .map(
+                          (item: any) =>
+                            `<tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.nombre}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.cantidad}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">€${(item.precio * item.cantidad).toFixed(2)}</td>
+                      </tr>`
+                        )
+                        .join('')}
+                    </table>
+                    
+                    <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                      <p style="margin: 5px 0;"><strong>Monto reembolsado:</strong> €${refundAmount.toFixed(2)}</p>
+                      <p style="margin: 5px 0; font-size: 1.2em; color: #D4AF37;"><strong>Total: €${refundAmount.toFixed(2)}</strong></p>
+                    </div>
+                    
+                    <p>El reembolso aparecerá en tu cuenta en 5-10 días hábiles.</p>
+                    
+                    <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
+                    
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
                       <p style="color: #666; font-size: 0.9em;">
-                        <em>El reembolso aparecerá en tu cuenta en 5-10 días hábiles.</em>
+                        Joyería Galiana<br>
+                        info@galiana.es
                       </p>
                     </div>
-                    <p>Si tienes alguna pregunta, contacta con nosotros.</p>
-                    <p style="color: #666; font-size: 0.9em; margin-top: 30px;">Joyería Galiana - info@galiana.es</p>
                   </div>
                 </body>
               </html>
