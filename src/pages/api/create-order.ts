@@ -32,6 +32,7 @@ export const POST: APIRoute = async ({ request }) => {
     // Obtener datos de la solicitud
     const data = await request.json();
     const {
+      userId,
       paymentIntentId,
       nombre,
       email,
@@ -47,6 +48,8 @@ export const POST: APIRoute = async ({ request }) => {
     } = data;
 
     console.log('[create-order] >>> Creando orden');
+    console.log('[create-order]     - Usuario ID: ' + (userId || 'null'));
+    console.log('[create-order]     - Payment Intent ID: ' + paymentIntentId);
     console.log('[create-order]     - Nombre: ' + nombre);
     console.log('[create-order]     - Email: ' + email);
     console.log('[create-order]     - Total: €' + total);
@@ -66,6 +69,7 @@ export const POST: APIRoute = async ({ request }) => {
       .from('pedidos')
       .insert([
         {
+          usuario_id: userId || null,
           nombre,
           email,
           telefono: telefono || '',
@@ -79,7 +83,6 @@ export const POST: APIRoute = async ({ request }) => {
           items: items,
           stripe_payment_id: paymentIntentId,
           estado: 'confirmado',
-          usuario_id: null, // Puedes agregar autenticación si lo deseas
         },
       ])
       .select('id');
