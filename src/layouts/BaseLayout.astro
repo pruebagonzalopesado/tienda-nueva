@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import GlobalFavicon from '../components/GlobalFavicon.astro';
 
 interface Props {
 	title: string;
@@ -14,12 +15,7 @@ const { title, description = 'Galiana - Joyería de Minimalismo Sofisticado' } =
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="description" content={description} />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<link rel="manifest" href="/site.webmanifest" />
-		<link rel="icon" type="image/x-icon" href="/favicon.ico?v=5" />
-		<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5" />
-		<link rel="apple-touch-icon" sizes="180x180" href="/favicon.png?v=5" />
-		<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=5" />
+		<GlobalFavicon />
 		<link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=5" />
 		<title>{title} | Galiana</title>
 	</head>

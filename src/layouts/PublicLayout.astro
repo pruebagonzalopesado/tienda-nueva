@@ -1,6 +1,7 @@
 ---
 import Header from "../components/ui/Header.astro";
 import Footer from "../components/ui/Footer.astro";
+import GlobalFavicon from "../components/GlobalFavicon.astro";
 
 interface Props {
 	title: string;
@@ -19,12 +20,7 @@ const {
 		<meta charset="UTF-8" />
 		<meta name="description" content={description} />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<link rel="manifest" href="/site.webmanifest" />
-		<link rel="icon" type="image/x-icon" href="/favicon.ico?v=5" />
-		<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5" />
-		<link rel="apple-touch-icon" sizes="180x180" href="/favicon.png?v=5" />
-		<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=5" />
-		<link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=5" />
+		<GlobalFavicon />
 		<link rel="stylesheet" href="/css/styles.css?v=11" />
 		<link rel="stylesheet" href="/css/cart-slide.css?v=3" />
 		<link rel="stylesheet" href="/css/stock-reservation-notification.css?v=2" />
