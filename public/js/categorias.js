@@ -35,6 +35,11 @@ async function cargarCategoria() {
 
         productosActuales = productos || [];
 
+        // 🔄 Registrar productos para sincronización de stock en tiempo real
+        if (typeof window.registrarProductosParaSync === 'function') {
+            window.registrarProductosParaSync(productosActuales);
+        }
+
         // Actualizar título
         const categoriaMap = {
             'Anillos': 'Anillos Exclusivos',

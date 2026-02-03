@@ -12,8 +12,9 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 });
 
 /**
- * Endpoint para agregar a carrito con validación de stock en tiempo real
- * Usa transacciones para evitar race conditions
+ * Endpoint para agregar a carrito con validación de stock en TIEMPO REAL
+ * Lee el stock directamente de la BD cada vez
+ * Realiza la actualización de forma atómica
  */
 export const POST: APIRoute = async ({ request }) => {
     try {
@@ -31,7 +32,7 @@ export const POST: APIRoute = async ({ request }) => {
             });
         }
 
-        // Obtener stock actual del producto
+        // 🔄 LEER STOCK ACTUAL DE LA BD EN TIEMPO REAL (MÁXIMA SEGURIDAD)
         const { data: producto, error: fetchError } = await supabase
             .from('products')
             .select('id, stock, nombre, precio')
@@ -52,7 +53,7 @@ export const POST: APIRoute = async ({ request }) => {
 
         const stockActual = producto.stock || 0;
 
-        // Validar que hay stock disponible
+        // ⚠️ VALIDACIÓN CRÍTICA: Stock real en este EXACTO momento
         if (stockActual < cantidad) {
             console.warn(`[add-to-cart-validated] Stock insuficiente para ${productId}: solicitado ${cantidad}, disponible ${stockActual}`);
             return new Response(JSON.stringify({
@@ -62,42 +63,84 @@ export const POST: APIRoute = async ({ request }) => {
                 producto: producto.nombre
             }), {
                 status: 409, // Conflict
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' }
             });
         }
 
-        // Restar el stock de forma atómica
+        // 🔒 ACTUALIZACIÓN ATÓMICA: Restar stock SOLO SI el valor actual sigue siendo el mismo
+        // Esto evita que dos usuarios resten stock simultáneamente
         const nuevoStock = stockActual - cantidad;
         
-        const { error: updateError, data: updateData } = await supabase
+        const { error: updateError, data: updateData, count } = await supabase
             .from('products')
             .update({ stock: nuevoStock })
             .eq('id', productId)
-            .eq('stock', stockActual) // Lock optimista: solo actualizar si el stock no cambió
+            .eq('stock', stockActual) // ← CRUCIAL: Solo actualiza si stock sigue siendo stockActual
             .select('stock');
 
-        // Si la actualización no afectó ninguna fila, significa que el stock cambió
+        // Si no se actualizó ninguna fila, otro proceso ya cambió el stock
         if (!updateData || updateData.length === 0) {
-            // Reintentar obteniendo el stock actual
-            const { data: productoActualizado } = await supabase
+            console.warn(`[add-to-cart-validated] Stock cambió entre validación y actualización para ${productId}`);
+            
+            // Obtener el stock actual AHORA
+            const { data: productoAhora } = await supabase
                 .from('products')
                 .select('stock')
                 .eq('id', productId)
                 .single();
 
-            const stockActualizado = productoActualizado?.stock || 0;
+            const stockAhora = productoAhora?.stock || 0;
             
-            if (stockActualizado < cantidad) {
+            if (stockAhora < cantidad) {
                 return new Response(JSON.stringify({
                     success: false,
-                    error: `Stock insuficiente. Solo hay ${stockActualizado} unidad(es) disponible(s)`,
-                    stockDisponible: stockActualizado,
+                    error: `Stock insuficiente. Solo hay ${stockAhora} unidad(es) disponible(s)`,
+                    stockDisponible: stockAhora,
                     producto: producto.nombre
                 }), {
                     status: 409,
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' }
                 });
             }
+
+            // Si aún hay stock, reintentar la actualización
+            const { data: updateData2 } = await supabase
+                .from('products')
+                .update({ stock: stockAhora - cantidad })
+                .eq('id', productId)
+                .eq('stock', stockAhora)
+                .select('stock');
+
+            if (!updateData2 || updateData2.length === 0) {
+                // Falló nuevamente, otro usuario debe estar agregando
+                return new Response(JSON.stringify({
+                    success: false,
+                    error: 'Stock cambió rápidamente. Intenta nuevamente.',
+                    stockDisponible: stockAhora - cantidad,
+                    producto: producto.nombre
+                }), {
+                    status: 409,
+                    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' }
+                });
+            }
+
+            console.log(`[add-to-cart-validated] ✅ Producto agregado al carrito (reintento): ${producto.nombre} (cantidad: ${cantidad}, stock: ${stockAhora} -> ${stockAhora - cantidad})`);
+
+            return new Response(JSON.stringify({
+                success: true,
+                mensaje: `${producto.nombre} agregado al carrito`,
+                stockAnterior: stockAhora,
+                stockNuevo: stockAhora - cantidad,
+                producto: {
+                    id: producto.id,
+                    nombre: producto.nombre,
+                    precio: producto.precio,
+                    stockDisponible: stockAhora - cantidad
+                }
+            }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' }
+            });
         }
 
         console.log(`[add-to-cart-validated] ✅ Producto agregado al carrito: ${producto.nombre} (cantidad: ${cantidad}, stock: ${stockActual} -> ${nuevoStock})`);
@@ -115,7 +158,7 @@ export const POST: APIRoute = async ({ request }) => {
             }
         }), {
             status: 200,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' }
         });
 
     } catch (error: any) {
