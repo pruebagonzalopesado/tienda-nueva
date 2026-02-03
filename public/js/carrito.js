@@ -939,7 +939,7 @@ async function aplicarDescuento() {
 // Ir a checkout
 function irACheckout() {
     if (carrito.length === 0) {
-        alert('Tu carrito está vacío');
+        notify.warning('Tu carrito está vacío. Añade productos antes de continuar', 'Carrito vacío', 4000);
         return;
     }
 

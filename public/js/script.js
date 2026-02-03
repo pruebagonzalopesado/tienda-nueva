@@ -1004,14 +1004,14 @@ async function handleNewsletterSubscribe(event) {
     const email = emailInput.value.trim();
     
     if (!email) {
-        alert('Por favor ingresa un correo válido');
+        notify.warning('Por favor ingresa un correo válido', 'Email requerido', 3500);
         return;
     }
     
     // Validar formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-        alert('Por favor ingresa un correo válido');
+        notify.error('Por favor ingresa un correo válido', 'Email inválido', 3500);
         return;
     }
     
@@ -1024,18 +1024,15 @@ async function handleNewsletterSubscribe(event) {
         
         if (error) {
             if (error.code === '23505') { // Unique constraint violation
-                alert('Este correo ya está suscrito');
+                notify.info('Este correo ya está suscrito a nuestra newsletter', 'Ya suscrito', 3500);
             } else {
                 throw error;
             }
             return;
         }
         
-        // Mostrar confirmación
-        const button = event.target.querySelector('button');
-        const originalText = button.textContent;
-        button.textContent = '¡Suscripción confirmada!';
-        button.style.background = '#4CAF50';
+        // Mostrar notificación de éxito
+        notify.success('¡Te has suscrito a nuestra newsletter exitosamente!', 'Suscripción confirmada', 4000);
         
         // Resetear el formulario
         emailInput.value = '';
@@ -1048,7 +1045,7 @@ async function handleNewsletterSubscribe(event) {
         
     } catch (error) {
         console.error('Error al suscribirse:', error);
-        alert('Hubo un error al suscribirse. Intenta nuevamente.');
+        notify.error('Hubo un error al suscribirse. Intenta nuevamente', 'Error de suscripción', 5000);
     }
 }
 

@@ -514,7 +514,7 @@ async function validarYAgregarAlCarritoDetalle(quantity) {
 
     } catch (error) {
         console.error('[validarYAgregarAlCarritoDetalle] Error:', error);
-        alert('Error al validar stock. Intenta nuevamente.');
+        notify.error('Error al validar stock. Intenta nuevamente', 'Error de validación', 4000);
     }
 }
 
@@ -722,7 +722,7 @@ function calcularTalla() {
     const diametro = parseFloat(input.value);
     
     if (!diametro || diametro <= 0) {
-        alert('Por favor ingresa un valor válido');
+        notify.warning('Por favor ingresa un valor válido', 'Entrada inválida', 3000);
         return;
     }
     

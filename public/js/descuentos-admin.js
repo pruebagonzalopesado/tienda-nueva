@@ -28,7 +28,7 @@ async function guardarDescuento(event) {
         
         // Validaciones
         if (!codigo || porcentaje <= 0 || porcentaje > 100) {
-            alert('Por favor completa todos los campos correctamente');
+            notify.warning('Por favor completa todos los campos correctamente', 'Campos incompletos', 3500);
             return;
         }
         
@@ -50,7 +50,7 @@ async function guardarDescuento(event) {
                 .eq('id', descuentoId);
             
             if (error) throw error;
-            alert('Descuento actualizado correctamente');
+            notify.success('Descuento actualizado correctamente', 'Éxito', 3500);
         } else {
             // Crear nuevo descuento
             const { error } = await supabaseClient
@@ -67,13 +67,13 @@ async function guardarDescuento(event) {
             
             if (error) {
                 if (error.message.includes('unique')) {
-                    alert('Este código de descuento ya existe');
+                    notify.error('Este código de descuento ya existe', 'Código duplicado', 4000);
                 } else {
                     throw error;
                 }
                 return;
             }
-            alert('Descuento creado correctamente');
+            notify.success('Descuento creado correctamente', 'Éxito', 3500);
         }
         
         cerrarFormularioDescuento();
@@ -81,7 +81,7 @@ async function guardarDescuento(event) {
         
     } catch (error) {
         console.error('Error guardando descuento:', error);
-        alert('Error al guardar el descuento: ' + error.message);
+        notify.error('Error al guardar el descuento: ' + error.message, 'Error', 5000);
     }
 }
 
@@ -190,7 +190,7 @@ async function editarDescuento(id) {
         
     } catch (error) {
         console.error('Error cargando descuento:', error);
-        alert('Error al cargar el descuento');
+        notify.error('Error al cargar el descuento', 'Error', 4000);
     }
 }
 
@@ -205,12 +205,12 @@ function eliminarDescuento(id, codigo) {
             
             if (error) throw error;
             
-            alert('Descuento eliminado correctamente');
+            notify.success('Descuento eliminado correctamente', 'Éxito', 3500);
             cargarDescuentos();
             
         } catch (error) {
             console.error('Error eliminando descuento:', error);
-            alert('Error al eliminar el descuento: ' + error.message);
+            notify.error('Error al eliminar el descuento: ' + error.message, 'Error', 5000);
         }
     });
 }

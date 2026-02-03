@@ -523,7 +523,7 @@ async function procesarPagoConStripe(datosCheckout) {
     console.log('cardElement:', cardElement);
     
     if (!stripe || !cardElement) {
-        alert('Sistema de pago no disponible. Por favor intenta de nuevo.');
+        notify.error('Sistema de pago no disponible. Por favor intenta de nuevo', 'Error del sistema', 5000);
         console.error('Stripe no está listo:', { stripe, cardElement });
         return;
     }
@@ -610,7 +610,7 @@ async function procesarPagoConStripe(datosCheckout) {
         
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al procesar el pago: ' + error.message);
+        notify.error('Error al procesar el pago. ' + error.message, 'Error de pago', 5000);
         
         const btn = document.querySelector('button[type="submit"]');
         btn.disabled = false;
@@ -691,6 +691,6 @@ async function crearPedidoEnBD(datosCheckout) {
         
     } catch (error) {
         console.error('Error creando pedido:', error);
-        alert('Error al crear el pedido: ' + error.message);
+        notify.error('Error al crear el pedido. ' + error.message, 'Error', 5000);
     }
 }

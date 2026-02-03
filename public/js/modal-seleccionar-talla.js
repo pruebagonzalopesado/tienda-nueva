@@ -142,7 +142,7 @@ async function calcularTallaModal() {
     const diametro = parseFloat(inputDiametro.value);
 
     if (!diametro || diametro <= 0) {
-        alert('Por favor, ingresa un diámetro válido');
+        notify.warning('Por favor ingresa un diámetro válido', 'Diámetro inválido', 3000);
         return;
     }
 
@@ -208,7 +208,7 @@ async function calcularTallaModal() {
 
     } catch (error) {
         console.error('Error calculando talla:', error);
-        alert('Error al calcular la talla');
+        notify.error('Error al calcular la talla. Intenta nuevamente', 'Error', 4000);
     }
 }
 
