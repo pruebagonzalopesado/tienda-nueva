@@ -62,6 +62,7 @@ export const POST: APIRoute = async ({ request }) => {
 
       for (const item of items) {
         if (item.product_id) {
+          // Obtener el stock actual
           const { data: productData, error: getError } = await supabase
             .from('productos')
             .select('stock, id')
@@ -71,6 +72,7 @@ export const POST: APIRoute = async ({ request }) => {
           if (!getError && productData) {
             const nuevoStock = (productData.stock || 0) + (item.cantidad || 1);
 
+            // Actualizar stock
             const { error: updateStockError } = await supabase
               .from('productos')
               .update({ stock: nuevoStock })
@@ -78,6 +80,8 @@ export const POST: APIRoute = async ({ request }) => {
 
             if (!updateStockError) {
               console.log(`[cancel-order-mobile] Stock restaurado para producto ${item.product_id}: +${item.cantidad}`);
+            } else {
+              console.warn(`[cancel-order-mobile] Error al restaurar stock para producto ${item.product_id}:`, updateStockError);
             }
           }
         }
