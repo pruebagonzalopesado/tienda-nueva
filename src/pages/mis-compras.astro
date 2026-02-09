@@ -1027,11 +1027,22 @@ Astro.response.headers.set('Expires', '0');
     <!-- Modal de Confirmación de Devolución -->
     <div id="modal-confirm-devolucion" class="modal" style="display: none;">
         <div class="modal-overlay" onclick="cerrarConfirmacionDevolucion()"></div>
-        <div class="modal-content">
-            <h2 style="margin-bottom: 16px; color: #333;">Solicitar Devolución</h2>
+        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <h2 style="margin-bottom: 16px; color: #333;">Solicitar Devolución - Selecciona los Productos</h2>
             <p style="color: #666; margin-bottom: 24px; line-height: 1.6;">
-                Por favor, cuéntanos el motivo de tu devolución. Tu solicitud será procesada en 24 horas.
+                Selecciona qué productos deseas devolver. El reembolso será proporcional a los artículos seleccionados.
             </p>
+            
+            <div id="items-seleccionar" style="margin-bottom: 24px; max-height: 300px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px;">
+                <!-- Los items se cargarán dinámicamente aquí -->
+            </div>
+
+            <div style="background: #f9f9f9; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #666;">Subtotal a reembolsar:</span>
+                    <span id="monto-reembolso" style="font-weight: bold; color: #333;">€0.00</span>
+                </div>
+            </div>
             
             <div style="margin-bottom: 24px;">
                 <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">
@@ -1571,8 +1582,11 @@ Astro.response.headers.set('Expires', '0');
                         `;
                     }
                     
+                    // Codificar items JSON de forma segura
+                    const itemsJSON = JSON.stringify(items).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+                    
                     html += `
-                        <article class="pedido-card" onclick="abrirDetallesPedido(${pedido.id})">
+                        <article class="pedido-card" data-pedido-id="${pedido.id}" data-items-json="${itemsJSON}" onclick="abrirDetallesPedido(${pedido.id})">
                             <div class="pedido-media">
                                 ${imagenPrincipal ? `<img src="${imagenPrincipal}" alt="Pedido #${pedido.id}" loading="lazy" />` : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 50px; height: 50px; color: #d4af37;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg></div>`}
                             </div>
@@ -1933,6 +1947,26 @@ Astro.response.headers.set('Expires', '0');
             let devolucionHtml = '';
             if (pedidoData.devolucion) {
                 const dev = pedidoData.devolucion;
+                
+                // Mostrar items devueltos si existen
+                let itemsDevueltosHtml = '';
+                if (dev.items_devueltos && dev.items_devueltos.length > 0) {
+                    itemsDevueltosHtml = '<div style="margin-top: 12px;"><strong style="color: #333; font-size: 13px;">Productos devueltos:</strong>';
+                    dev.items_devueltos.forEach(item => {
+                        itemsDevueltosHtml += `
+                            <div style="background: #fff; padding: 10px; margin-top: 6px; border-left: 3px solid #d4af37; border-radius: 4px; font-size: 13px;">
+                                <div style="color: #333; font-weight: 500;">${item.nombre} ${item.talla ? `(Talla: ${item.talla})` : ''}</div>
+                                <div style="color: #666; font-size: 12px;">
+                                    ${item.cantidad}x @ €${parseFloat(item.precio).toFixed(2)} = €${parseFloat(item.subtotal || item.cantidad * item.precio).toFixed(2)}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    itemsDevueltosHtml += '</div>';
+                }
+                
+                const montoReembolso = dev.monto_reembolso ? parseFloat(dev.monto_reembolso).toFixed(2) : '0.00';
+                
                 devolucionHtml = `
                     <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #d4af37;">
                         <div style="font-weight: 600; color: #333; margin-bottom: 10px;">Información de Devolución</div>
@@ -1943,6 +1977,11 @@ Astro.response.headers.set('Expires', '0');
                         <div class="modal-info-row">
                             <span class="modal-info-label">Motivo Solicitud</span>
                             <span class="modal-info-value">${dev.motivo_solicitud}</span>
+                        </div>
+                        ${itemsDevueltosHtml}
+                        <div class="modal-info-row" style="margin-top: 12px;">
+                            <span class="modal-info-label">Importe a Reembolsar</span>
+                            <span class="modal-info-value" style="font-weight: 700; color: #28a745;">€${montoReembolso}</span>
                         </div>
                         ${dev.estado === 'rechazada' ? `
                             <div class="modal-info-row">
@@ -1993,13 +2032,21 @@ Astro.response.headers.set('Expires', '0');
 
                 ${devolucionHtml}
 
-                <div style="display: flex; gap: 10px; margin-top: 30px;">
-                    <button onclick="descargarFactura(${pedidoData.id})" style="flex: 1; padding: 12px; background: #d4af37; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <div style="display: flex; gap: 10px; margin-top: 30px; flex-wrap: wrap;">
+                    <button onclick="descargarFactura(${pedidoData.id})" style="flex: 1; min-width: 150px; padding: 12px; background: #d4af37; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="13" x2="12" y2="19"></line><polyline points="9 16 12 13 15 16"></polyline>
                         </svg>
-                        Descargar Factura
+                        Factura Compra
                     </button>
+                    ${pedidoData.devolucion ? `
+                        <button onclick="descargarFacturaDevolucio(${pedidoData.id})" style="flex: 1; min-width: 150px; padding: 12px; background: #2196f3; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="13" x2="12" y2="19"></line><polyline points="9 16 12 13 15 16"></polyline>
+                            </svg>
+                            Factura Devolución
+                        </button>
+                    ` : ''}
                     ${botonesHtml}
                 </div>
             `;
@@ -2087,8 +2134,100 @@ Astro.response.headers.set('Expires', '0');
             modalConfirm.dataset.pedidoId = pedidoId;
             modalConfirm.dataset.email = email;
             modalConfirm.dataset.nombre = nombre;
+
+            // Cargar los items del pedido desde el DOM
+            const pedidoCard = document.querySelector(`[data-pedido-id="${pedidoId}"]`);
+            if (!pedidoCard) return;
+
+            // Extraer items del pedido desde el HTML
+            let itemsHTML = pedidoCard.getAttribute('data-items-json');
+            if (!itemsHTML) return;
+            
+            // Decodificar HTML entities
+            itemsHTML = itemsHTML.replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+            
+            try {
+              const items = JSON.parse(itemsHTML);
+              
+              // Construir HTML para seleccionar items
+              const seleccionarDiv = document.getElementById('items-seleccionar');
+              seleccionarDiv.innerHTML = items.map((item, index) => `
+                <div style="padding: 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 12px;">
+                  <input 
+                    type="checkbox" 
+                    id="item-${index}" 
+                    value="${index}"
+                    checked
+                    onchange="actalizarMontoReembolso('${pedidoId}')"
+                    style="width: 20px; height: 20px; cursor: pointer;"
+                  />
+                  <div style="flex: 1;">
+                    <label for="item-${index}" style="cursor: pointer; color: #333; font-weight: 500;">
+                      ${item.nombre} ${item.talla ? `(Talla: ${item.talla})` : ''}
+                    </label>
+                    <div style="color: #999; font-size: 12px;">
+                      ${item.cantidad}x @ €${item.precio.toFixed(2)} = €${(item.cantidad * item.precio).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              `).join('');
+
+              // Guardar items en el dataset para usarlos después
+              modalConfirm.dataset.itemsJSON = itemsHTML;
+              
+              // Calcular monto inicial
+              actalizarMontoReembolso(pedidoId);
+            } catch (e) {
+              console.error('[mis-compras] Error parsing items:', e);
+            }
             
             modalConfirm.style.display = 'flex';
+        }
+
+        function actalizarMontoReembolso(pedidoId) {
+          const modalConfirm = document.getElementById('modal-confirm-devolucion');
+          const itemsJSON = modalConfirm.dataset.itemsJSON;
+          
+          try {
+            const items = JSON.parse(itemsJSON);
+            let montoTotal = 0;
+            
+            items.forEach((item, index) => {
+              const checkbox = document.getElementById(`item-${index}`);
+              if (checkbox && checkbox.checked) {
+                montoTotal += item.cantidad * item.precio;
+              }
+            });
+            
+            const montoDiv = document.getElementById('monto-reembolso');
+            if (montoDiv) {
+              montoDiv.textContent = '€' + montoTotal.toFixed(2);
+            }
+          } catch (e) {
+            console.error('[mis-compras] Error updating monto:', e);
+          }
+        }
+        
+        function obtenerItemsSeleccionados() {
+          const modalConfirm = document.getElementById('modal-confirm-devolucion');
+          const itemsJSON = modalConfirm.dataset.itemsJSON;
+          
+          try {
+            const items = JSON.parse(itemsJSON);
+            const itemsSeleccionados = [];
+            
+            items.forEach((item, index) => {
+              const checkbox = document.getElementById(`item-${index}`);
+              if (checkbox && checkbox.checked) {
+                itemsSeleccionados.push(item);
+              }
+            });
+            
+            return itemsSeleccionados;
+          } catch (e) {
+            console.error('[mis-compras] Error getting selected items:', e);
+            return [];
+          }
         }
 
         // Confirmar devolución
@@ -2097,6 +2236,16 @@ Astro.response.headers.set('Expires', '0');
             const motivoInput = document.getElementById('motivo-devolucion');
             const motivo = motivoInput.value.trim();
             const errorDiv = document.getElementById('error-motivo');
+            
+            // Obtener items seleccionados
+            const itemsSeleccionados = obtenerItemsSeleccionados();
+            
+            // Validar que al menos un item está seleccionado
+            if (itemsSeleccionados.length === 0) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'Por favor, selecciona al menos un producto para devolver';
+                return;
+            }
             
             // Validar motivo
             if (!motivo) {
@@ -2117,7 +2266,7 @@ Astro.response.headers.set('Expires', '0');
             
             errorDiv.style.display = 'none';
             modalConfirm.style.display = 'none';
-            procesarDevolucion(pedidoId, email, nombre, motivo);
+            procesarDevolucion(pedidoId, email, nombre, motivo, itemsSeleccionados);
         }
 
         // Descargar factura en PDF desde el servidor
@@ -2155,6 +2304,40 @@ Astro.response.headers.set('Expires', '0');
             }
         }
 
+        async function descargarFacturaDevolucio(pedidoId) {
+            try {
+                console.log('[mis-compras] Descargando factura de devolución para pedido:', pedidoId);
+                
+                // Llamar a la API de descargar facturas de devolución
+                const response = await fetch(`/api/download-invoice?id=${pedidoId}&type=devolucio`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Error ${response.status}: ${errorData.error}`);
+                }
+
+                // Obtener el contenido como blob
+                const blob = await response.blob();
+                
+                // Crear un URL temporal y descargar
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `factura-devolucion-pedido-${pedidoId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                
+                // Limpiar
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                console.log('[mis-compras] ✅ Factura de devolución descargada exitosamente');
+            } catch (error) {
+                console.error('[mis-compras] Error descargando factura de devolución:', error);
+                mostrarModalError('Error al descargar la factura de devolución. Por favor, intenta de nuevo.');
+            }
+        }
+
         // Cerrar modal de confirmación de devolución
         function cerrarConfirmacionDevolucion() {
             const modalConfirm = document.getElementById('modal-confirm-devolucion');
@@ -2162,7 +2345,7 @@ Astro.response.headers.set('Expires', '0');
         }
 
         // Procesar devolución
-        async function procesarDevolucion(pedidoId, email, nombre, motivo) {
+        async function procesarDevolucion(pedidoId, email, nombre, motivo, itemsDevueltos) {
             try {
                 const response = await fetch('/api/request-return', {
                     method: 'POST',
@@ -2173,7 +2356,8 @@ Astro.response.headers.set('Expires', '0');
                         pedidoId: parseInt(pedidoId),
                         email: email,
                         nombre: nombre,
-                        motivo: motivo
+                        motivo: motivo,
+                        itemsDevueltos: itemsDevueltos  // Enviar items seleccionados
                     })
                 });
 
@@ -2181,7 +2365,12 @@ Astro.response.headers.set('Expires', '0');
 
                 if (data.success) {
                     // Mostrar modal de éxito
-                    mostrarModalExito('Tu solicitud de devolución ha sido registrada exitosamente. Te hemos enviado un email confirmando que tu devolución está en proceso. El equipo de Joyería Galiana se pondrá en contacto contigo dentro de 24 horas.');
+                    const montoTotal = itemsDevueltos.reduce((sum, item) => sum + (item.cantidad * item.precio), 0);
+                    const mensaje = `Tu solicitud de devolución ha sido registrada exitosamente. 
+                      Te hemos enviado un email confirmando que tu devolución está en proceso. 
+                      Monto a reembolsar: €${montoTotal.toFixed(2)} 
+                      El equipo de Joyería Galiana se pondrá en contacto contigo dentro de 24 horas.`;
+                    mostrarModalExito(mensaje);
                 } else {
                     mostrarModalError('Error: ' + (data.message || 'No se pudo procesar la devolución'));
                 }

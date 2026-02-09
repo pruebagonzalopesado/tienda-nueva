@@ -88,12 +88,12 @@ export const POST: APIRoute = async (context) => {
       // PASO 1: Generar PDF de factura de devolución confirmada
       let pdfBuffer: Buffer | undefined;
       try {
-        const items = typeof pedido.items === 'string' 
-          ? JSON.parse(pedido.items) 
-          : (pedido.items || []);
+        // Usar los items devueltos guardados en la devolución
+        const itemsDevueltos = devolucion.items_devueltos || [];
+        const montoReembolso = devolucion.monto_reembolso || 0;
 
         const productosConDetalles: any[] = [];
-        for (const item of items) {
+        for (const item of itemsDevueltos) {
           const detalles = await obtenerDatosProducto(item.product_id || item.id);
           productosConDetalles.push({
             id: item.product_id || item.id,
@@ -118,10 +118,10 @@ export const POST: APIRoute = async (context) => {
             pais: pedido?.pais || 'ES'
           },
           productos: productosConDetalles,
-          subtotal: pedido?.subtotal || 0,
-          envio: pedido?.envio || 0,
-          descuento: pedido?.descuento || 0,
-          total: pedido?.total || 0
+          subtotal: montoReembolso,
+          envio: 0, // No se devuelve gastos de envío en devoluciones parciales
+          descuento: 0,
+          total: montoReembolso
         };
 
         pdfBuffer = await generateRefundInvoicePDF(datosFacturaDevolucion);
@@ -130,12 +130,17 @@ export const POST: APIRoute = async (context) => {
         console.warn('[manage-returns] ⚠️ Error generando factura de devolución:', pdfError);
       }
 
-      // PASO 1-B: Procesar reembolso en Stripe
+      // PASO 1-B: Procesar reembolso proporcional en Stripe
       let refundProcessed = false;
+      let refundAmount = 0;
       try {
         if (pedido && pedido.stripe_payment_id) {
           const sessionId = pedido.stripe_payment_id;
+          const montoReembolso = devolucion.monto_reembolso || 0;
+          const amountInCents = Math.round(montoReembolso * 100);
+
           console.log('[manage-returns] Checkout Session ID:', sessionId);
+          console.log('[manage-returns] Monto a reembolsar:', montoReembolso, '€ (', amountInCents, 'céntimos)');
 
           try {
             const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -144,14 +149,17 @@ export const POST: APIRoute = async (context) => {
             console.log('[manage-returns] Payment Intent obtenido:', paymentIntentId);
 
             if (paymentIntentId) {
+              // Crear reembolso proporcional basado en los items devueltos
               const refund = await stripe.refunds.create({
                 payment_intent: paymentIntentId,
+                amount: amountInCents, // Reembolso solo del monto de los items devueltos
                 reason: 'requested_by_customer'
               });
 
               if (refund.id) {
-                console.log('[manage-returns] ✅ Reembolso procesado:', refund.id);
+                console.log('[manage-returns] ✅ Reembolso procesado:', refund.id, '- Monto:', refund.amount / 100, '€');
                 refundProcessed = true;
+                refundAmount = refund.amount / 100;
               }
             }
           } catch (refundError: any) {
@@ -183,6 +191,13 @@ export const POST: APIRoute = async (context) => {
       }
 
       // PASO 3: Enviar email "Devolución Confirmada y Reembolso en Proceso"
+      const itemsDevueltos = devolucion.items_devueltos || [];
+      const montoReembolso = devolucion.monto_reembolso || 0;
+      
+      const itemsHTML = itemsDevueltos
+        .map(item => `<li style="color: #666; margin: 8px 0;"><strong>${item.nombre}</strong> (x${item.cantidad}) - €${item.subtotal?.toFixed(2) || (item.precio * item.cantidad).toFixed(2)}</li>`)
+        .join('');
+
       const emailContent = `
         <div style="font-family: 'Playfair Display', Georgia, serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 40px; text-align: center; border-radius: 12px 12px 0 0;">
@@ -196,9 +211,21 @@ export const POST: APIRoute = async (context) => {
               Tu devolución para el pedido <strong>#${devolucion.pedido_id}</strong> ha sido <strong>confirmada</strong>.
             </p>
 
+            <div style="background: #f9f9f9; padding: 16px; border-radius: 6px; margin: 24px 0; border: 1px solid #e0e0e0;">
+              <h4 style="color: #333; margin-top: 0; font-size: 14px; margin-bottom: 12px;">📦 Productos devueltos:</h4>
+              <ul style="margin: 0; padding-left: 20px; color: #666;">
+                ${itemsHTML}
+              </ul>
+              <div style="border-top: 1px solid #e0e0e0; margin-top: 12px; padding-top: 12px;">
+                <p style="color: #333; margin: 0; font-weight: bold;">
+                  💰 Monto a reembolsar: €${montoReembolso.toFixed(2)}
+                </p>
+              </div>
+            </div>
+
             <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 16px; margin: 24px 0; border-radius: 4px;">
               <p style="color: #155724; margin: 0; font-size: 14px;">
-                <strong>✅ Reembolso en Proceso:</strong> Hemos iniciado el proceso de reembolso. El dinero aparecerá en tu cuenta en 5-10 días hábiles dependiendo de tu banco.
+                <strong>✅ Reembolso en Proceso:</strong> Hemos iniciado el proceso de reembolso de €${montoReembolso.toFixed(2)}. El dinero aparecerá en tu cuenta en 5-10 días hábiles dependiendo de tu banco.
               </p>
             </div>
 
@@ -207,7 +234,7 @@ export const POST: APIRoute = async (context) => {
               <p style="color: #666; margin: 8px 0;"><strong>Pedido:</strong> #${devolucion.pedido_id}</p>
               <p style="color: #666; margin: 8px 0;"><strong>Motivo:</strong> ${devolucion.motivo_solicitud}</p>
               <p style="color: #666; margin: 8px 0;"><strong>Estado:</strong> Confirmada</p>
-              <p style="color: #666; margin: 8px 0;"><strong>Monto a reembolsar:</strong> €${pedido?.total || 'N/A'}</p>
+              <p style="color: #666; margin: 8px 0;"><strong>Monto a reembolsar:</strong> €${montoReembolso.toFixed(2)}</p>
             </div>
 
             <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 16px; margin: 24px 0; border-radius: 4px;">

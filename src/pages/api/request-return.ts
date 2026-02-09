@@ -3,20 +3,31 @@ import { supabase } from '../../lib/supabase';
 import { sendEmail } from '../../lib/brevo';
 import { generateRefundInvoicePDF, obtenerDatosProducto } from '../../lib/invoice-generator';
 
+interface ReturnItem {
+  product_id?: string;
+  id?: string;
+  nombre: string;
+  cantidad: number;
+  precio: number;
+  subtotal: number;
+  talla?: string;
+}
+
 interface ReturnRequest {
   pedidoId: number | string;
   email: string;
   nombre: string;
   motivo: string;
+  itemsDevueltos: ReturnItem[]; // Items seleccionados para devolver
 }
 
 export const POST: APIRoute = async (context) => {
   try {
     const body = (await context.request.json()) as ReturnRequest;
-    const { pedidoId, email, nombre, motivo } = body;
+    const { pedidoId, email, nombre, motivo, itemsDevueltos } = body;
 
     // Validar entrada
-    if (!pedidoId || !email || !nombre || !motivo) {
+    if (!pedidoId || !email || !nombre || !motivo || !itemsDevueltos || itemsDevueltos.length === 0) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -36,7 +47,28 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
-    // PASO 1: Actualizar estado del pedido a "devolucion_proceso"
+    // Calcular monto total a reembolsar basado en items seleccionados
+    const montoReembolso = itemsDevueltos.reduce((sum, item) => sum + (item.subtotal || 0), 0);
+
+    // PASO 1: Actualizar estado del pedido a "devolucion_proceso" (solo si no hay otro proceso activo)
+    const { data: existingReturn, error: checkError } = await supabase
+      .from('devoluciones')
+      .select('id')
+      .eq('pedido_id', parseInt(String(pedidoId)))
+      .in('estado', ['procesado', 'confirmada'])
+      .single();
+
+    // Si ya existe una devolución activa, no permitir otra
+    if (existingReturn && !checkError) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: 'Ya existe una devolución en proceso para este pedido'
+        }),
+        { status: 400 }
+      );
+    }
+
     const { error: updatePedidoError } = await supabase
       .from('pedidos')
       .update({
@@ -55,7 +87,7 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
-    // PASO 2: Crear registro en tabla de devoluciones con estado "procesado"
+    // PASO 2: Crear registro en tabla de devoluciones con items específicos
     const { data: devolucion, error: insertDevError } = await supabase
       .from('devoluciones')
       .insert({
@@ -63,6 +95,8 @@ export const POST: APIRoute = async (context) => {
         usuario_email: email,
         usuario_nombre: nombre,
         motivo_solicitud: motivo,
+        items_devueltos: itemsDevueltos, // Guardar items específicos
+        monto_reembolso: montoReembolso,
         estado: 'procesado'
       })
       .select()
@@ -99,15 +133,13 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
-    // PASO 4: Generar factura de devolución (PDF)
+    // PASO 4: Generar factura de devolución (PDF) solo con items devueltos
     let pdfBuffer: Buffer | undefined;
     try {
-      const items = typeof pedido.items === 'string' 
-        ? JSON.parse(pedido.items) 
-        : (pedido.items || []);
-
       const productosConDetalles: any[] = [];
-      for (const item of items) {
+      
+      // Usar solo los items devueltos, no todos
+      for (const item of itemsDevueltos) {
         const detalles = await obtenerDatosProducto(item.product_id || item.id);
         productosConDetalles.push({
           id: item.product_id || item.id,
@@ -132,10 +164,10 @@ export const POST: APIRoute = async (context) => {
           pais: pedido.pais || 'ES'
         },
         productos: productosConDetalles,
-        subtotal: pedido.subtotal || 0,
-        envio: pedido.envio || 0,
-        descuento: pedido.descuento || 0,
-        total: pedido.total || 0
+        subtotal: montoReembolso,
+        envio: 0, // No se devuelve el envío en devoluciones parciales
+        descuento: 0,
+        total: montoReembolso
       };
 
       pdfBuffer = await generateRefundInvoicePDF(datosFacturaDevolucion);
@@ -145,6 +177,10 @@ export const POST: APIRoute = async (context) => {
     }
 
     // PASO 5: Enviar email "Devolución en Proceso" al cliente
+    const itemsHTML = itemsDevueltos
+      .map(item => `<li style="color: #666; margin: 8px 0;"><strong>${item.nombre}</strong> (x${item.cantidad}) - €${item.subtotal.toFixed(2)}</li>`)
+      .join('');
+
     const emailContent = `
       <div style="font-family: 'Playfair Display', Georgia, serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #d4af37 0%, #b8941a 100%); padding: 40px; text-align: center; border-radius: 12px 12px 0 0;">
@@ -157,6 +193,18 @@ export const POST: APIRoute = async (context) => {
           <p style="color: #666; margin-bottom: 24px; line-height: 1.6;">
             Tu solicitud de devolución para el pedido <strong>#${pedidoId}</strong> ha sido registrada exitosamente.
           </p>
+
+          <div style="background: #f9f9f9; padding: 16px; border-radius: 6px; margin: 24px 0; border: 1px solid #e0e0e0;">
+            <h4 style="color: #333; margin-top: 0; font-size: 14px; margin-bottom: 12px;">📦 Productos a devolver:</h4>
+            <ul style="margin: 0; padding-left: 20px; color: #666;">
+              ${itemsHTML}
+            </ul>
+            <div style="border-top: 1px solid #e0e0e0; margin-top: 12px; padding-top: 12px;">
+              <p style="color: #333; margin: 0; font-weight: bold;">
+                💰 Monto a reembolsar: €${montoReembolso.toFixed(2)}
+              </p>
+            </div>
+          </div>
 
           <div style="background: #f9f9f9; padding: 16px; border-left: 4px solid #d4af37; margin: 24px 0; border-radius: 4px;">
             <p style="color: #333; margin: 0; font-weight: bold; margin-bottom: 8px;">Motivo de devolución:</p>

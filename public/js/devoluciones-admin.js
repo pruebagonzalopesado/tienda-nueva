@@ -209,7 +209,29 @@ function abrirDevolucion(devolucion) {
     document.getElementById('dev-cliente').textContent = devolucion.usuario_nombre;
     document.getElementById('dev-email').textContent = devolucion.usuario_email;
     document.getElementById('dev-motivo').textContent = devolucion.motivo_solicitud;
-    document.getElementById('dev-monto').textContent = `€${devolucion.pedidos?.total?.toFixed(2) || '0.00'}`;
+    
+    // Mostrar el monto de la devolución (no el total del pedido)
+    const montoReembolso = devolucion.monto_reembolso || devolucion.pedidos?.total || 0;
+    document.getElementById('dev-monto').textContent = `€${parseFloat(montoReembolso).toFixed(2)}`;
+    
+    // Mostrar los items devueltos
+    const itemsDevueltos = devolucion.items_devueltos || [];
+    const itemsContainer = document.getElementById('dev-items-devueltos');
+    
+    if (itemsContainer) {
+        if (itemsDevueltos.length > 0) {
+            itemsContainer.innerHTML = itemsDevueltos.map(item => `
+                <div style="padding: 0.75rem; background: white; border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 0.5rem;">
+                    <div style="font-weight: 600; color: #333;">${item.nombre} ${item.talla ? `(Talla: ${item.talla})` : ''}</div>
+                    <div style="font-size: 0.9rem; color: #666;">
+                        ${item.cantidad}x @ €${parseFloat(item.precio).toFixed(2)} = €${parseFloat(item.subtotal || item.cantidad * item.precio).toFixed(2)}
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            itemsContainer.innerHTML = '<p style="color: #999;">No hay items seleccionados</p>';
+        }
+    }
     
     const estadoTexto = {
         'procesado': 'Procesado (Pendiente de revisar)',
