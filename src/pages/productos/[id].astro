@@ -38,79 +38,10 @@ import PublicLayout from "../../layouts/PublicLayout.astro";
             </div>
 
             <div class="product-rating">
-                <div class="stars">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="#ffc107"
-                        stroke="#ffc107"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        ><polygon
-                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                        ></polygon></svg
-                    >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="#ffc107"
-                        stroke="#ffc107"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        ><polygon
-                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                        ></polygon></svg
-                    >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="#ffc107"
-                        stroke="#ffc107"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        ><polygon
-                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                        ></polygon></svg
-                    >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="#ffc107"
-                        stroke="#ffc107"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        ><polygon
-                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                        ></polygon></svg
-                    >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="#ffc107"
-                        stroke="#ffc107"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        ><polygon
-                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                        ></polygon></svg
-                    >
+                <div class="stars" id="product-stars">
+                    <!-- Las estrellas se cargarán dinámicamente -->
                 </div>
-                <span class="rating-text">(128 reseñas)</span>
+                <span class="rating-text" id="product-rating-text">(0 reseñas)</span>
             </div>
 
             <div class="product-price">
@@ -370,6 +301,18 @@ import PublicLayout from "../../layouts/PublicLayout.astro";
             <h2>Productos Relacionados</h2>
             <div class="productos-grid" id="related-products-grid">
                 <!-- Se cargarán aquí -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de Reseñas -->
+    <section class="reviews-section">
+        <div class="container">
+            <h2>Reseñas de Clientes</h2>
+            
+            <!-- Lista de Reseñas -->
+            <div class="reviews-list" id="reviews-list">
+                <p class="no-reviews">Cargando reseñas...</p>
             </div>
         </div>
     </section>

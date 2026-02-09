@@ -1333,6 +1333,30 @@ Astro.response.headers.set('Expires', '0');
             cursor: not-allowed;
         }
 
+        .btn-resena {
+            background: linear-gradient(135deg, #d4af37, #c69c2b);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .btn-resena:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
+            background: linear-gradient(135deg, #c69c2b, #b8892e);
+        }
+
+        .btn-resena:active {
+            transform: translateY(0);
+        }
+
         @media (max-width: 768px) {
             .modal-content {
                 padding: 30px 20px;
@@ -1347,6 +1371,52 @@ Astro.response.headers.set('Expires', '0');
             }
         }
     </style>
+
+    <!-- Modal de Reseña -->
+    <div id="modal-resena" class="modal" style="display: none; z-index: 2000;">
+        <div class="modal-overlay" onclick="cerrarModalResena()"></div>
+        <div class="modal-content" style="max-width: 500px;">
+            <button class="modal-close" onclick="cerrarModalResena()">×</button>
+            <h2 style="margin-bottom: 24px; color: var(--color-secundario);">Deja tu Reseña</h2>
+            
+            <form id="forma-resena" onsubmit="enviarResena(event)" style="display: flex; flex-direction: column; gap: 16px;">
+                <!-- Nombre del producto -->
+                <div style="background: #f5f5f5; padding: 12px 16px; border-radius: 8px; color: #666; font-size: 14px; font-weight: 600; text-align: center;" id="resena-product-name"></div>
+                
+                <!-- Calificación por estrellas -->
+                <div>
+                    <label style="display: block; margin-bottom: 12px; font-weight: 600; color: #333;">Calificación</label>
+                    <div style="display: flex; gap: 12px; justify-content: center; font-size: 32px; cursor: pointer;">
+                        <span onclick="setRating(1)" id="star-1" style="cursor: pointer; opacity: 0.3; transition: opacity 0.2s;">★</span>
+                        <span onclick="setRating(2)" id="star-2" style="cursor: pointer; opacity: 0.3; transition: opacity 0.2s;">★</span>
+                        <span onclick="setRating(3)" id="star-3" style="cursor: pointer; opacity: 0.3; transition: opacity 0.2s;">★</span>
+                        <span onclick="setRating(4)" id="star-4" style="cursor: pointer; opacity: 0.3; transition: opacity 0.2s;">★</span>
+                        <span onclick="setRating(5)" id="star-5" style="cursor: pointer; opacity: 0.3; transition: opacity 0.2s;">★</span>
+                    </div>
+                    <input type="hidden" id="resena-calificacion" name="calificacion" value="0" />
+                    <div style="text-align: center; margin-top: 8px; font-size: 12px; color: #999;" id="rating-text">Selecciona una calificación</div>
+                </div>
+
+                <!-- Título -->
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">Título (opcional)</label>
+                    <input type="text" id="resena-titulo" name="titulo" placeholder="Ej: Excelente joya" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; box-sizing: border-box; font-size: 14px;" />
+                </div>
+
+                <!-- Comentario -->
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">Tu comentario</label>
+                    <textarea id="resena-comentario" name="comentario" placeholder="Cuéntanos tu experiencia con este producto..." style="width: 100%; min-height: 100px; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; box-sizing: border-box; font-size: 14px; resize: vertical;"></textarea>
+                </div>
+
+                <!-- Botones -->
+                <div style="display: flex; gap: 12px; margin-top: 16px;">
+                    <button type="button" class="modal-btn" onclick="cerrarModalResena()" style="flex: 1; background: #f0f0f0; color: #333; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600;">Cancelar</button>
+                    <button type="submit" class="modal-btn" style="flex: 1; background: linear-gradient(135deg, #d4af37, #c69c2b); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600;">Publicar Reseña</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script is:inline>
         // Almacenar datos de pedidos globalmente
@@ -1902,14 +1972,21 @@ Astro.response.headers.set('Expires', '0');
                     imagenProducto = item.imagen || item.imagen_url || item.image;
                 }
                 
+                const productId = item.product_id || item.id;
+                
                 productosHtml += `
                     <div class="modal-product-item">
                         ${imagenProducto ? `<img src="${imagenProducto}" alt="${item.nombre}" class="modal-product-img" />` : ''}
-                        <div class="modal-product-details">
+                        <div class="modal-product-details" style="flex: 1;">
                             <div class="modal-product-name">${item.nombre}</div>
                             <div class="modal-product-qty">Cantidad: ${cantidad}</div>
                             ${item.talla ? `<div class="modal-product-qty" style="font-size: 0.9rem; color: #666;">Talla: <strong>${item.talla}</strong></div>` : ''}
                             <div class="modal-product-price">€${precio}</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
+                            <button class="btn-resena" onclick="abrirModalResena(${productId}, ${pedidoId}, '${item.nombre}')">
+                                Reseña
+                            </button>
                         </div>
                     </div>
                 `;
@@ -2432,6 +2509,127 @@ Astro.response.headers.set('Expires', '0');
         function cerrarModalError() {
             const modal = document.getElementById('modal-error');
             if (modal) modal.remove();
+        }
+
+        // ===== SISTEMA DE RESEÑAS =====
+        let currentResenaData = {};
+
+        async function abrirModalResena(productId, pedidoId, productName) {
+            try {
+                // Obtener sesión del usuario
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session) {
+                    alert('Debes estar autenticado para dejar una reseña');
+                    return;
+                }
+
+                // Verificar si ya existe una reseña para este producto
+                const { data: resenaExistente, error } = await window.supabaseClient
+                    .from('resenas')
+                    .select('id')
+                    .eq('product_id', parseInt(productId))
+                    .eq('usuario_id', session.user.id)
+                    .single();
+
+                if (resenaExistente) {
+                    mostrarModalError('Ya has escrito una reseña para este producto');
+                    return;
+                }
+
+                currentResenaData = { productId, pedidoId, productName };
+                document.getElementById('resena-product-name').textContent = productName;
+                document.getElementById('resena-calificacion').value = '0';
+                document.getElementById('resena-titulo').value = '';
+                document.getElementById('resena-comentario').value = '';
+                resetRatingStars();
+                document.getElementById('modal-resena').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            } catch (error) {
+                console.error('[abrirModalResena] Error:', error);
+                mostrarModalError('Error al abrir el formulario de reseña');
+            }
+        }
+
+        function cerrarModalResena() {
+            document.getElementById('modal-resena').style.display = 'none';
+            document.body.style.overflow = '';
+            currentResenaData = {};
+        }
+
+        function setRating(stars) {
+            currentResenaData.calificacion = stars;
+            document.getElementById('resena-calificacion').value = stars;
+            updateRatingStars(stars);
+            document.getElementById('rating-text').textContent = `${stars} de 5 estrellas`;
+        }
+
+        function resetRatingStars() {
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`star-${i}`).style.opacity = '0.3';
+            }
+        }
+
+        function updateRatingStars(rating) {
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`star-${i}`).style.opacity = i <= rating ? '1' : '0.3';
+                document.getElementById(`star-${i}`).style.color = i <= rating ? '#d4af37' : 'currentColor';
+            }
+        }
+
+        async function enviarResena(event) {
+            event.preventDefault();
+
+            const calificacion = parseInt(document.getElementById('resena-calificacion').value);
+            if (calificacion === 0) {
+                alert('Por favor selecciona una calificación');
+                return;
+            }
+
+            const titulo = document.getElementById('resena-titulo').value.trim();
+            const comentario = document.getElementById('resena-comentario').value.trim();
+
+            if (!comentario && !titulo) {
+                alert('Por favor escribe al menos un comentario');
+                return;
+            }
+
+            try {
+                // Obtener datos del usuario
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session) {
+                    alert('Debes estar autenticado para dejar una reseña');
+                    return;
+                }
+
+                const usuario = session.user;
+                const pedidoData = window.pedidosData[currentResenaData.pedidoId];
+
+                const response = await fetch('/api/resenas/crear-resena', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        product_id: currentResenaData.productId,
+                        pedido_id: currentResenaData.pedidoId,
+                        usuario_id: usuario.id,
+                        usuario_nombre: usuario.user_metadata?.nombre || usuario.email || 'Cliente',
+                        usuario_email: usuario.email,
+                        calificacion,
+                        titulo,
+                        comentario
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al publicar la reseña');
+                }
+
+                cerrarModalResena();
+                mostrarModalExito('¡Tu reseña ha sido publicada! Gracias por tu opinión');
+            } catch (error) {
+                console.error('[enviarResena] Error:', error);
+                mostrarModalError(error.message || 'Error al publicar la reseña');
+            }
         }
 
         // Cerrar modal al hacer click fuera

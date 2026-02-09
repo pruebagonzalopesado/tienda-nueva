@@ -481,3 +481,242 @@
 #modal-validar-talla button:last-of-type:hover {
     background-color: #c69c2b !important;
 }
+
+/* ===== SECCIÓN DE RESEÑAS ===== */
+.reviews-section {
+    background: #f9f9f9;
+    padding: 60px 0;
+}
+
+.reviews-section .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.reviews-section h2 {
+    text-align: center;
+    color: var(--color-secundario);
+    margin-bottom: 40px;
+    font-size: 28px;
+}
+
+/* Estadísticas de Reseñas */
+.reviews-stats {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 40px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.stats-summary {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 40px;
+    align-items: center;
+}
+
+.overall-rating {
+    text-align: center;
+    padding: 20px;
+}
+
+.rating-number {
+    font-size: 48px;
+    font-weight: bold;
+    color: #d4af37;
+    margin-bottom: 8px;
+}
+
+.rating-stars {
+    font-size: 28px;
+    color: #d4af37;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+}
+
+.rating-count {
+    font-size: 14px;
+    color: #888;
+}
+
+.rating-distribution {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.rating-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rating-label {
+    width: 60px;
+    font-size: 14px;
+    color: #666;
+    text-align: right;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.rating-label span {
+    color: #d4af37;
+    font-weight: bold;
+}
+
+.bar-container {
+    flex: 1;
+    height: 8px;
+    background: #e8e8e8;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #d4af37, #c69c2b);
+    transition: width 0.3s ease;
+}
+
+.bar-count {
+    width: 50px;
+    text-align: right;
+    font-size: 13px;
+    color: #999;
+}
+
+/* Lista de Reseñas */
+.reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.review-item {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.review-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.review-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.review-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d4af37, #c69c2b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.review-user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.review-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.review-date {
+    font-size: 12px;
+    color: #999;
+}
+
+.review-rating {
+    font-size: 14px;
+    color: #d4af37;
+    letter-spacing: 1px;
+}
+
+.review-verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #e8f5e9;
+    color: #4caf50;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.review-verified::before {
+    content: '✓';
+    font-weight: bold;
+}
+
+.review-content {
+    margin-bottom: 12px;
+}
+
+.review-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    font-size: 15px;
+}
+
+.review-text {
+    color: #666;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.no-reviews {
+    text-align: center;
+    color: #999;
+    padding: 40px 20px;
+    font-size: 15px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stats-summary {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .reviews-section h2 {
+        font-size: 22px;
+    }
+
+    .review-item {
+        padding: 16px;
+    }
+
+    .rating-number {
+        font-size: 36px;
+    }
+
+    .rating-stars {
+        font-size: 20px;
+    }
+}

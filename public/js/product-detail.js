@@ -83,6 +83,9 @@ async function loadProduct() {
         
         // 🔄 Iniciar sincronización de stock en tiempo real
         iniciarSincronizacionStockTiempoReal();
+        
+        // ⭐ Cargar reseñas
+        loadReviews(product.id);
 
     } catch (err) {
         console.error('Error cargando producto:', err);
@@ -1144,6 +1147,107 @@ window.actualizarStockDesdeModal = async function(productId) {
     } catch (err) {
         console.error('[actualizarStockDesdeModal] Error:', err);
     }
+}
+
+// ===== SISTEMA DE RESEÑAS =====
+
+async function loadReviews(productId) {
+    try {
+        const response = await fetch(`/api/resenas/obtener-resenas?product_id=${productId}`);
+        if (!response.ok) {
+            console.error('Error cargando reseñas');
+            return;
+        }
+
+        const { resenas, estadisticas } = await response.json();
+        console.log('[loadReviews] Reseñas cargadas:', resenas.length);
+
+        renderReviews(resenas, estadisticas);
+    } catch (error) {
+        console.error('[loadReviews] Error:', error);
+    }
+}
+
+function renderReviews(resenas, estadisticas) {
+    const container = document.getElementById('reviews-list');
+    
+    // ===== ACTUALIZAR ESTRELLAS Y NÚMERO EN LA TARJETA DEL PRODUCTO =====
+    const starsContainer = document.getElementById('product-stars');
+    const ratingText = document.getElementById('product-rating-text');
+    
+    // Renderizar siempre 5 estrellas
+    let starsHtml = '';
+    const promedio = estadisticas.total > 0 ? estadisticas.promedio : 0;
+    for (let i = 1; i <= 5; i++) {
+        const isFilled = i <= Math.round(promedio);
+        const starSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="${isFilled ? '#d4af37' : '#e0e0e0'}" stroke="${isFilled ? '#d4af37' : '#e0e0e0'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+        starsHtml += starSvg;
+    }
+    starsContainer.innerHTML = starsHtml;
+    ratingText.textContent = `(${estadisticas.total} ${estadisticas.total === 1 ? 'reseña' : 'reseñas'})`;
+
+    // ===== RENDERIZAR LISTA DE RESEÑAS =====
+    if (resenas.length === 0) {
+        container.innerHTML = '<p class="no-reviews">Sin reseñas aún. ¡Sé el primero en dejar una reseña!</p>';
+    } else {
+        const reseniasHtml = resenas
+            .map(resena => {
+                const fecha = new Date(resena.created_at).toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                const iniciales = resena.usuario_nombre
+                    .split(' ')
+                    .map(n => n[0])
+                    .join('')
+                    .toUpperCase()
+                    .substring(0, 2);
+
+                return `
+                    <div class="review-item">
+                        <div class="review-header">
+                            <div class="review-author">
+                                <div class="review-avatar">${iniciales}</div>
+                                <div class="review-user-info">
+                                    <div class="review-name">${resena.usuario_nombre}</div>
+                                    <div class="review-date">${fecha}</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="review-rating">${generarEstrellas(resena.calificacion)}</div>
+                                ${resena.compra_verificada ? '<div class="review-verified">Compra verificada</div>' : ''}
+                            </div>
+                        </div>
+                        ${resena.titulo ? `<div class="review-title">${escapeHtml(resena.titulo)}</div>` : ''}
+                        ${resena.comentario ? `<div class="review-content"><div class="review-text">${escapeHtml(resena.comentario)}</div></div>` : ''}
+                    </div>
+                `;
+            })
+            .join('');
+
+        container.innerHTML = reseniasHtml;
+    }
+}
+
+function generarEstrellas(cantidad) {
+    const llenas = Math.floor(cantidad);
+    const media = cantidad % 1 !== 0;
+    const vacias = 5 - llenas - (media ? 1 : 0);
+
+    return '★'.repeat(llenas) + (media ? '½' : '') + '☆'.repeat(vacias);
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, char => map[char]);
 };
 
 // Fin del archivo product-detail.js

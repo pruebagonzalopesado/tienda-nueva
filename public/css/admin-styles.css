@@ -1390,17 +1390,21 @@ table tbody tr:hover {
     .admin-container {
         min-height: auto;
         overflow: visible;
+        width: 100%;
     }
 
     .admin-content {
-        padding: 0.5rem;
+        padding: 0.75rem 0.5rem;
         overflow: visible !important;
         min-height: auto;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .admin-section {
         overflow: visible !important;
         margin-bottom: 0.5rem !important;
+        width: 100%;
     }
 
     .admin-section h2 {
@@ -1665,5 +1669,582 @@ table tbody tr:hover {
         padding: 0.4rem !important;
         font-size: 0.7rem !important;
         margin-bottom: 0.75rem;
+    }
+}
+
+/* Estilos para la sección de Reseñas */
+#tabla-resenas {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#tabla-resenas thead {
+    background: #f5f5f5;
+}
+
+#tabla-resenas th {
+    padding: 1rem 0.8rem;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #e0e0e0;
+    font-size: 0.95rem;
+    white-space: nowrap;
+}
+
+#tabla-resenas th:nth-child(2),
+#tabla-resenas th:nth-child(6) {
+    text-align: center;
+}
+
+#tabla-resenas td {
+    padding: 0.8rem;
+    border-bottom: 1px solid #e0e0e0;
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+
+#tabla-resenas tbody tr:hover {
+    background: #f0f8ff;
+    box-shadow: inset 0 0 8px rgba(212, 175, 55, 0.1);
+    transition: all 0.2s ease;
+}
+
+#tabla-resenas tbody tr {
+    transition: all 0.2s ease;
+}
+
+#tabla-resenas button {
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+#tabla-resenas button:hover {
+    background: #cc2a2a !important;
+    transform: scale(1.05);
+}
+
+/* Envolver tabla en contenedor scrolleable si es necesario */
+.tabla-container {
+    overflow-x: auto;
+}
+
+/* Responsive - Reseñas en móvil */
+@media (max-width: 768px) {
+    #tabla-resenas th,
+    #tabla-resenas td {
+        padding: 0.5rem 0.4rem;
+        font-size: 0.8rem;
+    }
+
+    #tabla-resenas th {
+        font-size: 0.75rem;
+    }
+
+    #tabla-resenas button {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+    }
+
+    /* Esconder columnas menos importantes en móvil (Título y Comentario) */
+    #tabla-resenas th:nth-child(3),
+    #tabla-resenas td:nth-child(3),
+    #tabla-resenas th:nth-child(4),
+    #tabla-resenas td:nth-child(4) {
+        display: none;
+    }
+}
+
+/* Estilos base para tabla de productos con reseñas (Desktop) */
+#contenedor-productos-resenas table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#contenedor-productos-resenas thead {
+    background: var(--color-secundario);
+}
+
+#contenedor-productos-resenas th {
+    padding: 1rem 0.8rem;
+    text-align: left;
+    font-weight: 600;
+    color: white;
+    border-bottom: 2px solid #e0e0e0;
+    font-size: 0.95rem;
+}
+
+#contenedor-productos-resenas th:nth-child(1),
+#contenedor-productos-resenas th:nth-child(3),
+#contenedor-productos-resenas th:nth-child(4) {
+    text-align: center;
+}
+
+#contenedor-productos-resenas td {
+    padding: 0.8rem;
+    border-bottom: 1px solid #e0e0e0;
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+
+#contenedor-productos-resenas td:nth-child(1) {
+    text-align: center;
+}
+
+#contenedor-productos-resenas td:nth-child(1) img {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+#contenedor-productos-resenas td:nth-child(3) {
+    text-align: center;
+}
+
+#contenedor-productos-resenas td:nth-child(3) span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-principal);
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    min-width: 40px;
+}
+
+#contenedor-productos-resenas td:nth-child(4) {
+    text-align: center;
+}
+
+#contenedor-productos-resenas tbody tr:hover {
+    background: #f0f8ff;
+    transition: all 0.2s ease;
+}
+
+#contenedor-productos-resenas tbody tr {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+@media (max-width: 480px) {
+    /* Contenedor de productos */
+    #contenedor-productos-resenas {
+        margin-bottom: 1.5rem;
+        width: 100%;
+        overflow-x: hidden;
+        padding: 0;
+    }
+
+    #contenedor-productos-resenas h3 {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+        margin-top: 0.5rem;
+        padding: 0 0.5rem;
+    }
+
+    .tabla-container {
+        width: 100vw !important;
+        overflow-x: auto;
+        margin-left: calc(-50vw + 50%) !important;
+    }
+
+    /* Tabla normal pero comprimida */
+    #contenedor-productos-resenas table {
+        width: 100%;
+        table-layout: fixed;
+        font-size: 0.9rem;
+        min-width: 100%;
+    }
+
+    #contenedor-productos-resenas table colgroup col:nth-child(1) {
+        width: 50px !important;
+    }
+
+    #contenedor-productos-resenas table colgroup col:nth-child(2) {
+        width: auto !important;
+    }
+
+    #contenedor-productos-resenas table colgroup col:nth-child(3) {
+        width: 60px !important;
+    }
+
+    #contenedor-productos-resenas table colgroup col:nth-child(4) {
+        width: 0px !important;
+        display: none !important;
+    }
+
+    #contenedor-productos-resenas thead {
+        background: #720916;
+        display: table-header-group;
+        width: 100%;
+    }
+
+    #contenedor-productos-resenas th {
+        padding: 0.5rem 0.3rem !important;
+        font-size: 0.7rem !important;
+        text-align: center;
+        background: #720916 !important;
+        color: white !important;
+        font-weight: 700;
+        border: none !important;
+        white-space: nowrap;
+        display: table-cell !important;
+    }
+
+    #contenedor-productos-resenas th:nth-child(1) {
+        width: 50px;
+    }
+
+    #contenedor-productos-resenas th:nth-child(2) {
+        text-align: left;
+        padding-right: 0.2rem !important;
+    }
+
+    #contenedor-productos-resenas th:nth-child(3) {
+        text-align: left;
+        width: 60px;
+        font-size: 0.6rem !important;
+        padding-left: 0 !important;
+    }
+
+    #contenedor-productos-resenas th:nth-child(4) {
+        display: none !important;
+    }
+
+    #contenedor-productos-resenas tbody {
+        display: table-row-group;
+    }
+
+    #contenedor-productos-resenas tr {
+        display: table-row;
+        border-bottom: 1px solid #e0e0e0;
+        height: auto;
+        cursor: pointer;
+    }
+
+    #contenedor-productos-resenas tr:hover {
+        background: #f5f5f5;
+    }
+
+    /* Foto pequeña */
+    #contenedor-productos-resenas td:nth-child(1) {
+        display: table-cell !important;
+        padding: 0.4rem !important;
+        text-align: center;
+        vertical-align: middle;
+        width: 50px;
+    }
+
+    #contenedor-productos-resenas td:nth-child(1) img {
+        width: 45px;
+        height: 45px;
+        object-fit: contain;
+        border-radius: 3px;
+    }
+
+    #contenedor-productos-resenas td:nth-child(1) div {
+        width: 60px;
+        height: 60px;
+        background: #f0f0f0;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        color: #999;
+    }
+
+    /* Nombre */
+    #contenedor-productos-resenas td:nth-child(2) {
+        display: table-cell !important;
+        padding: 0.5rem 0.2rem 0.5rem 0.3rem !important;
+        font-weight: 600;
+        font-size: 0.78rem;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
+        vertical-align: middle;
+        word-break: break-word;
+        line-height: 1.3;
+    }
+
+    /* Reseñas badge */
+    #contenedor-productos-resenas td:nth-child(3) {
+        display: table-cell !important;
+        padding: 0.3rem 0 0.3rem 0 !important;
+        text-align: left;
+        vertical-align: middle;
+        width: 60px;
+    }
+
+    #contenedor-productos-resenas td:nth-child(3) span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #d4af37;
+        color: white;
+        padding: 0.2rem 0.3rem;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.7rem;
+        min-width: 28px;
+        height: 22px;
+    }
+
+    /* Botón */
+    #contenedor-productos-resenas td:nth-child(4) {
+        display: table-cell !important;
+        padding: 0.3rem !important;
+        text-align: center;
+        vertical-align: middle;
+        width: 65px;
+        display: none !important;
+    }
+
+    #contenedor-productos-resenas button {
+        width: 100%;
+        padding: 0.35rem 0.2rem !important;
+        font-size: 0.63rem !important;
+        min-height: 28px;
+        background: #d4af37 !important;
+        color: white !important;
+        font-weight: 700;
+        border-radius: 3px;
+        border: none !important;
+        white-space: normal;
+        cursor: pointer;
+        line-height: 1.1;
+        display: none;
+    }
+
+    #contenedor-productos-resenas button:active {
+        background: #b8951f !important;
+    }
+
+    /* Tabla de reseñas en móvil */
+    #tabla-resenas {
+        width: 100%;
+        table-layout: fixed;
+        font-size: 0.8rem;
+        border-collapse: collapse;
+    }
+
+    #tabla-resenas thead {
+        background: #720916;
+        display: table-header-group;
+    }
+
+    #tabla-resenas th {
+        padding: 0.4rem 0.15rem !important;
+        font-size: 0.65rem !important;
+        background: #720916 !important;
+        color: white !important;
+        text-transform: uppercase;
+        font-weight: 700;
+        border: none !important;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    #tabla-resenas th:nth-child(1) {
+        text-align: left;
+        width: 32%;
+    }
+
+    #tabla-resenas th:nth-child(2) {
+        width: 18%;
+    }
+
+    #tabla-resenas th:nth-child(5) {
+        width: 25%;
+    }
+
+    #tabla-resenas th:nth-child(6) {
+        width: 25%;
+    }
+
+    /* Ocultar Título y Comentario en móvil */
+    #tabla-resenas th:nth-child(3),
+    #tabla-resenas th:nth-child(4),
+    #tabla-resenas td:nth-child(3),
+    #tabla-resenas td:nth-child(4) {
+        display: none !important;
+    }
+
+    #tabla-resenas tbody {
+        display: table-row-group;
+    }
+
+    #tabla-resenas tr {
+        display: table-row;
+        border-bottom: 1px solid #e0e0e0;
+        cursor: pointer;
+    }
+
+    #tabla-resenas tr:hover {
+        background: #f5f5f5;
+    }
+
+    #tabla-resenas td {
+        display: table-cell !important;
+        padding: 0.4rem 0.15rem !important;
+        font-size: 0.7rem !important;
+        border: none !important;
+        vertical-align: middle;
+    }
+
+    #tabla-resenas td:nth-child(1) {
+        font-weight: 600;
+        white-space: normal;
+        word-break: break-word;
+        text-align: left;
+        font-size: 0.65rem !important;
+    }
+
+    #tabla-resenas td:nth-child(2) {
+        text-align: center;
+        white-space: nowrap;
+        font-size: 0.65rem !important;
+    }
+
+    #tabla-resenas td:nth-child(3),
+    #tabla-resenas td:nth-child(4) {
+        display: none !important;
+    }
+
+    #tabla-resenas td:nth-child(5) {
+        text-align: center;
+        white-space: nowrap;
+        font-size: 0.65rem !important;
+    }
+
+    #tabla-resenas td:nth-child(6) {
+        text-align: center;
+        padding: 0.3rem 0.15rem !important;
+    }
+
+    #tabla-resenas button {
+        padding: 0.35rem 0.4rem !important;
+        font-size: 0.6rem !important;
+        min-height: 26px;
+        background: #ff4444 !important;
+        color: white !important;
+        border-radius: 4px;
+        white-space: nowrap;
+        border: none;
+    }
+
+    /* Botón volver */
+    #vista-resenas {
+        width: 100%;
+        padding: 0 0.5rem;
+        overflow-x: hidden;
+        margin: 0;
+    }
+
+    #vista-resenas .tabla-container {
+        width: 100%;
+        overflow-x: auto;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none;
+    }
+
+    #vista-resenas .tabla-container h3 {
+        padding: 0.3rem 0;
+        margin: 0 0 0.3rem 0;
+        font-size: 0.85rem;
+        word-break: break-word;
+        line-height: 1.2;
+    }
+
+    #vista-resenas > button {
+        width: 100%;
+        padding: 0.5rem 0.75rem !important;
+        margin: 0 0 0.5rem 0;
+        font-size: 0.8rem;
+        background: #666 !important;
+        color: white !important;
+        font-weight: 600;
+        border-radius: 4px;
+        border: none;
+    }
+}
+
+/* Estilos para Modal de Detalles de Reseña */
+#modal-resena-detalle {
+    animation: fadeIn 0.3s ease;
+}
+
+#modal-resena-detalle > div {
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+#modal-resena-detalle h3 {
+    color: #333;
+    font-size: 1.1rem;
+    margin-bottom: 0.8rem;
+}
+
+#modal-resena-detalle h2 {
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+#modal-resena-detalle p {
+    color: #555;
+    line-height: 1.6;
+}
+
+/* Responsive para modal de reseña */
+@media (max-width: 480px) {
+    #modal-resena-detalle > div {
+        width: 95%;
+        max-width: 95%;
+        padding: 1.5rem;
+    }
+
+    #modal-resena-detalle h3 {
+        font-size: 1rem;
+    }
+
+    #modal-resena-detalle > div > div:last-child {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    #modal-resena-detalle button {
+        width: 100%;
+        padding: 0.75rem !important;
     }
 }
