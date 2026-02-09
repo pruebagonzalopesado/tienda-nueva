@@ -315,6 +315,27 @@ function cambiarSeccion(section) {
     if (section === 'contacto') {
         loadContactMessages();
     }
+    
+    // Si cambió a descuentos, cargar datos
+    if (section === 'descuentos') {
+        if (typeof cargarDescuentos === 'function') {
+            cargarDescuentos();
+        }
+    }
+    
+    // Si cambió a devoluciones, cargar datos
+    if (section === 'devoluciones') {
+        if (typeof cargarDevoluciones === 'function') {
+            cargarDevoluciones();
+        }
+    }
+    
+    // Si cambió a resenas, cargar datos
+    if (section === 'resenas') {
+        if (typeof cargarProductosConResenas === 'function') {
+            cargarProductosConResenas();
+        }
+    }
 }
 
 // ========== PRODUCTOS ==========
@@ -1185,7 +1206,7 @@ async function editarOferta(id) {
     const { data: productoData, error } = await supabaseAdmin
         .from('products')
         .select('*')
-        .eq('descuento_oferta', '>', 0)  // Solo obtener si tiene descuento
+        .gt('descuento_oferta', 0)
         .eq('id', id)
         .single();
     
@@ -1396,6 +1417,12 @@ function inicializarZonaSubidaSlide() {
     const inputFile = document.getElementById('slide-imagen-file');
     
     if (!zonaSubida || !inputFile) return;
+    
+    // Evitar agregar listeners duplicados
+    if (zonaSubida.dataset.inicializado === 'true') {
+        return;
+    }
+    zonaSubida.dataset.inicializado = 'true';
     
     // Click en la zona
     zonaSubida.addEventListener('click', () => {
@@ -1801,9 +1828,10 @@ function renderNewsletterSubscribers(subscribers) {
         `;
     }).join('');
 
-    // Agregar búsqueda
+    // Agregar búsqueda (evitar duplicar listeners)
     const searchInput = document.getElementById('search-suscriptores');
-    if (searchInput) {
+    if (searchInput && !searchInput.dataset.listenerAdded) {
+        searchInput.dataset.listenerAdded = 'true';
         searchInput.addEventListener('keyup', () => {
             const filter = searchInput.value.toLowerCase();
             const rows = tbody.querySelectorAll('tr');
@@ -2002,9 +2030,10 @@ function renderContactMessages(messages) {
         renderContactMessages(mensajesGlobal);
     });
 
-    // Agregar búsqueda
+    // Agregar búsqueda (evitar duplicar listeners)
     const searchInput = document.getElementById('search-contacto');
-    if (searchInput) {
+    if (searchInput && !searchInput.dataset.listenerAdded) {
+        searchInput.dataset.listenerAdded = 'true';
         searchInput.addEventListener('keyup', () => {
             const filter = searchInput.value.toLowerCase();
             const rows = tbody.querySelectorAll('tr');
@@ -2140,14 +2169,19 @@ async function cargarDatosVentas() {
     try {
         console.log('[cargarDatosVentas] Iniciando carga de datos...');
         
-        // Esperar a que supabaseAdmin esté disponible
+        // Esperar a que supabaseAdmin esté disponible (máximo 10 segundos)
         if (!supabaseAdmin) {
             console.log('[cargarDatosVentas] Esperando supabaseAdmin...');
-            await new Promise(resolve => {
+            await new Promise((resolve, reject) => {
+                let elapsed = 0;
                 const checkInterval = setInterval(() => {
+                    elapsed += 100;
                     if (supabaseAdmin) {
                         clearInterval(checkInterval);
                         resolve(null);
+                    } else if (elapsed >= 10000) {
+                        clearInterval(checkInterval);
+                        reject(new Error('Timeout esperando supabaseAdmin'));
                     }
                 }, 100);
             });

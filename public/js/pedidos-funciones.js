@@ -65,11 +65,11 @@ function renderizarPedidos(pedidos, total) {
     tbody.innerHTML = pedidos.map(pedido => `
         <tr>
             <td><span class="pedido-id" data-pedido-id="${pedido.id}">${pedido.id}</span></td>
-            <td>${pedido.nombre || '-'}</td>
-            <td>${pedido.email || '-'}</td>
+            <td class="col-cliente">${pedido.nombre || '-'}</td>
+            <td class="col-email">${pedido.email || '-'}</td>
             <td>€${parseFloat(pedido.total || 0).toFixed(2)}</td>
             <td><span class="estado-badge estado-${pedido.estado}">${capitalizar(pedido.estado)}</span></td>
-            <td>${formatearFecha(pedido.fecha_creacion)}</td>
+            <td class="col-fecha">${formatearFecha(pedido.fecha_creacion)}</td>
             <td>
                 <button class="btn-principal btn-ver-pedido" data-pedido-id="${pedido.id}" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
                     Ver
