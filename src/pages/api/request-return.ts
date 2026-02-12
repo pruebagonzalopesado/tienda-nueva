@@ -47,19 +47,40 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
-    // Calcular monto total a reembolsar basado en items seleccionados
-    const montoReembolso = itemsDevueltos.reduce((sum, item) => sum + (item.subtotal || 0), 0);
+    // Validar que cada item tenga los datos necesarios
+    for (const item of itemsDevueltos) {
+      if (!item.nombre || typeof item.cantidad !== 'number' || typeof item.precio !== 'number') {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            message: 'Datos incompletos en algunos productos'
+          }),
+          { status: 400 }
+        );
+      }
+    }
 
-    // PASO 1: Actualizar estado del pedido a "devolucion_proceso" (solo si no hay otro proceso activo)
-    const { data: existingReturn, error: checkError } = await supabase
+    // Calcular monto total a reembolsar basado en items seleccionados
+    let montoReembolso = 0;
+    for (const item of itemsDevueltos) {
+      const cantidad = item.cantidad || 1;
+      const precio = item.precio || 0;
+      const subtotal = item.subtotal !== undefined && item.subtotal !== null 
+        ? item.subtotal 
+        : (cantidad * precio);
+      montoReembolso += subtotal;
+    }
+
+    // PASO 1: Verificar si ya existe una devolución activa
+    const pedidoIdInt = parseInt(String(pedidoId));
+    const { data: existingReturns, error: checkError } = await supabase
       .from('devoluciones')
       .select('id')
-      .eq('pedido_id', parseInt(String(pedidoId)))
-      .in('estado', ['procesado', 'confirmada'])
-      .single();
+      .eq('pedido_id', pedidoIdInt)
+      .in('estado', ['procesado', 'confirmada']);
 
     // Si ya existe una devolución activa, no permitir otra
-    if (existingReturn && !checkError) {
+    if (existingReturns && existingReturns.length > 0) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -74,7 +95,7 @@ export const POST: APIRoute = async (context) => {
       .update({
         estado: 'devolucion_proceso'
       })
-      .eq('id', parseInt(String(pedidoId)));
+      .eq('id', pedidoIdInt);
 
     if (updatePedidoError) {
       console.error('[request-return] Error updating pedido status:', updatePedidoError);
@@ -91,7 +112,7 @@ export const POST: APIRoute = async (context) => {
     const { data: devolucion, error: insertDevError } = await supabase
       .from('devoluciones')
       .insert({
-        pedido_id: parseInt(String(pedidoId)),
+        pedido_id: pedidoIdInt,
         usuario_email: email,
         usuario_nombre: nombre,
         motivo_solicitud: motivo,
@@ -119,7 +140,7 @@ export const POST: APIRoute = async (context) => {
     const { data: pedido, error: pedidoError } = await supabase
       .from('pedidos')
       .select('*')
-      .eq('id', pedidoId)
+      .eq('id', pedidoIdInt)
       .single();
 
     if (pedidoError || !pedido) {
@@ -173,12 +194,19 @@ export const POST: APIRoute = async (context) => {
       pdfBuffer = await generateRefundInvoicePDF(datosFacturaDevolucion);
       console.log('[request-return] ✅ Factura de devolución generada');
     } catch (pdfError) {
-      console.warn('[request-request] ⚠️ Error generando factura de devolución:', pdfError);
+      console.warn('[request-return] ⚠️ Error generando factura de devolución:', pdfError);
     }
 
     // PASO 5: Enviar email "Devolución en Proceso" al cliente
     const itemsHTML = itemsDevueltos
-      .map(item => `<li style="color: #666; margin: 8px 0;"><strong>${item.nombre}</strong> (x${item.cantidad}) - €${item.subtotal.toFixed(2)}</li>`)
+      .map(item => {
+        const cantidad = item.cantidad || 1;
+        const precio = item.precio || 0;
+        const subtotal = item.subtotal !== undefined && item.subtotal !== null 
+          ? item.subtotal 
+          : (cantidad * precio);
+        return `<li style="color: #666; margin: 8px 0;"><strong>${item.nombre || 'Producto'}</strong> (x${cantidad}) - €${subtotal.toFixed(2)}</li>`;
+      })
       .join('');
 
     const emailContent = `
@@ -255,10 +283,25 @@ export const POST: APIRoute = async (context) => {
 
     if (!emailResult.success) {
       console.error('[request-return] Error sending email:', emailResult.error);
+      
+      // Hacer rollback: eliminar la devolución creada si falla el email
+      if (devolucion?.id) {
+        await supabase
+          .from('devoluciones')
+          .delete()
+          .eq('id', devolucion.id);
+        
+        // Restaurar estado del pedido
+        await supabase
+          .from('pedidos')
+          .update({ estado: 'completado' })
+          .eq('id', pedidoIdInt);
+      }
+      
       return new Response(
         JSON.stringify({
           success: false,
-          message: 'Se registró la devolución pero hubo un error al enviar el email'
+          message: 'Error al procesar la solicitud. Por favor intenta nuevamente.'
         }),
         { status: 500 }
       );
@@ -276,7 +319,9 @@ export const POST: APIRoute = async (context) => {
     );
 
   } catch (error) {
-    console.error('[request-return] Error:', error);
+    console.error('[request-return] ❌ Error:', error instanceof Error ? error.message : String(error));
+    console.error('[request-return] Stack:', error instanceof Error ? error.stack : 'No stack available');
+    
     return new Response(
       JSON.stringify({
         success: false,
