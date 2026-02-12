@@ -1,170 +1,163 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../lib/supabase';
-import { generateInvoicePDF, generateRefundInvoicePDF, obtenerDatosProducto } from '../../lib/invoice-generator';
+import { createClient } from '@supabase/supabase-js';
+import { generateInvoicePDF, obtenerDatosProducto } from '../../lib/invoice-generator';
 
-export const GET: APIRoute = async ({ request }) => {
+export const GET: APIRoute = async ({ url }) => {
   try {
-    const url = new URL(request.url);
-    const pedidoId = url.searchParams.get('id');
-    const type = url.searchParams.get('type') || 'factura'; // 'factura' o 'devolucio'
-    const esReembolso = url.searchParams.get('reembolso') === 'true';
+    const pedidoId = url.searchParams.get('pedidoId');
 
+    console.log('[download-invoice] >>> Iniciando descarga de factura');
+    console.log('[download-invoice]     - Pedido ID: ' + pedidoId);
+
+    // Validar que se proporcionó pedidoId
     if (!pedidoId) {
+      console.error('[download-invoice] Falta pedidoId');
       return new Response(
-        JSON.stringify({ error: 'ID de pedido requerido' }),
+        JSON.stringify({ error: 'Falta pedidoId' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('[download-invoice] Descargando:', type, 'para pedido:', pedidoId, 'Reembolso:', esReembolso);
+    // Obtener variables de entorno
+    const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
-    // Obtener datos del pedido
-    const { data: pedido, error } = await supabase
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('[download-invoice] Supabase no configurado');
+      return new Response(
+        JSON.stringify({ error: 'Supabase no configurado' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+    // Obtener pedido de Supabase
+    console.log('[download-invoice] 🔍 Buscando pedido en Supabase...');
+    const { data: pedido, error: pedidoError } = await supabase
       .from('pedidos')
       .select('*')
       .eq('id', pedidoId)
       .single();
 
-    if (error || !pedido) {
-      console.error('[download-invoice] Error al obtener pedido:', error);
+    if (pedidoError || !pedido) {
+      console.error('[download-invoice] Pedido no encontrado:', pedidoError);
       return new Response(
         JSON.stringify({ error: 'Pedido no encontrado' }),
         { status: 404, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
+    console.log('[download-invoice] ✅ Pedido encontrado:', pedidoId);
+
+    // Obtener items del pedido
     let items = typeof pedido.items === 'string' 
       ? JSON.parse(pedido.items) 
       : (pedido.items || []);
 
-    // Si es devolución, obtener datos de la devolución
-    let datosFactura: any;
-    
-    if (type === 'devolucio') {
-      const { data: devoluciones, error: devError } = await supabase
-        .from('devoluciones')
-        .select('*')
-        .eq('pedido_id', pedidoId)
-        .in('estado', ['procesado', 'confirmada'])
-        .order('created_at', { ascending: false })
-        .limit(1);
+    // Enriquecer items del pedido
+    console.log('[download-invoice] 🔄 Enriqueciendo datos de productos...');
+    const productosEnriquecidos = [];
 
-      if (devError || !devoluciones || devoluciones.length === 0) {
-        console.error('[download-invoice] Error al obtener devolución:', devError);
+    for (const item of items) {
+      console.log(`[download-invoice]   Obteniendo datos del producto: ${item.product_id}`);
+      const datosProducto = await obtenerDatosProducto(item.product_id);
+
+      if (datosProducto) {
+        productosEnriquecidos.push({
+          id: item.product_id,
+          nombre: datosProducto.nombre || item.nombre,
+          cantidad: item.cantidad,
+          precio_unitario: datosProducto.precio || item.precio,
+          subtotal: (datosProducto.precio || item.precio) * item.cantidad,
+          imagen_url: datosProducto.imagen_url,
+          talla: item.talla,
+        });
+      } else {
+        // Usar datos del item si no se puede obtener el producto
+        productosEnriquecidos.push({
+          id: item.product_id,
+          nombre: item.nombre,
+          cantidad: item.cantidad,
+          precio_unitario: item.precio,
+          subtotal: item.precio * item.cantidad,
+          talla: item.talla,
+        });
+      }
+    }
+
+    console.log('[download-invoice] ✅ Datos de productos enriquecidos');
+
+    // Crear objeto datosFactura
+    const datosFactura = {
+      numero_pedido: pedidoId.toString(),
+      fecha: new Date(pedido.fecha_creacion || new Date()),
+      cliente: {
+        nombre: pedido.nombre,
+        email: pedido.email,
+        telefono: pedido.telefono || '',
+        direccion: pedido.direccion,
+        ciudad: pedido.ciudad,
+        codigo_postal: pedido.codigo_postal || '',
+        pais: pedido.pais || 'España',
+      },
+      productos: productosEnriquecidos,
+      subtotal: pedido.subtotal,
+      envio: pedido.envio,
+      descuento: 0,
+      total: pedido.total,
+    };
+
+    // Generar PDF
+    console.log('[download-invoice] 📄 Generando PDF de factura...');
+    let pdfBuffer: Buffer;
+
+    try {
+      pdfBuffer = await generateInvoicePDF(datosFactura);
+
+      if (!Buffer.isBuffer(pdfBuffer) || pdfBuffer.length === 0) {
+        console.error('[download-invoice] PDF generado inválido');
         return new Response(
-          JSON.stringify({ error: 'Devolución no encontrada para este pedido' }),
-          { status: 404, headers: { 'Content-Type': 'application/json' } }
+          JSON.stringify({ error: 'Error al generar el PDF' }),
+          { status: 500, headers: { 'Content-Type': 'application/json' } }
         );
       }
 
-      const devolucio = devoluciones[0];
-      
-      // Usar solo los items devueltos
-      items = devolucio.items_devueltos || [];
-      const montoReembolso = devolucio.monto_reembolso || 0;
-
-      console.log('[download-invoice] Items encontrados:', items.length);
-
-      // Enriquecer productos con detalles
-      const productosConDetalles: any[] = [];
-      for (const item of items) {
-        const detalles = await obtenerDatosProducto(item.product_id || item.id);
-        productosConDetalles.push({
-          id: item.product_id || item.id,
-          nombre: item.nombre || detalles?.nombre || 'Producto',
-          cantidad: item.cantidad || 1,
-          precio_unitario: item.precio || 0,
-          subtotal: item.subtotal || (item.precio * item.cantidad),
-          talla: item.talla
-        });
-      }
-
-      // Estructura EXACTA como en manage-returns.ts
-      datosFactura = {
-        numero_pedido: `DEV-${pedidoId}`,
-        fecha: new Date(),
-        cliente: {
-          nombre: devolucio.usuario_nombre || 'Cliente',
-          email: devolucio.usuario_email,
-          telefono: pedido?.telefono || 'No proporcionado',
-          direccion: pedido?.direccion || 'No proporcionada',
-          ciudad: pedido?.ciudad || 'No proporcionada',
-          codigo_postal: pedido?.codigo_postal || 'No proporcionado',
-          pais: pedido?.pais || 'ES'
-        },
-        productos: productosConDetalles,
-        subtotal: montoReembolso,
-        envio: 0,
-        descuento: 0,
-        total: montoReembolso,
-        esDevolucion: true
-      };
-    } else {
-      // Es una factura normal de compra
-      console.log('[download-invoice] Items encontrados:', items.length);
-
-      // Enriquecer productos con detalles
-      const productosConDetalles: any[] = [];
-      for (const item of items) {
-        const detalles = await obtenerDatosProducto(item.product_id || item.id);
-        productosConDetalles.push({
-          id: item.product_id || item.id,
-          nombre: item.nombre || detalles?.nombre || 'Producto',
-          cantidad: item.cantidad || 1,
-          precio_unitario: item.precio || 0,
-          subtotal: item.subtotal || (item.precio * item.cantidad),
-          imagen_url: detalles?.imagen_url,
-          talla: item.talla
-        });
-      }
-
-      datosFactura = {
-        numero_pedido: String(pedidoId),
-        fecha: new Date(pedido.fecha_pedido || new Date()),
-        cliente: {
-          nombre: pedido.nombre_cliente || 'Cliente',
-          email: pedido.email || '',
-          telefono: pedido.telefono || 'No proporcionado',
-          direccion: pedido.direccion || 'No proporcionada',
-          ciudad: pedido.ciudad || 'No proporcionada',
-          codigo_postal: pedido.codigo_postal || 'No proporcionado',
-          pais: pedido.pais || 'ES'
-        },
-        productos: productosConDetalles,
-        subtotal: pedido.subtotal || 0,
-        envio: pedido.envio || 0,
-        descuento: pedido.descuento || 0,
-        total: pedido.total || 0,
-        esReembolso: esReembolso,
-        esDevolucion: false
-      };
+      console.log(`[download-invoice] ✅ PDF generado exitosamente (${pdfBuffer.length} bytes)`);
+    } catch (pdfError) {
+      console.error('[download-invoice] ❌ Error generando PDF:', pdfError);
+      return new Response(
+        JSON.stringify({ error: 'Error al generar el PDF' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log('[download-invoice] Generando PDF...');
-    
-    // Usar la función de factura de devolución si es una devolución
-    let pdfBuffer: Buffer;
-    if (datosFactura.esDevolucion) {
-      pdfBuffer = await generateRefundInvoicePDF(datosFactura);
-    } else {
-      pdfBuffer = await generateInvoicePDF(datosFactura);
-    }
-    
-    console.log('[download-invoice] ✅ PDF generado exitosamente, tamaño:', pdfBuffer.length, 'bytes');
+    // Retornar PDF
+    console.log('[download-invoice] 📤 Enviando PDF al cliente...');
 
     return new Response(pdfBuffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="factura_${pedidoId}.pdf"`,
-        'Content-Length': pdfBuffer.length.toString()
-      }
+        'Content-Length': pdfBuffer.length.toString(),
+      },
     });
-  } catch (error) {
-    console.error('[download-invoice] Error descargando factura:', error);
+  } catch (error: any) {
+    console.error('[download-invoice] ❌ Error:', error.message);
+    console.error('[download-invoice] Stack:', error.stack);
+
     return new Response(
-      JSON.stringify({ error: 'Error al generar la factura', details: error instanceof Error ? error.message : String(error) }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({
+        success: false,
+        error: error.message,
+      }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
     );
   }
 };
