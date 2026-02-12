@@ -110,45 +110,62 @@ export const POST = async ({ request }: any) => {
                 .single();
 
             if (pedidoCompleto && pedidoCompleto.stripe_payment_id) {
-                const sessionId = pedidoCompleto.stripe_payment_id;
-                console.log('[cancel-order] Checkout Session ID:', sessionId);
+                const stripeId = pedidoCompleto.stripe_payment_id;
+                console.log('[cancel-order] Stripe Payment ID:', stripeId);
                 
                 try {
-                    // Obtener la sesión para obtener el Payment Intent
-                    const session = await stripe.checkout.sessions.retrieve(sessionId);
-                    const paymentIntentId = session.payment_intent as string;
-                    
-                    console.log('[cancel-order] Payment Intent obtenido:', paymentIntentId);
-                    
+                    let paymentIntentId = stripeId;
+
+                    // Si es una sesión (comienza con cs_), obtener el Payment Intent
+                    if (stripeId.startsWith('cs_')) {
+                        console.log('[cancel-order] ID es una sesión, obteniendo Payment Intent...');
+                        const session = await stripe.checkout.sessions.retrieve(stripeId);
+                        paymentIntentId = session.payment_intent as string;
+                        console.log('[cancel-order] Payment Intent obtenido:', paymentIntentId);
+                    } else if (stripeId.startsWith('pi_')) {
+                        console.log('[cancel-order] ID es un Payment Intent, usando directamente');
+                    }
+
                     if (paymentIntentId) {
-                        // Procesar el refund usando el Payment Intent ID directamente
+                        // Procesar el refund
+                        console.log('[cancel-order] Creando refund para Payment Intent:', paymentIntentId);
                         const refund = await stripe.refunds.create({
                             payment_intent: paymentIntentId,
                             reason: 'requested_by_customer'
                         });
 
-                        if (refund.id) {
-                            console.log('[cancel-order] ✅ Reembolso procesado:', refund.id);
+                        if (refund && refund.id) {
+                            console.log('[cancel-order] ✅ Reembolso procesado exitosamente:', refund.id);
+                            console.log('[cancel-order]     - Status:', refund.status);
+                            console.log('[cancel-order]     - Monto:', refund.amount);
                             refundProcessed = true;
                         }
                     }
                 } catch (refundError: any) {
-                    console.error('[cancel-order] Error procesando refund:', refundError.message);
+                    console.error('[cancel-order] ❌ Error procesando refund:', refundError.message);
+                    if (refundError.raw) {
+                        console.error('[cancel-order] Detalles:', refundError.raw.message);
+                    }
                 }
+            } else {
+                console.warn('[cancel-order] ⚠️ No se encontró stripe_payment_id en el pedido');
             }
         } catch (refundError) {
-            console.warn('[cancel-order] ⚠️ Error al procesar reembolso de Stripe:', refundError);
+            console.error('[cancel-order] ❌ Error al procesar reembolso de Stripe:', refundError);
         }
 
         // ===== GENERAR FACTURA DE DEVOLUCIÓN =====
         let pdfBuffer: Buffer | undefined;
+        let pedidoCompleto: any;
         try {
             // Obtener datos completos del pedido
-            const { data: pedidoCompleto } = await supabase
+            const response = await supabase
                 .from('pedidos')
                 .select('*')
                 .eq('id', pedidoId)
                 .single();
+            
+            pedidoCompleto = response.data;
 
             if (pedidoCompleto) {
                 const items = typeof pedidoCompleto.items === 'string' 
@@ -197,64 +214,70 @@ export const POST = async ({ request }: any) => {
 
         console.log('[cancel-order] Pedido actualizado a cancelado');
 
-        // ===== ENVIAR EMAIL FINAL CON FACTURA (solo si el reembolso se procesó) =====
-        if (refundProcessed) {
-            try {
-                console.log('[cancel-order] Enviando email de confirmación con factura a:', email);
-                
-                const emailResult = await sendEmail({
-                    to: [{ email: email, name: nombre }],
-                    subject: `Pedido Cancelado - Reembolso Procesado - Pedido #${pedidoId} - Joyería Galiana`,
-                    htmlContent: `
-                        <div style="font-family: 'Playfair Display', Georgia, serif; max-width: 600px; margin: 0 auto;">
-                            <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 40px; text-align: center; border-radius: 12px 12px 0 0;">
-                                <h1 style="color: white; margin: 0; font-size: 28px;">✅ Pedido Cancelado</h1>
-                            </div>
-                            
-                            <div style="background: white; padding: 40px; border: 1px solid #f0f0f0; border-radius: 0 0 12px 12px;">
-                                <p style="color: #666; margin-bottom: 24px;">
-                                    Hola <strong>${nombre}</strong>,
-                                </p>
-                                
-                                <p style="color: #666; margin-bottom: 24px; line-height: 1.6;">
-                                    Tu pedido <strong>#${pedidoId}</strong> ha sido cancelado y tu reembolso ha sido procesado correctamente.
-                                </p>
-
-                                <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 16px; margin: 24px 0; border-radius: 4px;">
-                                    <p style="color: #155724; margin: 0; font-size: 14px;">
-                                        <strong>✅ Reembolso Iniciado:</strong> Tu reembolso ha sido iniciado en Stripe y aparecerá en tu cuenta en 5-10 días hábiles.
-                                    </p>
-                                </div>
-
-                                <p style="color: #666; margin-bottom: 24px; line-height: 1.6;">
-                                    Adjunto encontrarás la nota de devolución con los detalles completos del reembolso.
-                                </p>
-
-                                <p style="color: #666; margin-bottom: 24px; line-height: 1.6;">
-                                    Si tienes alguna pregunta, no dudes en contactarnos.
-                                </p>
-
-                                <p style="color: #999; font-size: 13px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
-                                    Joyería Galiana<br>
-                                    <a href="mailto:info@joyeriagaliana.com" style="color: #d4af37; text-decoration: none;">info@joyeriagaliana.com</a>
-                                </p>
-                            </div>
+        // ===== ENVIAR EMAIL FINAL CON FACTURA DE CANCELACIÓN =====
+        try {
+            console.log('[cancel-order] 📧 Enviando email de confirmación de cancelación a:', email);
+            
+            const emailResult = await sendEmail({
+                to: [{ email: email, name: nombre }],
+                subject: `Pedido Cancelado${refundProcessed ? ' - Reembolso Procesado' : ''} - Pedido #${pedidoId} - Joyería Galiana`,
+                htmlContent: `
+                    <div style="font-family: 'Playfair Display', Georgia, serif; max-width: 600px; margin: 0 auto;">
+                        <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 40px; text-align: center; border-radius: 12px 12px 0 0;">
+                            <h1 style="color: white; margin: 0; font-size: 28px;">✅ Pedido Cancelado</h1>
                         </div>
-                    `,
-                    attachment: pdfBuffer ? {
-                        content: pdfBuffer.toString('base64'),
-                        name: `nota_devolucion_${pedidoId}.pdf`
-                    } : undefined
-                });
+                        
+                        <div style="background: white; padding: 40px; border: 1px solid #f0f0f0; border-radius: 0 0 12px 12px;">
+                            <p style="color: #666; margin-bottom: 24px;">
+                                Hola <strong>${nombre}</strong>,
+                            </p>
+                            
+                            <p style="color: #666; margin-bottom: 24px; line-height: 1.6;">
+                                Tu pedido <strong>#${pedidoId}</strong> ha sido cancelado.
+                            </p>
 
-                if (emailResult.success) {
-                    console.log('[cancel-order] Email de confirmación enviado correctamente');
-                } else {
-                    console.warn('[cancel-order] Error al enviar email de confirmación:', emailResult.error);
-                }
-            } catch (emailError) {
-                console.error('[cancel-order] Error al enviar email de confirmación:', emailError);
+                            ${refundProcessed ? `
+                            <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 16px; margin: 24px 0; border-radius: 4px;">
+                                <p style="color: #155724; margin: 0; font-size: 14px;">
+                                    <strong>✅ Reembolso Iniciado:</strong> Tu reembolso ha sido iniciado en Stripe y aparecerá en tu cuenta en 5-10 días hábiles.
+                                </p>
+                            </div>
+                            ` : `
+                            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 16px; margin: 24px 0; border-radius: 4px;">
+                                <p style="color: #856404; margin: 0; font-size: 14px;">
+                                    <strong>⚠️ Reembolso Pendiente:</strong> No pudimos procesar el reembolso automáticamente. Nos pondremos en contacto contigo pronto para resolver esto.
+                                </p>
+                            </div>
+                            `}
+
+                            <p style="color: #666; margin-bottom: 24px; line-height: 1.6;">
+                                Adjunto encontrarás la nota de cancelación/devolución con los detalles completos del reembolso.
+                            </p>
+
+                            <p style="color: #666; margin-bottom: 24px; line-height: 1.6;">
+                                Si tienes alguna pregunta, no dudes en contactarnos.
+                            </p>
+
+                            <p style="color: #999; font-size: 13px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
+                                Joyería Galiana<br>
+                                <a href="mailto:info@joyeriagaliana.com" style="color: #d4af37; text-decoration: none;">info@joyeriagaliana.com</a>
+                            </p>
+                        </div>
+                    </div>
+                `,
+                attachment: pdfBuffer ? {
+                    content: pdfBuffer.toString('base64'),
+                    name: `nota_cancelacion_${pedidoId}.pdf`
+                } : undefined
+            });
+
+            if (emailResult.success) {
+                console.log('[cancel-order] ✅ Email de cancelación enviado correctamente');
+            } else {
+                console.warn('[cancel-order] ⚠️ Error al enviar email de cancelación:', emailResult.error);
             }
+        } catch (emailError) {
+            console.error('[cancel-order] ⚠️ Error al enviar email de cancelación:', emailError);
         }
 
         // Email anterior removido
