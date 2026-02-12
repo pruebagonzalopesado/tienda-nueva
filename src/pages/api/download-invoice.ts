@@ -4,16 +4,16 @@ import { generateInvoicePDF, obtenerDatosProducto } from '../../lib/invoice-gene
 
 export const GET: APIRoute = async ({ url }) => {
   try {
-    const pedidoId = url.searchParams.get('pedidoId');
+    const pedidoId = url.searchParams.get('id') || url.searchParams.get('pedidoId');
 
     console.log('[download-invoice] >>> Iniciando descarga de factura');
     console.log('[download-invoice]     - Pedido ID: ' + pedidoId);
 
     // Validar que se proporcionó pedidoId
     if (!pedidoId) {
-      console.error('[download-invoice] Falta pedidoId');
+      console.error('[download-invoice] Falta id o pedidoId');
       return new Response(
-        JSON.stringify({ error: 'Falta pedidoId' }),
+        JSON.stringify({ error: 'Falta id o pedidoId' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
