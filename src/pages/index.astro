@@ -1,10 +1,5 @@
 ---
 import PublicLayout from "../layouts/PublicLayout.astro";
-
-// Forzar que no se cachee esta página para asegurar que el favicon siempre se recargue
-Astro.response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-Astro.response.headers.set('Pragma', 'no-cache');
-Astro.response.headers.set('Expires', '0');
 ---
 
 <style>
@@ -358,6 +353,9 @@ Astro.response.headers.set('Expires', '0');
 						<img
 							src="/images/categoria-anillos.png"
 							alt="Anillos"
+							width="120"
+							height="120"
+							loading="lazy"
 						/>
 					</div>
 					<h3>Anillos</h3>
@@ -373,6 +371,9 @@ Astro.response.headers.set('Expires', '0');
 						<img
 							src="/images/categoria-collares.png"
 							alt="Collares"
+							width="120"
+							height="120"
+							loading="lazy"
 						/>
 					</div>
 					<h3>Collares</h3>
@@ -388,6 +389,9 @@ Astro.response.headers.set('Expires', '0');
 						<img
 							src="/images/categoria-pendientes.jpg"
 							alt="Pendientes"
+							width="120"
+							height="120"
+							loading="lazy"
 						/>
 					</div>
 					<h3>Pendientes</h3>
@@ -403,6 +407,9 @@ Astro.response.headers.set('Expires', '0');
 						<img
 							src="/images/categoria-pulseras.jpg"
 							alt="Pulseras"
+							width="120"
+							height="120"
+							loading="lazy"
 						/>
 					</div>
 					<h3>Pulseras</h3>
@@ -418,6 +425,9 @@ Astro.response.headers.set('Expires', '0');
 						<img
 							src="/images/categoria-relojes.png"
 							alt="Relojes"
+							width="120"
+							height="120"
+							loading="lazy"
 						/>
 					</div>
 					<h3>Relojes</h3>
@@ -433,6 +443,9 @@ Astro.response.headers.set('Expires', '0');
 						<img
 							src="/images/categoria-medallas.png"
 							alt="Medallas"
+							width="120"
+							height="120"
+							loading="lazy"
 						/>
 					</div>
 					<h3>Medallas</h3>
@@ -515,7 +528,7 @@ Astro.response.headers.set('Expires', '0');
 					>
 				</div>
 				<div class="donde-estamos-image">
-					<img src="/images/tiendas.jpg" alt="Tienda Joyería Galiana" />
+					<img src="/images/tiendas.jpg" alt="Tienda Joyería Galiana" width="600" height="400" loading="lazy" />
 				</div>
 			</div>
 		</div>
@@ -526,7 +539,7 @@ Astro.response.headers.set('Expires', '0');
 		<div class="container">
 			<div class="sobre-nosotros-content">
 				<div class="sobre-nosotros-image">
-					<img src="/images/sobre-nosotros.jpg" alt="Joyería Galiana" />
+					<img src="/images/sobre-nosotros.jpg" alt="Joyería Galiana" width="600" height="400" loading="lazy" />
 				</div>
 				<div class="sobre-nosotros-text">
 					<h2>Sobre Joyería Galiana</h2>

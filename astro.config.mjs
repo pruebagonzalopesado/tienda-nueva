@@ -13,7 +13,7 @@ export default defineConfig({
 	integrations: [react()],
 	image: {
 		service: {
-			entrypoint: 'astro/assets/services/noop'
+			entrypoint: 'astro/assets/services/sharp'
 		}
 	},
 	favicon: '/favicon.ico',

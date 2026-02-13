@@ -17,6 +17,9 @@ const { id, nombre, precio, imagen, descripcion, categoria } = Astro.props;
       src={imagen} 
       alt={nombre}
       class="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+      width="400"
+      height="400"
+      loading="lazy"
     />
     {categoria && (
       <span class="absolute top-2 right-2 bg-amber-900 text-white text-xs px-2 py-1 rounded">

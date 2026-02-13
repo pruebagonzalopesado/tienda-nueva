@@ -14,6 +14,8 @@ const { images, title } = Astro.props;
       src={images[0]} 
       alt={title}
       class="w-full h-full object-cover"
+      width="600"
+      height="600"
     />
   </div>
   
@@ -24,7 +26,7 @@ const { images, title } = Astro.props;
         class="flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 border-transparent hover:border-amber-900 transition-colors cursor-pointer"
         onclick={`document.getElementById('main-image').src = '${img}'`}
       >
-        <img src={img} alt={`${title} ${idx + 1}`} class="w-full h-full object-cover" />
+        <img src={img} alt={`${title} ${idx + 1}`} class="w-full h-full object-cover" width="80" height="80" loading="lazy" />
       </button>
     ))}
   </div>

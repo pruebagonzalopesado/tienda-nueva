@@ -1,25 +1,7 @@
-<!-- Favicon Global - Forzado en todas las páginas -->
+<!-- Favicon Global -->
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
 <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
-
-<script is:inline>
-// Forzar refresco del favicon al cargar la página
-(function() {
-	// Crear un timeout para asegurar que el favicon se recargue
-	setTimeout(() => {
-		// Forzar una recarga del favicon usando un parámetro de tiempo
-		const timestamp = new Date().getTime();
-		const links = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]');
-		links.forEach(link => {
-			const href = link.getAttribute('href');
-			if (href && !href.includes('?')) {
-				link.setAttribute('href', href + '?t=' + timestamp);
-			}
-		});
-	}, 0);
-})();
-</script>

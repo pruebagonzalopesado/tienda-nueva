@@ -21,24 +21,20 @@ const {
 		<meta name="description" content={description} />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<GlobalFavicon />
+		<!-- Preconnect para recursos externos -->
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+		<!-- CSS -->
 		<link rel="stylesheet" href="/css/styles.css?v=11" />
 		<link rel="stylesheet" href="/css/cart-slide.css?v=3" />
 		<link rel="stylesheet" href="/css/stock-reservation-notification.css?v=2" />
+		<!-- Supabase CDN -->
 		<script
 			src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+			defer
 			is:inline></script>
-		<script src="/js/stock-real-time.js?v=1" is:inline></script>
-		<script src="/js/supabase-init.js?v=4" is:inline></script>
-		<script src="/js/supabase-config.js?v=3" is:inline></script>
-		<script src="/js/stock-reservations.js?v=4" is:inline></script>
-		<script src="/js/carrito.js?v=10" is:inline></script>
-		<script src="/js/cart-slide.js?v=5" is:inline></script>
-		<script src="/js/auth-new.js?v=14" is:inline></script>
-		<script src="/js/perfil-modal.js?v=3" is:inline></script>
-		<script src="/js/modal-seleccionar-talla.js?v=6" is:inline></script>
-		<script src="/js/modal-alert.js?v=3" is:inline></script>
-		<script src="/js/notification-system.js?v=2" is:inline></script>
-		<script src="/js/script.js?v=12" is:inline></script>
 		<slot name="head" />
 		<title>{title}</title>
 	</head>
@@ -85,6 +81,20 @@ const {
 		</main>
 		<Footer />
 		
+		<!-- Scripts al final del body con defer para no bloquear renderizado -->
+		<script src="/js/supabase-init.js?v=4" defer is:inline></script>
+		<script src="/js/supabase-config.js?v=3" defer is:inline></script>
+		<script src="/js/stock-real-time.js?v=1" defer is:inline></script>
+		<script src="/js/stock-reservations.js?v=4" defer is:inline></script>
+		<script src="/js/carrito.js?v=10" defer is:inline></script>
+		<script src="/js/cart-slide.js?v=5" defer is:inline></script>
+		<script src="/js/auth-new.js?v=14" defer is:inline></script>
+		<script src="/js/perfil-modal.js?v=3" defer is:inline></script>
+		<script src="/js/modal-seleccionar-talla.js?v=6" defer is:inline></script>
+		<script src="/js/modal-alert.js?v=3" defer is:inline></script>
+		<script src="/js/notification-system.js?v=2" defer is:inline></script>
+		<script src="/js/script.js?v=12" defer is:inline></script>
+
 		<!-- Script para sincronizar contador de carrito en tiempo real -->
 		<script is:inline>
 		// FUNCIÓN GLOBAL ÚNICA para manejar la expiración del carrito
