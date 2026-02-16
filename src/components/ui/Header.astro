@@ -23,14 +23,6 @@
 		</div>
 		<nav class="nav" id="nav-menu">
 			<div class="nav-top-bar">
-				<div class="nav-logo">
-					<img
-						src="/images/logo.png"
-						alt="Joyería Galiana"
-						width="150"
-						height="50"
-					/>
-				</div>
 				<button
 					class="nav-close-btn"
 					id="nav-close-btn"
@@ -52,6 +44,15 @@
 						<line x1="6" y1="6" x2="18" y2="18"></line>
 					</svg>
 				</button>
+				<div class="nav-logo">
+					<img
+						src="/images/logo.png"
+						alt="Joyería Galiana"
+						width="150"
+						height="50"
+					/>
+				</div>
+				<div class="nav-top-spacer"></div>
 			</div>
 			<div
 				id="nav-user-email"
@@ -65,19 +66,22 @@
 				</li>
 				<li>
 					<a href="/productos" onclick="closeMobileMenu()"
-						>Productos</a>
+						>Productos</a
+					>
 				</li>
 				<li>
 					<a href="/#categorias" onclick="closeMobileMenu()"
-						>Categorías</a>
+						>Categorías</a
+					>
 				</li>
 				<li>
 					<a href="/#sobre-nosotros" onclick="closeMobileMenu()"
-						>Sobre Nosotros</a>
+						>Sobre Nosotros</a
+					>
 				</li>
 				<li>
-					<a href="/#contacto" onclick="closeMobileMenu()"
-						>Contacto</a>
+					<a href="/#contacto" onclick="closeMobileMenu()">Contacto</a
+					>
 				</li>
 				<li id="auth-button">
 					<a href="#" id="auth-link" onclick="closeMobileMenu()"
@@ -114,105 +118,105 @@
 			</div>
 		</div>
 	</div>
-</header>
 
-<script>
-	// Función para cerrar el menú
-	window.closeMobileMenu = function () {
-		const hamburger = document.getElementById("hamburger");
-		const nav = document.getElementById("nav-menu");
-		const overlay = document.getElementById("nav-overlay");
+	<script>
+		// Función para cerrar el menú
+		window.closeMobileMenu = function () {
+			const hamburger = document.getElementById("hamburger");
+			const nav = document.getElementById("nav-menu");
+			const overlay = document.getElementById("nav-overlay");
 
-		if (hamburger) hamburger.classList.remove("active");
-		if (nav) nav.classList.remove("active");
-		if (overlay) overlay.classList.remove("active");
-		document.body.style.overflow = "";
-	};
-
-	// Función para toggle del menú
-	window.toggleMobileMenu = function () {
-		const hamburger = document.getElementById("hamburger");
-		const nav = document.getElementById("nav-menu");
-		let overlay = document.getElementById("nav-overlay");
-
-		if (!hamburger || !nav) return;
-
-		hamburger.classList.toggle("active");
-		nav.classList.toggle("active");
-
-		// Congelar/descongelar página
-		if (nav.classList.contains("active")) {
-			document.body.style.overflow = "hidden";
-		} else {
+			if (hamburger) hamburger.classList.remove("active");
+			if (nav) nav.classList.remove("active");
+			if (overlay) overlay.classList.remove("active");
 			document.body.style.overflow = "";
+		};
+
+		// Función para toggle del menú
+		window.toggleMobileMenu = function () {
+			const hamburger = document.getElementById("hamburger");
+			const nav = document.getElementById("nav-menu");
+			let overlay = document.getElementById("nav-overlay");
+
+			if (!hamburger || !nav) return;
+
+			hamburger.classList.toggle("active");
+			nav.classList.toggle("active");
+
+			// Congelar/descongelar página
+			if (nav.classList.contains("active")) {
+				document.body.style.overflow = "hidden";
+			} else {
+				document.body.style.overflow = "";
+			}
+
+			if (!overlay) {
+				overlay = document.createElement("div");
+				overlay.id = "nav-overlay";
+				overlay.className = "nav-overlay";
+				document.body.appendChild(overlay);
+				setupOverlay(overlay);
+			}
+
+			overlay.classList.toggle("active");
+		};
+
+		function setupOverlay(overlay) {
+			// Solo cerrar si el click es exactamente en el overlay, no en elementos dentro
+			overlay.addEventListener(
+				"click",
+				function (e) {
+					if (e.target === overlay) {
+						console.log("Overlay clicked - closing menu");
+						window.closeMobileMenu();
+					}
+				},
+				false,
+			);
 		}
 
-		if (!overlay) {
-			overlay = document.createElement("div");
-			overlay.id = "nav-overlay";
-			overlay.className = "nav-overlay";
-			document.body.appendChild(overlay);
-			setupOverlay(overlay);
-		}
+		// Ejecutar al cargar
+		document.addEventListener("DOMContentLoaded", function () {
+			console.log("Header DOMContentLoaded");
 
-		overlay.classList.toggle("active");
-	};
+			// Crear overlay
+			let overlay = document.getElementById("nav-overlay");
+			if (!overlay) {
+				overlay = document.createElement("div");
+				overlay.id = "nav-overlay";
+				overlay.className = "nav-overlay";
+				document.body.appendChild(overlay);
+				setupOverlay(overlay);
+			}
 
-	function setupOverlay(overlay) {
-		// Solo cerrar si el click es exactamente en el overlay, no en elementos dentro
-		overlay.addEventListener(
-			"click",
-			function (e) {
-				if (e.target === overlay) {
-					console.log("Overlay clicked - closing menu");
+			// Auth link handler
+			const authLink = document.getElementById("auth-link");
+			if (authLink) {
+				authLink.addEventListener("click", function (e) {
+					e.preventDefault();
 					window.closeMobileMenu();
-				}
-			},
-			false,
-		);
-	}
 
-	// Ejecutar al cargar
-	document.addEventListener("DOMContentLoaded", function () {
-		console.log("Header DOMContentLoaded");
+					const currentUser = localStorage.getItem("currentUser");
+					let isAdmin = false;
 
-		// Crear overlay
-		let overlay = document.getElementById("nav-overlay");
-		if (!overlay) {
-			overlay = document.createElement("div");
-			overlay.id = "nav-overlay";
-			overlay.className = "nav-overlay";
-			document.body.appendChild(overlay);
-			setupOverlay(overlay);
-		}
+					if (currentUser) {
+						try {
+							const userData = JSON.parse(currentUser);
+							isAdmin = userData.rol === "admin";
+						} catch (err) {}
+					}
 
-		// Auth link handler
-		const authLink = document.getElementById("auth-link");
-		if (authLink) {
-			authLink.addEventListener("click", function (e) {
-				e.preventDefault();
-				window.closeMobileMenu();
+					if (!isAdmin && window.currentUserData) {
+						isAdmin = window.currentUserData.rol === "admin";
+					}
 
-				const currentUser = localStorage.getItem("currentUser");
-				let isAdmin = false;
-
-				if (currentUser) {
-					try {
-						const userData = JSON.parse(currentUser);
-						isAdmin = userData.rol === "admin";
-					} catch (err) {}
-				}
-
-				if (!isAdmin && window.currentUserData) {
-					isAdmin = window.currentUserData.rol === "admin";
-				}
-
-				if (isAdmin) {
-					window.location.href = "/admin-panel.html";
-				} else {
-					window.location.href = "/admin-login.html";
-				}
-			});
-		}
-	});
-</script>
+					if (isAdmin) {
+						window.location.href = "/admin-panel.html";
+					} else {
+						window.location.href = "/admin-login.html";
+					}
+				});
+			}
+		});
+	</script>
+</header>

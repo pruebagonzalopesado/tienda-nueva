@@ -1,28 +1,6 @@
 // ========== MOBILE MENU TOGGLE ==========
-function toggleMobileMenu() {
-    const navMenu = document.getElementById('nav-menu');
-    const hamburger = document.getElementById('hamburger');
-
-    if (navMenu) {
-        navMenu.classList.toggle('active');
-        hamburger.classList.toggle('active');
-    }
-}
-
-// Cerrar menú móvil cuando se hace clic en un enlace
-document.addEventListener('DOMContentLoaded', function () {
-    const navLinks = document.querySelectorAll('.nav a');
-    navLinks.forEach(link => {
-        link.addEventListener('click', function () {
-            const navMenu = document.getElementById('nav-menu');
-            const hamburger = document.getElementById('hamburger');
-            if (navMenu) {
-                navMenu.classList.remove('active');
-                hamburger.classList.remove('active');
-            }
-        });
-    });
-});
+// Delegado a Header.astro (window.toggleMobileMenu / window.closeMobileMenu)
+// que incluye overlay, body scroll lock, y botón X de cerrar
 
 let currentProduct = null;
 let currentImageIndex = 0;
@@ -35,7 +13,7 @@ async function loadProduct() {
     // Extraer ID del pathname (ej: /productos/6)
     const pathParts = window.location.pathname.split('/');
     let productId = pathParts[pathParts.length - 1];
-    
+
     // Si no encontramos ID en pathname, intentar en query string
     if (!productId || isNaN(productId)) {
         const urlParams = new URLSearchParams(window.location.search);
@@ -80,10 +58,10 @@ async function loadProduct() {
         renderProduct(product);
         loadRelatedProducts(product.categoria);
         loadAllProducts();
-        
+
         // 🔄 Iniciar sincronización de stock en tiempo real
         iniciarSincronizacionStockTiempoReal();
-        
+
         // ⭐ Cargar reseñas
         loadReviews(product.id);
 
@@ -153,7 +131,7 @@ async function renderProduct(product) {
 
     // Stock
     const stockStatus = document.getElementById('product-stock-status');
-    
+
     if (product.stock > 5) {
         stockStatus.textContent = `${product.stock} unidades disponibles`;
         stockStatus.className = 'stock-status in-stock';
@@ -173,7 +151,7 @@ async function renderProduct(product) {
     } else {
         document.getElementById('main-image').src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3C/svg%3E';
     }
-    
+
     // Cargar tallas si es anillo
     if (product.categoria === 'Anillos') {
         await loadRingSizes(product.id);
@@ -246,33 +224,33 @@ function selectImage(index) {
 async function loadRingSizes(productId) {
     try {
         if (!window.supabaseClient) return;
-        
+
         // Obtener todas las tallas disponibles (6-22)
         const { data: sizes, error } = await window.supabaseClient
             .from('ring_sizes')
             .select('id, size_number')
             .order('size_number', { ascending: true });
-        
+
         if (error) {
             console.log('Tallas no disponibles:', error.message);
             return;
         }
-        
+
         if (!sizes || sizes.length === 0) {
             console.log('No hay tallas definidas');
             hideSizeSelector();
             return;
         }
-        
+
         // Usar todas las tallas disponibles
         availableSizes = sizes.map(s => ({
             id: s.id,
             size: s.size_number
         })).sort((a, b) => a.size - b.size);
-        
+
         console.log('Tallas disponibles:', availableSizes);
         renderSizeSelector();
-        
+
     } catch (err) {
         console.error('Error cargando tallas:', err);
     }
@@ -282,14 +260,14 @@ async function loadRingSizes(productId) {
 function renderSizeSelector() {
     const sizeSelector = document.getElementById('size-selector');
     const sizesGrid = document.getElementById('sizes-grid');
-    
+
     if (!sizeSelector || !sizesGrid) return;
-    
+
     // Mostrar selector
     sizeSelector.style.display = 'block';
     sizesGrid.innerHTML = '';
     selectedSize = null;
-    
+
     // Crear botones de talla
     availableSizes.forEach(size => {
         const btn = document.createElement('button');
@@ -308,21 +286,21 @@ function renderSizeSelector() {
             transition: all 0.3s ease;
             text-align: center;
         `;
-        
+
         btn.addEventListener('mouseover', () => {
             if (btn !== selectedSize) {
                 btn.style.background = '#f9f9f9';
             }
         });
-        
+
         btn.addEventListener('mouseout', () => {
             if (btn !== selectedSize) {
                 btn.style.background = 'white';
             }
         });
-        
+
         btn.addEventListener('click', () => selectSize(btn, size.id));
-        
+
         sizesGrid.appendChild(btn);
     });
 }
@@ -334,7 +312,7 @@ function selectSize(btn, sizeId) {
         b.style.background = 'white';
         b.style.color = '#333';
     });
-    
+
     // Seleccionar nueva talla
     btn.style.background = '#d4af37';
     btn.style.color = 'white';
@@ -404,7 +382,7 @@ function decreaseQuantity() {
 // Agregar al carrito
 async function agregarAlCarritoDetalle() {
     if (!currentProduct) return;
-    
+
     const productId = currentProduct.id;
     if (!productId) {
         console.error('[agregarAlCarritoDetalle] productId no disponible');
@@ -441,21 +419,21 @@ async function validarYAgregarAlCarritoDetalle(quantity) {
         if (!response.ok) {
             // Stock insuficiente o agotado
             console.warn('[validarYAgregarAlCarritoDetalle] Stock insuficiente:', data);
-            
+
             const stockDisponible = data.stockDisponible || 0;
             let mensaje = '';
-            
+
             if (stockDisponible === 0) {
                 mensaje = `Lo sentimos, el producto ${currentProduct.nombre} se ha agotado. Otro usuario lo acaba de comprar.`;
             } else {
                 mensaje = `Stock insuficiente. Solo quedan ${stockDisponible} ${stockDisponible === 1 ? 'unidad' : 'unidades'} disponible${stockDisponible === 1 ? '' : 's'}, pero intentaste agregar ${quantity}.`;
             }
-            
+
             mostrarModalAlerta('Stock no disponible', mensaje, 'error');
-            
+
             // Actualizar inmediatamente el stock en la página
             actualizarStockDisponibleEnPagina();
-            
+
             return;
         }
 
@@ -484,15 +462,15 @@ async function validarYAgregarAlCarritoDetalle(quantity) {
             })(),
             tiempoAgregado: Date.now()
         };
-        
+
         // Agregar talla si es anillo
         if (currentProduct.categoria === 'Anillos' && selectedSize) {
             cartItem.talla = selectedSize.textContent;
             cartItem.tallaId = selectedSize.dataset.sizeId;
         }
 
-        const existingItem = cart.find(item => 
-            item.id === currentProduct.id && 
+        const existingItem = cart.find(item =>
+            item.id === currentProduct.id &&
             (item.talla === cartItem.talla || (!item.talla && !cartItem.talla))
         );
 
@@ -688,9 +666,9 @@ const TALLAS_CONVERSION = [
 function abrirGuiaTallas() {
     const modal = document.getElementById('modal-guia-tallas');
     const tbody = document.getElementById('tbody-guia-tallas');
-    
+
     if (!modal || !tbody) return;
-    
+
     // Llenar la tabla
     tbody.innerHTML = TALLAS_CONVERSION.map(item => `
         <tr style="border-bottom: 1px solid #e0e0e0;">
@@ -698,10 +676,10 @@ function abrirGuiaTallas() {
             <td style="padding: 0.75rem; text-align: center; font-weight: 600; color: #000;">${item.talla}</td>
         </tr>
     `).join('');
-    
+
     // Congelar página
     document.body.style.overflow = 'hidden';
-    
+
     // Mostrar modal
     modal.style.display = 'flex';
 }
@@ -740,16 +718,16 @@ function cerrarMedidorInteligente() {
 function calcularTalla() {
     const input = document.getElementById('input-diametro');
     const diametro = parseFloat(input.value);
-    
+
     if (!diametro || diametro <= 0) {
         notify.warning('Por favor ingresa un valor válido', 'Entrada inválida', 3000);
         return;
     }
-    
+
     // Buscar la talla más cercana
     let tallaMasProxima = TALLAS_CONVERSION[0];
     let diferenciaMinima = Math.abs(TALLAS_CONVERSION[0].mm - diametro);
-    
+
     for (let i = 1; i < TALLAS_CONVERSION.length; i++) {
         const diferencia = Math.abs(TALLAS_CONVERSION[i].mm - diametro);
         if (diferencia < diferenciaMinima) {
@@ -757,7 +735,7 @@ function calcularTalla() {
             tallaMasProxima = TALLAS_CONVERSION[i];
         }
     }
-    
+
     // Mostrar resultado
     document.getElementById('talla-resultado').textContent = tallaMasProxima.talla;
     document.getElementById('resultado-talla').style.display = 'block';
@@ -773,7 +751,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
+
     const medidor = document.getElementById('modal-medidor');
     if (medidor) {
         medidor.addEventListener('click', (e) => {
@@ -792,7 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
+
     // Permitir calcular talla al presionar Enter
     const inputDiametro = document.getElementById('input-diametro');
     if (inputDiametro) {
@@ -824,13 +802,13 @@ function cerrarModalValidarTalla() {
 // Sistema robusto de actualización de stock - se ejecuta cada vez que el carrito cambia
 
 // 1. Escuchar evento personalizado de carrito actualizado
-window.addEventListener('carritoActualizado', function(event) {
+window.addEventListener('carritoActualizado', function (event) {
     console.log('[product-detail] Evento carritoActualizado recibido:', event.detail);
     actualizarStockDisponibleEnPagina();
 });
 
 // Escuchar cuando el stock se actualiza desde removeFromCartSlide
-window.addEventListener('stockActualizado', function(event) {
+window.addEventListener('stockActualizado', function (event) {
     console.log('[product-detail] Stock actualizado en BD:', event.detail);
     // Si el producto actualizado es el actual, recargar su stock
     if (event.detail && event.detail.productId === currentProduct?.id) {
@@ -857,13 +835,13 @@ function iniciarSincronizacionStockTiempoReal() {
     if (stockSyncInterval) {
         clearInterval(stockSyncInterval);
     }
-    
+
     console.log('[product-detail] Iniciando sincronización de stock en tiempo real (cada 1 segundo)');
-    
+
     // Sincronizar stock cada 1 segundo
     stockSyncInterval = setInterval(async () => {
         if (!currentProduct || !window.supabaseClient) return;
-        
+
         try {
             // Obtener stock actual de la BD
             const { data: producto, error } = await window.supabaseClient
@@ -871,26 +849,26 @@ function iniciarSincronizacionStockTiempoReal() {
                 .select('stock')
                 .eq('id', currentProduct.id)
                 .single();
-            
+
             if (error || !producto) {
                 console.warn('[product-detail] Error sincronizando stock:', error);
                 return;
             }
-            
+
             // Si el stock cambió, actualizar
             if (producto.stock !== currentProduct.stock) {
                 console.log(`[product-detail] 🔄 STOCK ACTUALIZADO EN TIEMPO REAL: ${currentProduct.stock} → ${producto.stock}`);
                 currentProduct.stock = producto.stock;
-                
+
                 // Si se agotó, mostrar notificación
                 if (producto.stock === 0 && currentProduct.stock > 0) {
                     console.log('[product-detail] ⚠️ PRODUCTO AGOTADO EN TIEMPO REAL');
                     mostrarNotificacionAgotado();
                 }
-                
+
                 // Actualizar UI inmediatamente
                 actualizarStockDisponibleEnPagina();
-                
+
                 // Si se agotó, deshabilitar botones
                 if (producto.stock === 0) {
                     const agregarBtn = document.getElementById('agregar-al-carrito-btn');
@@ -936,11 +914,11 @@ function mostrarNotificacionAgotado() {
         font-weight: 600;
         max-width: 300px;
     `;
-    
+
     notificacion.textContent = '⚠️ ' + (currentProduct.nombre || 'Producto') + ' se ha agotado. Otro usuario lo acaba de comprar.';
-    
+
     document.body.appendChild(notificacion);
-    
+
     // Agregar estilos de animación si no existen
     if (!document.getElementById('product-detail-animations')) {
         const style = document.createElement('style');
@@ -959,7 +937,7 @@ function mostrarNotificacionAgotado() {
         `;
         document.head.appendChild(style);
     }
-    
+
     // Eliminar después de 5 segundos
     setTimeout(() => {
         notificacion.style.animation = 'slideInRight 0.3s ease reverse';
@@ -977,7 +955,7 @@ function actualizarStockDisponibleEnPagina() {
 
     try {
         const carrito = JSON.parse(localStorage.getItem('carrito') || '[]');
-        
+
         // Calcular cantidad del producto actual en carrito
         let cantidadEnCarrito = 0;
         for (let item of carrito) {
@@ -989,7 +967,7 @@ function actualizarStockDisponibleEnPagina() {
         // El stock mostrado es el que quedó en la BD después de restar lo que está en carrito
         // NO restar de nuevo porque ya fue restado en la BD
         const stockDisponible = currentProduct.stock;
-        
+
         console.log('[actualizarStockDisponibleEnPagina] Producto:', currentProduct.nombre, 'Stock BD (ya restado):', currentProduct.stock, 'En carrito:', cantidadEnCarrito, 'Disponible:', stockDisponible);
 
         // Actualizar elemento del DOM
@@ -1033,7 +1011,7 @@ function actualizarStockDisponibleEnPagina() {
 window.addEventListener('storage', async (e) => {
     if (e.key === 'carrito' && currentProduct) {
         console.log('[product-detail] Storage change detectado - recargando stock de BD');
-        
+
         // Refresco de stock desde BD
         if (window.supabaseClient && currentProduct.id) {
             try {
@@ -1042,7 +1020,7 @@ window.addEventListener('storage', async (e) => {
                     .select('stock')
                     .eq('id', currentProduct.id)
                     .single();
-                
+
                 if (!error && producto) {
                     currentProduct.stock = producto.stock;
                     console.log('[product-detail] Stock refrescado desde BD:', producto.stock);
@@ -1058,7 +1036,7 @@ window.addEventListener('storage', async (e) => {
 // También escuchar eventos personalizados del carrito
 document.addEventListener('carritoActualizado', async (e) => {
     console.log('[product-detail] carritoActualizado event - refrescando stock de BD');
-    
+
     if (window.supabaseClient && currentProduct && currentProduct.id) {
         try {
             const { data: producto, error } = await window.supabaseClient
@@ -1066,7 +1044,7 @@ document.addEventListener('carritoActualizado', async (e) => {
                 .select('stock')
                 .eq('id', currentProduct.id)
                 .single();
-            
+
             if (!error && producto) {
                 currentProduct.stock = producto.stock;
                 console.log('[product-detail] Stock refrescado:', producto.stock);
@@ -1079,14 +1057,14 @@ document.addEventListener('carritoActualizado', async (e) => {
 });
 
 // Función global para refrescar stock desde modal
-window.actualizarStockDesdeModal = async function(productId) {
+window.actualizarStockDesdeModal = async function (productId) {
     console.log('[actualizarStockDesdeModal] Iniciando refres para producto:', productId, 'currentProduct:', currentProduct?.id);
-    
+
     if (!window.supabaseClient) {
         console.warn('[actualizarStockDesdeModal] supabaseClient no disponible');
         return;
     }
-    
+
     // Validar que tenemos un productId válido
     if (!productId) {
         console.warn('[actualizarStockDesdeModal] productId no disponible, intentando usar currentProduct.id');
@@ -1096,31 +1074,31 @@ window.actualizarStockDesdeModal = async function(productId) {
         }
         productId = currentProduct.id;
     }
-    
+
     // Si no hay currentProduct o es diferente, crear uno temporal
     if (!currentProduct || currentProduct.id !== productId) {
         console.log('[actualizarStockDesdeModal] currentProduct no coincide, creando temporal');
     }
-    
+
     try {
         const { data: producto, error } = await window.supabaseClient
             .from('products')
             .select('stock')
             .eq('id', productId)
             .single();
-        
+
         if (error) {
             console.error('[actualizarStockDesdeModal] Error query:', error);
             return;
         }
-        
+
         if (!producto) {
             console.warn('[actualizarStockDesdeModal] Producto no encontrado');
             return;
         }
-        
+
         console.log('[actualizarStockDesdeModal] Stock obtenido de BD:', producto.stock);
-        
+
         // Actualizar currentProduct si existe y coincide
         if (currentProduct && currentProduct.id === productId) {
             currentProduct.stock = producto.stock;
@@ -1170,11 +1148,11 @@ async function loadReviews(productId) {
 
 function renderReviews(resenas, estadisticas) {
     const container = document.getElementById('reviews-list');
-    
+
     // ===== ACTUALIZAR ESTRELLAS Y NÚMERO EN LA TARJETA DEL PRODUCTO =====
     const starsContainer = document.getElementById('product-stars');
     const ratingText = document.getElementById('product-rating-text');
-    
+
     // Renderizar siempre 5 estrellas
     let starsHtml = '';
     const promedio = estadisticas.total > 0 ? estadisticas.promedio : 0;

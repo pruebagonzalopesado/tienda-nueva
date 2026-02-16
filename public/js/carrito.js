@@ -1,28 +1,6 @@
 // ========== MOBILE MENU TOGGLE ==========
-function toggleMobileMenu() {
-    const navMenu = document.getElementById('nav-menu');
-    const hamburger = document.getElementById('hamburger');
-
-    if (navMenu) {
-        navMenu.classList.toggle('active');
-        hamburger.classList.toggle('active');
-    }
-}
-
-// Cerrar menú móvil cuando se hace clic en un enlace
-document.addEventListener('DOMContentLoaded', function () {
-    const navLinks = document.querySelectorAll('.nav a');
-    navLinks.forEach(link => {
-        link.addEventListener('click', function () {
-            const navMenu = document.getElementById('nav-menu');
-            const hamburger = document.getElementById('hamburger');
-            if (navMenu) {
-                navMenu.classList.remove('active');
-                hamburger.classList.remove('active');
-            }
-        });
-    });
-});
+// Delegado a Header.astro (window.toggleMobileMenu / window.closeMobileMenu)
+// que incluye overlay, body scroll lock, y botón X de cerrar
 
 // Carrito de compras - localStorage + Supabase sync
 
@@ -49,12 +27,12 @@ if (!window.EXPIRACION_CARRITO_MS_LOADED) {
 
 // ========== SISTEMA DE PAUSA EN PÁGINAS PROTEGIDAS ==========
 // Detectar si estamos en checkout/pago y pausar el temporizador
-window.esPagenaProtegida = function() {
+window.esPagenaProtegida = function () {
     const path = window.location.pathname;
     return path.includes('/checkout') || path.includes('/pago') || path.includes('/pago-exitoso');
 };
 
-window.pausarTemporizador = function() {
+window.pausarTemporizador = function () {
     console.log('[carrito] Temporizador pausado - estamos en página protegida');
     // Pausar ajustando el tiempoAgregado de todos los items
     const carritoActual = JSON.parse(localStorage.getItem('carrito') || '[]');
@@ -71,13 +49,13 @@ window.pausarTemporizador = function() {
     }
 };
 
-window.reanudarTemporizador = function() {
+window.reanudarTemporizador = function () {
     console.log('[carrito] Temporizador reanudado - salimos de página protegida');
     const tiempoPausado = parseInt(sessionStorage.getItem('carritoTiempoPausado') || '0');
     if (tiempoPausado > 0) {
         const ahora = Date.now();
         const tiempoEnPausa = ahora - tiempoPausado;
-        
+
         // Ajustar todos los items para compensar el tiempo en pausa
         const carritoActual = JSON.parse(localStorage.getItem('carrito') || '[]');
         carritoActual.forEach(item => {
@@ -86,18 +64,18 @@ window.reanudarTemporizador = function() {
                 item.tiempoAgregado += tiempoEnPausa;
             }
         });
-        
+
         localStorage.setItem('carrito', JSON.stringify(carritoActual));
         window.carrito = carritoActual;
         carrito = carritoActual;
-        
+
         sessionStorage.removeItem('carritoTiempoPausado');
         console.log('[carrito] Temporizador reanudado - ajustado por', Math.floor(tiempoEnPausa / 1000), 'segundos en pausa');
     }
 };
 
 // Detectar cambios de página y pausar/reanudar según corresponda
-window.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('DOMContentLoaded', function () {
     if (window.esPagenaProtegida()) {
         window.pausarTemporizador();
     } else {
@@ -106,7 +84,7 @@ window.addEventListener('DOMContentLoaded', function() {
 });
 
 // Escuchar cambios en el location (navegación)
-window.addEventListener('popstate', function() {
+window.addEventListener('popstate', function () {
     if (window.esPagenaProtegida()) {
         window.pausarTemporizador();
     } else {
@@ -115,7 +93,7 @@ window.addEventListener('popstate', function() {
 });
 
 // Para navegación con Astro (spa-like), escuchar cambios de URL
-window.addEventListener('astro:before-preparation', function() {
+window.addEventListener('astro:before-preparation', function () {
     if (window.esPagenaProtegida()) {
         window.pausarTemporizador();
     } else {
@@ -126,7 +104,7 @@ window.addEventListener('astro:before-preparation', function() {
 // Función para restaurar stock de un producto
 async function restaurarStockProducto(productoId, cantidad) {
     if (!window.supabaseClient) return;
-    
+
     try {
         const { data: producto, error: errorGet } = await window.supabaseClient
             .from('products')
@@ -185,10 +163,10 @@ async function verificarExpirationCarrito() {
 
         if (tiempoEnCarrito > window.EXPIRACION_CARRITO_MS) {
             console.log('[verificarExpirationCarrito] Item expirado:', item.nombre, 'tiempo en carrito:', Math.floor(tiempoEnCarrito / 1000), 'segundos');
-            
+
             // Restaurar stock de la BD
             await restaurarStockProducto(item.id, item.cantidad);
-            
+
             itemsExpirados.push({
                 nombre: item.nombre,
                 cantidad: item.cantidad
@@ -231,8 +209,8 @@ async function verificarExpirationCarrito() {
         // ❌ Carrito NO se sincroniza con BD - solo se usa localStorage
 
         // Disparar evento de actualización
-        window.dispatchEvent(new CustomEvent('carritoActualizado', { 
-            detail: { carrito: carritoActual, expirado: true } 
+        window.dispatchEvent(new CustomEvent('carritoActualizado', {
+            detail: { carrito: carritoActual, expirado: true }
         }));
     }
 }
@@ -240,7 +218,7 @@ async function verificarExpirationCarrito() {
 // Mostrar notificación de expiración
 function mostrarNotificacionExpiracion(items) {
     const mensaje = `Tu reserva expiró. Se removieron ${items.length} producto(s) del carrito:\n${items.map(i => `${i.nombre} (${i.cantidad}x)`).join(', ')}`;
-    
+
     // Crear modal de notificación
     let notifDiv = document.getElementById('notif-expiracion-carrito');
     if (!notifDiv) {
@@ -352,12 +330,12 @@ window.cargarCarrito = cargarCarrito;
 // Función global para sincronizar carrito después de login (fusiona UNA sola vez al hacer login)
 window.sincronizarCarritoConBD = async function () {
     console.log('Sincronización de carrito con BD DESHABILITADA - usando solo localStorage');
-    
+
     // Solo cargar de localStorage, sin tocar BD
     const carritoLocal = JSON.parse(localStorage.getItem('carrito') || '[]');
     window.carrito = carritoLocal;
     carrito = window.carrito;
-    
+
     localStorage.setItem('carrito', JSON.stringify(carrito));
     renderizarCarrito();
     calcularTotales();
@@ -388,7 +366,7 @@ function renderizarCarrito() {
         table.style.display = 'none';
         vacioMsg.style.display = 'block';
         updateCartCount();
-        
+
         // Limpiar contador
         const timerContainer = document.getElementById('carrito-timer');
         if (timerContainer) {
@@ -400,7 +378,7 @@ function renderizarCarrito() {
     console.log('Carrito con items, renderizando tabla');
     table.style.display = 'table';
     vacioMsg.style.display = 'none';
-    
+
     // Mostrar contador si hay items
     const timerContainer = document.getElementById('carrito-timer');
     if (timerContainer) {
@@ -495,9 +473,9 @@ async function validarStockEnTimeReal(index, valor) {
     const cantidad = parseInt(valor) || 0;
     const carritoActual = JSON.parse(localStorage.getItem('carrito') || '[]');
     const item = carritoActual[index];
-    
+
     if (!item || !window.supabaseClient) return;
-    
+
     try {
         const { data: producto } = await window.supabaseClient
             .from('products')
@@ -510,22 +488,22 @@ async function validarStockEnTimeReal(index, valor) {
         // Calcular stock disponible
         const cantidadActualEnCarrito = item.cantidad;
         const stockOriginal = producto.stock + cantidadActualEnCarrito;
-        
+
         let cantidadOtrosEnCarrito = 0;
         for (let i = 0; i < carritoActual.length; i++) {
             if (i !== index && carritoActual[i].id === item.id) {
                 cantidadOtrosEnCarrito += carritoActual[i].cantidad;
             }
         }
-        
+
         const stockDisponible = stockOriginal - cantidadOtrosEnCarrito;
-        
+
         // Limitar el valor máximo en el input
         const inputEl = document.getElementById(`cantidad-${index}`);
         if (inputEl) {
             inputEl.max = stockDisponible;
         }
-        
+
         // Mostrar advertencia visual si se intenta exceder el stock
         if (cantidad > stockDisponible) {
             inputEl.style.borderColor = '#ff6b6b';
@@ -534,7 +512,7 @@ async function validarStockEnTimeReal(index, valor) {
             inputEl.style.borderColor = '';
             inputEl.style.backgroundColor = '';
         }
-        
+
     } catch (err) {
         console.error('[validarStockEnTimeReal] Error:', err);
     }
@@ -580,7 +558,7 @@ async function actualizarCantidad(index, nuevaCantidad) {
             // Calcular stock ORIGINAL = stock_actual_en_bd + cantidad_en_carrito_actual
             const cantidadActualEnCarrito = item.cantidad;
             const stockOriginal = producto.stock + cantidadActualEnCarrito;
-            
+
             // Calcular stock disponible (considerando otros items del mismo producto en carrito)
             let cantidadOtrosEnCarrito = 0;
             for (let i = 0; i < carritoActual.length; i++) {
@@ -588,16 +566,16 @@ async function actualizarCantidad(index, nuevaCantidad) {
                     cantidadOtrosEnCarrito += carritoActual[i].cantidad;
                 }
             }
-            
+
             const stockDisponible = stockOriginal - cantidadOtrosEnCarrito;
-            
+
             if (cantidad > stockDisponible) {
                 mostrarErrorStock(`No hay suficiente stock. Disponible: ${stockDisponible}`);
                 // Restaurar valor anterior
                 renderizarCarrito();
                 return;
             }
-            
+
             console.log('[actualizarCantidad] Validación - Stock BD:', producto.stock, 'En carrito:', cantidadActualEnCarrito, 'Original:', stockOriginal, 'Disponible:', stockDisponible, 'Solicitado:', cantidad);
         } catch (err) {
             console.error('Error en actualizarCantidad:', err);
@@ -615,15 +593,15 @@ async function actualizarCantidad(index, nuevaCantidad) {
     carrito = carritoActual;
 
     // Dispatch event para que otros scripts sepan que el carrito cambió
-    window.dispatchEvent(new CustomEvent('carritoActualizado', { 
-        detail: { carrito: carritoActual, productoId: item.id } 
+    window.dispatchEvent(new CustomEvent('carritoActualizado', {
+        detail: { carrito: carritoActual, productoId: item.id }
     }));
 
     // Ajustar stock en BD según el cambio de cantidad
     if (diferencia !== 0 && window.supabaseClient) {
         const accion = diferencia > 0 ? 'restar' : 'sumar';
         const cantidadAjuste = Math.abs(diferencia);
-        
+
         fetch('/api/update-cart-stock', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -633,19 +611,19 @@ async function actualizarCantidad(index, nuevaCantidad) {
                 accion: accion
             })
         })
-        .then(res => {
-            if (!res.ok) {
-                console.warn('[actualizarCantidad] API error:', res.status);
-                return null;
-            }
-            return res.json();
-        })
-        .then(data => {
-            if (data?.success) {
-                console.log('[actualizarCantidad] Stock ajustado:', data);
-            }
-        })
-        .catch(err => console.warn('[actualizarCantidad] Error ajustando stock:', err));
+            .then(res => {
+                if (!res.ok) {
+                    console.warn('[actualizarCantidad] API error:', res.status);
+                    return null;
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data?.success) {
+                    console.log('[actualizarCantidad] Stock ajustado:', data);
+                }
+            })
+            .catch(err => console.warn('[actualizarCantidad] Error ajustando stock:', err));
     }
 
     // Actualizar UI
@@ -694,7 +672,7 @@ async function eliminarDelCarrito(index) {
     // Restaurar stock en la BD si existe el producto
     if (productoEliminado && productoEliminado.cantidad) {
         console.log('[eliminarDelCarrito] Restaurando stock del producto:', productoEliminado);
-        
+
         if (typeof releaseReservation === 'function') {
             releaseReservation(productoEliminado.id);
         }
@@ -710,19 +688,19 @@ async function eliminarDelCarrito(index) {
                     accion: 'sumar'
                 })
             })
-            .then(res => {
-                if (!res.ok) {
-                    console.warn('[eliminarDelCarrito] API error:', res.status);
-                    return null;
-                }
-                return res.json();
-            })
-            .then(data => {
-                if (data?.success) {
-                    console.log('[eliminarDelCarrito] Stock restaurado:', data);
-                }
-            })
-            .catch(err => console.warn('[eliminarDelCarrito] Error restaurando stock:', err));
+                .then(res => {
+                    if (!res.ok) {
+                        console.warn('[eliminarDelCarrito] API error:', res.status);
+                        return null;
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data?.success) {
+                        console.log('[eliminarDelCarrito] Stock restaurado:', data);
+                    }
+                })
+                .catch(err => console.warn('[eliminarDelCarrito] Error restaurando stock:', err));
         }
     }
 

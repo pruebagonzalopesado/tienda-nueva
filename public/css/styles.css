@@ -526,7 +526,7 @@ main {
         position: relative;
         z-index: 2;
         color: white !important;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
     }
 
     .categoria-card p {
@@ -2044,6 +2044,15 @@ a[href^="sms:"] {
     transform: rotate(-45deg) translate(7px, -7px);
 }
 
+/* Ocultar en desktop: botón cerrar y barra superior del menú lateral */
+.nav-top-bar {
+    display: none;
+}
+
+.nav-close-btn {
+    display: none;
+}
+
 /* Media Queries - Responsive Design */
 @media (max-width: 1024px) {
     .header .container {
@@ -2161,6 +2170,18 @@ a[href^="sms:"] {
         margin: 0 !important;
         border-bottom: none;
         width: auto;
+        display: flex;
+        align-items: center;
+        flex: 1;
+        justify-content: center;
+    }
+
+    .nav-top-bar .nav-close-btn {
+        flex: 0 0 40px;
+    }
+
+    .nav-top-spacer {
+        flex: 0 0 40px;
     }
 
     .nav-top-bar .nav-logo img,
@@ -2173,7 +2194,7 @@ a[href^="sms:"] {
         flex-shrink: 0;
     }
 
-    /* Botón de cerrar (X) dentro del menú */
+    /* Botón de cerrar (X) dentro del menú - visible en móvil */
     .nav-close-btn {
         display: flex;
         align-items: center;
@@ -2225,20 +2246,18 @@ a[href^="sms:"] {
         align-items: center;
     }
 
-    /* Overlay para cerrar menú lateral */
+    /* Overlay para cerrar menú lateral - solo cubre el 30% restante */
     .nav-overlay {
         position: fixed;
         top: 0;
-        left: 0;
+        left: 70%;
         right: 0;
         bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
+        background: transparent;
         display: none;
         z-index: 998;
         cursor: pointer;
         transition: opacity 0.3s ease;
-        -webkit-backdrop-filter: blur(2px);
-        backdrop-filter: blur(2px);
     }
 
     .nav-overlay.active {
@@ -2255,7 +2274,7 @@ a[href^="sms:"] {
         align-items: center !important;
         justify-content: center !important;
     }
-    
+
     #auth-button.mobile-hidden {
         display: none !important;
         height: 0 !important;
@@ -2277,7 +2296,7 @@ a[href^="sms:"] {
         border-bottom: 1px solid rgba(212, 175, 55, 0.3) !important;
     }
 
-    #auth-button > div {
+    #auth-button>div {
         width: 100%;
     }
 
@@ -2425,7 +2444,7 @@ a[href^="sms:"] {
         background: #FFFFFF !important;
         border-radius: 10px !important;
         overflow: hidden !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
         border: none !important;
         padding: 8px !important;
         position: relative !important;
@@ -2513,6 +2532,7 @@ a[href^="sms:"] {
 
 /* === HERO/GALERÍA MÓVIL === */
 @media (max-width: 640px) {
+
     .hero,
     .galeria-hero {
         min-height: auto;
@@ -2799,85 +2819,85 @@ a[href^="sms:"] {
 
 /* Botones para modal de recuperación */
 .btn-close-recuperar {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #999;
-  transition: color 0.3s;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  padding: 0;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #999;
+    transition: color 0.3s;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    padding: 0;
 }
 
 .btn-close-recuperar:hover {
-  color: #8B1538;
-  background-color: #f5f5f5;
+    color: #8B1538;
+    background-color: #f5f5f5;
 }
 
 .btn-volver {
-  background: none;
-  border: 2px solid #d4af37;
-  color: #8B1538;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+    background: none;
+    border: 2px solid #d4af37;
+    color: #8B1538;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .btn-volver:hover {
-  background: #d4af37;
-  color: white;
+    background: #d4af37;
+    color: white;
 }
 
 .btn-volver-recuperacion {
-  background: none;
-  border: 2px solid #d4af37;
-  color: #8B1538;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+    background: none;
+    border: 2px solid #d4af37;
+    color: #8B1538;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .btn-volver-recuperacion:hover {
-  background: #d4af37;
-  color: white;
+    background: #d4af37;
+    color: white;
 }
 
 .btn-close-modal {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #999;
-  transition: color 0.3s;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  padding: 0;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #999;
+    transition: color 0.3s;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    padding: 0;
 }
 
 .btn-close-modal:hover {
-  color: #8B1538;
-  background-color: #f5f5f5;
+    color: #8B1538;
+    background-color: #f5f5f5;
 }

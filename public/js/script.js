@@ -1,28 +1,6 @@
 // ========== MOBILE MENU TOGGLE ==========
-function toggleMobileMenu() {
-    const navMenu = document.getElementById('nav-menu');
-    const hamburger = document.getElementById('hamburger');
-
-    if (navMenu) {
-        navMenu.classList.toggle('active');
-        hamburger.classList.toggle('active');
-    }
-}
-
-// Cerrar menú móvil cuando se hace clic en un enlace
-document.addEventListener('DOMContentLoaded', function () {
-    const navLinks = document.querySelectorAll('.nav a');
-    navLinks.forEach(link => {
-        link.addEventListener('click', function () {
-            const navMenu = document.getElementById('nav-menu');
-            const hamburger = document.getElementById('hamburger');
-            if (navMenu) {
-                navMenu.classList.remove('active');
-                hamburger.classList.remove('active');
-            }
-        });
-    });
-});
+// Delegado a Header.astro (window.toggleMobileMenu / window.closeMobileMenu)
+// que incluye overlay, body scroll lock, y botón X de cerrar
 
 // ========== AUTENTICACIÓN ==========
 let supabaseClient = null;
@@ -155,7 +133,7 @@ function renderizarUltimasTendencias(productos) {
     grid.innerHTML = '';
 
     const categorias = ['Anillos', 'Collares', 'Pendientes', 'Pulseras', 'Relojes'];
-    
+
     // Detectar si es móvil (pantalla < 768px)
     const isMobile = window.innerWidth < 768;
     const productosAMostrar = isMobile ? 2 : 4;
@@ -772,7 +750,7 @@ async function agregarAlCarrito(producto) {
         return;
     }
     window.agregarAlCarritoEnProceso = true;
-    
+
     // Verificar si el producto tiene stock
     const productoEnBD = allProductos.find(p => p.id === producto.id);
     if (!productoEnBD || productoEnBD.stock <= 0) {
@@ -793,7 +771,7 @@ async function agregarAlCarrito(producto) {
                 imagenUrl = productoEnBD.imagen_url;
             }
         }
-        
+
         const productoConImagen = {
             ...productoEnBD,
             imagen: imagenUrl
@@ -820,11 +798,11 @@ async function agregarAlCarrito(producto) {
 
         // Buscar si el producto ya está en el carrito
         const existingItem = cart.find(i => i.id === item.id);
-        
+
         // NUEVA VALIDACIÓN: Verificar que la cantidad total no supere el stock
         let cantidadEnCarrito = existingItem ? existingItem.cantidad : 0;
         let cantidadTotal = cantidadEnCarrito + 1;
-        
+
         if (cantidadTotal > productoEnBD.stock) {
             window.agregarAlCarritoEnProceso = false;
             const stockDisponible = productoEnBD.stock - cantidadEnCarrito;
@@ -841,16 +819,16 @@ async function agregarAlCarrito(producto) {
 
     // Guardar en localStorage
     localStorage.setItem('carrito', JSON.stringify(cart));
-    
+
     // 🔑 IMPORTANTE: Si es el primer item, guardar timestamp en sessionStorage
     if (cart.length === 1 || !sessionStorage.getItem('carritoTimestamp')) {
         const ahora = Date.now();
         sessionStorage.setItem('carritoTimestamp', ahora.toString());
         window.carritoTimestamp = ahora;
     }
-    
+
     actualizarCarrito();
-    
+
     // Restar stock de la base de datos
     if (window.supabaseClient && typeof producto === 'object') {
         fetch('/api/update-cart-stock', {
@@ -862,26 +840,26 @@ async function agregarAlCarrito(producto) {
                 accion: 'restar'
             })
         })
-        .then(res => {
-            if (!res.ok) {
-                console.warn('[script agregarAlCarrito] API error:', res.status);
-                return null;
-            }
-            return res.json();
-        })
-        .then(data => {
-            if (data?.success) {
-                console.log('[script agregarAlCarrito] Stock actualizado:', data);
-            }
-        })
-        .catch(err => console.warn('[script agregarAlCarrito] Error actualizando stock:', err));
+            .then(res => {
+                if (!res.ok) {
+                    console.warn('[script agregarAlCarrito] API error:', res.status);
+                    return null;
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data?.success) {
+                    console.log('[script agregarAlCarrito] Stock actualizado:', data);
+                }
+            })
+            .catch(err => console.warn('[script agregarAlCarrito] Error actualizando stock:', err));
     }
-    
+
     // Abrir slide-over del carrito
     if (typeof openCartSlide === 'function') {
         openCartSlide();
     }
-    
+
     // 🛡️ Resetear flag de protección
     window.agregarAlCarritoEnProceso = false;
 }
@@ -918,10 +896,10 @@ function mostrarMensajeErrorStock(mensaje) {
         `;
         document.body.appendChild(errorDiv);
     }
-    
+
     errorDiv.textContent = mensaje;
     errorDiv.style.display = 'block';
-    
+
     // Ocultar después de 3 segundos
     setTimeout(() => {
         errorDiv.style.display = 'none';
@@ -999,27 +977,27 @@ window.addEventListener('load', function () {
 // ========== NEWSLETTER ==========
 async function handleNewsletterSubscribe(event) {
     event.preventDefault();
-    
+
     const emailInput = document.getElementById('newsletter-email');
     const email = emailInput.value.trim();
     const button = document.querySelector('.newsletter-form button[type="submit"]');
     const originalText = button.textContent;
-    
+
     if (!email) {
         notify.warning('Por favor ingresa un correo válido', 'Email requerido', 3500);
         return;
     }
-    
+
     // Validar formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         notify.error('Por favor ingresa un correo válido', 'Email inválido', 3500);
         return;
     }
-    
+
     button.disabled = true;
     button.textContent = 'Suscribiendo...';
-    
+
     try {
         // Usar el mismo endpoint que el popup para enviar el email
         const response = await fetch('/api/newsletter-popup-subscribe', {
@@ -1037,13 +1015,13 @@ async function handleNewsletterSubscribe(event) {
         } else if (data.success) {
             // Mostrar notificación de éxito
             notify.success('¡Te has suscrito a nuestra newsletter exitosamente! Revisa tu email.', 'Suscripción confirmada', 4000);
-            
+
             // Resetear el formulario
             emailInput.value = '';
         } else {
             notify.error(data.message || 'Error al suscribirse', 'Error de suscripción', 5000);
         }
-        
+
     } catch (error) {
         console.error('Error al suscribirse:', error);
         notify.error('Hubo un error al suscribirse. Intenta nuevamente', 'Error de suscripción', 5000);
