@@ -1002,6 +1002,8 @@ async function handleNewsletterSubscribe(event) {
     
     const emailInput = document.getElementById('newsletter-email');
     const email = emailInput.value.trim();
+    const button = document.querySelector('.newsletter-form button[type="submit"]');
+    const originalText = button.textContent;
     
     if (!email) {
         notify.warning('Por favor ingresa un correo válido', 'Email requerido', 3500);
@@ -1015,37 +1017,39 @@ async function handleNewsletterSubscribe(event) {
         return;
     }
     
+    button.disabled = true;
+    button.textContent = 'Suscribiendo...';
+    
     try {
-        // Guardar en la base de datos
-        const { data, error } = await window.supabaseClient
-            .from('newsletter_subscribers')
-            .insert([{ email: email }])
-            .select();
-        
-        if (error) {
-            if (error.code === '23505') { // Unique constraint violation
-                notify.info('Este correo ya está suscrito a nuestra newsletter', 'Ya suscrito', 3500);
-            } else {
-                throw error;
-            }
-            return;
+        // Usar el mismo endpoint que el popup para enviar el email
+        const response = await fetch('/api/newsletter-popup-subscribe', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+        });
+
+        const data = await response.json();
+
+        if (data.alreadySubscribed) {
+            notify.info('Este correo ya está suscrito a nuestra newsletter', 'Ya suscrito', 3500);
+        } else if (data.success) {
+            // Mostrar notificación de éxito
+            notify.success('¡Te has suscrito a nuestra newsletter exitosamente! Revisa tu email.', 'Suscripción confirmada', 4000);
+            
+            // Resetear el formulario
+            emailInput.value = '';
+        } else {
+            notify.error(data.message || 'Error al suscribirse', 'Error de suscripción', 5000);
         }
-        
-        // Mostrar notificación de éxito
-        notify.success('¡Te has suscrito a nuestra newsletter exitosamente!', 'Suscripción confirmada', 4000);
-        
-        // Resetear el formulario
-        emailInput.value = '';
-        
-        // Restaurar el botón después de 3 segundos
-        setTimeout(() => {
-            button.textContent = originalText;
-            button.style.background = '';
-        }, 3000);
         
     } catch (error) {
         console.error('Error al suscribirse:', error);
         notify.error('Hubo un error al suscribirse. Intenta nuevamente', 'Error de suscripción', 5000);
+    } finally {
+        button.disabled = false;
+        button.textContent = originalText;
     }
 }
 

@@ -7,13 +7,17 @@ import PublicLayout from "../../layouts/PublicLayout.astro";
   <div id="login-modal" class="modal" style="display: none;">
     <div class="modal-content auth-modal">
       <span class="close" onclick="window.closeLoginModal()">&times;</span>
-      
+
       <!-- Tabs de navegación -->
       <div class="auth-tabs">
-        <button type="button" class="auth-tab active" data-tab="login">Iniciar Sesión</button>
-        <button type="button" class="auth-tab" data-tab="register">Registrarse</button>
+        <button type="button" class="auth-tab active" data-tab="login"
+          >Iniciar Sesión</button
+        >
+        <button type="button" class="auth-tab" data-tab="register"
+          >Registrarse</button
+        >
       </div>
-      
+
       <!-- Formulario de Login -->
       <form id="login-form" class="auth-form active">
         <h2>Iniciar Sesión</h2>
@@ -26,11 +30,13 @@ import PublicLayout from "../../layouts/PublicLayout.astro";
           <input type="password" id="login-password" required />
         </div>
         <div class="forgot-password-link">
-          <a href="#" onclick="abrirModalRecuperacion(event)">¿Olvidaste tu contraseña?</a>
+          <a href="#" onclick="abrirModalRecuperacion(event)"
+            >¿Olvidaste tu contraseña?</a
+          >
         </div>
         <button type="submit" class="btn-principal">Iniciar Sesión</button>
       </form>
-      
+
       <!-- Formulario de Registro -->
       <form id="register-form" class="auth-form">
         <h2>Registrarse</h2>
@@ -78,33 +84,95 @@ import PublicLayout from "../../layouts/PublicLayout.astro";
   <!-- Modal Recuperar Contraseña (FUERA del login-modal) -->
   <div id="recuperacion-modal" class="modal" style="display: none;">
     <div class="modal-content auth-modal" style="max-width: 420px;">
-      <button class="btn-close-modal" onclick="cerrarModalRecuperacion()" type="button">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button
+        class="btn-close-modal"
+        onclick="cerrarModalRecuperacion()"
+        type="button"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
       </button>
-      
+
       <div style="text-align: center; margin-bottom: 30px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8B1538" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block; margin-bottom: 15px;">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="48"
+          height="48"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#8B1538"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          style="margin: 0 auto; display: block; margin-bottom: 15px;"
+        >
           <path d="M12 1v6m0 6v6"></path>
           <rect x="5" y="9" width="14" height="12" rx="2" ry="2"></rect>
           <path d="M8 14h8"></path>
         </svg>
-        <h2 style="color: #8B1538; margin: 0; font-size: 24px;">Recuperar Contraseña</h2>
-        <p style="color: #666; margin: 10px 0 0 0; font-size: 14px;">Ingresa tu email para recibir un enlace de recuperación</p>
+        <h2 style="color: #8B1538; margin: 0; font-size: 24px;">
+          Recuperar Contraseña
+        </h2>
+        <p style="color: #666; margin: 10px 0 0 0; font-size: 14px;">
+          Ingresa tu email para recibir un enlace de recuperación
+        </p>
       </div>
 
       <form id="form-recuperacion">
         <div class="form-group">
-          <label for="recuperacion-email" style="font-weight: 600; color: #333;">Correo Electrónico</label>
-          <input type="email" id="recuperacion-email" required placeholder="tu@email.com" style="width: 100%; padding: 12px; border: 2px solid #d4af37; border-radius: 6px; font-size: 14px;" />
+          <label for="recuperacion-email" style="font-weight: 600; color: #333;"
+            >Correo Electrónico</label
+          >
+          <input
+            type="email"
+            id="recuperacion-email"
+            required
+            placeholder="tu@email.com"
+            style="width: 100%; padding: 12px; border: 2px solid #d4af37; border-radius: 6px; font-size: 14px;"
+          />
         </div>
-        <button type="submit" class="btn-principal" id="btn-recuperacion-submit" style="width: 100%; margin-top: 20px;">Enviar Enlace</button>
-        <div id="recuperacion-message" class="message" style="margin-top: 15px; padding: 12px; border-radius: 6px; text-align: center;"></div>
+        <button
+          type="submit"
+          class="btn-principal"
+          id="btn-recuperacion-submit"
+          style="width: 100%; margin-top: 20px;">Enviar Enlace</button
+        >
+        <div
+          id="recuperacion-message"
+          class="message"
+          style="margin-top: 15px; padding: 12px; border-radius: 6px; text-align: center;"
+        >
+        </div>
         <div style="text-align: center; margin-top: 20px;">
-          <button type="button" class="btn-volver-recuperacion" onclick="cerrarModalRecuperacion()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline; margin-right: 6px; vertical-align: middle;">
+          <button
+            type="button"
+            class="btn-volver-recuperacion"
+            onclick="cerrarModalRecuperacion()"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              style="display: inline; margin-right: 6px; vertical-align: middle;"
+            >
               <line x1="19" y1="12" x2="5" y2="12"></line>
               <polyline points="12 19 5 12 12 5"></polyline>
             </svg>
@@ -143,46 +211,342 @@ import PublicLayout from "../../layouts/PublicLayout.astro";
         />
       </div>
 
-      <!-- Filtros -->
-      <div
-        class="filtros-productos"
-        style="margin: 30px 0; text-align: center;"
-      >
-        <button
-          class="filtro-btn activo"
-          onclick="aplicarFiltroProductos('Todos')">Todos</button
+      <!-- Filtros y Ordenamiento -->
+      <div class="filtros-container">
+        <!-- Dropdown de Categorías -->
+        <div class="filtro-wrapper">
+          <div class="filtro-header">
+            <svg
+              class="filtro-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"
+              ></polygon>
+            </svg>
+            <label for="filtro-categoria" class="filtro-label">Categoría</label>
+          </div>
+          <div class="select-wrapper">
+            <select
+              id="filtro-categoria"
+              onchange="aplicarFiltroProductos(this.value)"
+              class="filtro-select"
+            >
+              <option value="Todos">Todos los Productos</option>
+              <option value="Ofertas">Ofertas</option>
+              <option value="Anillos">Anillos</option>
+              <option value="Collares">Collares</option>
+              <option value="Pendientes">Pendientes</option>
+              <option value="Pulseras">Pulseras</option>
+              <option value="Relojes">Relojes</option>
+              <option value="Medallas">Medallas</option>
+            </select>
+            <svg
+              class="select-chevron"
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Dropdown de Subcategorías (dinámico) -->
+        <div
+          class="filtro-wrapper"
+          id="subcategoria-wrapper"
+          style="display: none;"
         >
-        <button class="filtro-btn" onclick="aplicarFiltroProductos('Ofertas')"
-          >Ofertas</button
-        >
-        <button class="filtro-btn" onclick="aplicarFiltroProductos('Anillos')"
-          >Anillos</button
-        >
-        <button class="filtro-btn" onclick="aplicarFiltroProductos('Collares')"
-          >Collares</button
-        >
-        <button
-          class="filtro-btn"
-          onclick="aplicarFiltroProductos('Pendientes')">Pendientes</button
-        >
-        <button class="filtro-btn" onclick="aplicarFiltroProductos('Pulseras')"
-          >Pulseras</button
-        >
-        <button class="filtro-btn" onclick="aplicarFiltroProductos('Relojes')"
-          >Relojes</button
-        >
-        <button class="filtro-btn" onclick="aplicarFiltroProductos('Medallas')"
-          >Medallas</button
-        >
+          <div class="filtro-header">
+            <svg
+              class="filtro-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            <label for="filtro-subcategoria" class="filtro-label"
+              >Subcategoría</label
+            >
+          </div>
+          <div class="select-wrapper">
+            <select
+              id="filtro-subcategoria"
+              onchange="filtrarPorSubcategoriaProductos()"
+              class="filtro-select"
+            >
+              <option value="">Ver Todos</option>
+            </select>
+            <svg
+              class="select-chevron"
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Dropdown de Ordenamiento -->
+        <div class="filtro-wrapper">
+          <div class="filtro-header">
+            <svg
+              class="filtro-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="4" y1="21" x2="4" y2="14"></line>
+              <line x1="4" y1="10" x2="4" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12" y2="3"></line>
+              <line x1="20" y1="21" x2="20" y2="16"></line>
+              <line x1="20" y1="12" x2="20" y2="3"></line>
+              <line x1="1" y1="14" x2="7" y2="14"></line>
+              <line x1="9" y1="8" x2="15" y2="8"></line>
+              <line x1="17" y1="16" x2="23" y2="16"></line>
+            </svg>
+            <label for="filtro-ordenamiento" class="filtro-label"
+              >Ordenar por</label
+            >
+          </div>
+          <div class="select-wrapper">
+            <select
+              id="filtro-ordenamiento"
+              onchange="aplicarOrdenamiento(this.value)"
+              class="filtro-select"
+            >
+              <option value="relevancia">- Relevancia -</option>
+              <option value="a-z">A - Z</option>
+              <option value="z-a">Z - A</option>
+              <option value="precio-menor">Precio: Menor a Mayor</option>
+              <option value="precio-mayor">Precio: Mayor a Menor</option>
+            </select>
+            <svg
+              class="select-chevron"
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+        </div>
       </div>
 
-      <!-- Filtros de Subcategorías -->
-      <div 
-        id="filtro-subcategoria-container" 
-        style="margin: 20px 0; text-align: center; min-height: 50px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;"
-      >
-        <!-- Se cargará dinámicamente -->
-      </div>
+      <style>
+        /* ===== FILTROS PREMIUM ===== */
+        .filtros-container {
+          margin: 40px 0;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 0;
+          padding: 0;
+          background: linear-gradient(145deg, #ffffff 0%, #faf8f4 100%);
+          border-radius: 16px;
+          box-shadow:
+            0 1px 3px rgba(0, 0, 0, 0.04),
+            0 4px 16px rgba(0, 0, 0, 0.06);
+          border: 1px solid rgba(212, 175, 55, 0.18);
+          overflow: hidden;
+          position: relative;
+        }
+
+        .filtros-container::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: linear-gradient(
+            90deg,
+            #d4af37 0%,
+            #e5c158 40%,
+            #8b1538 100%
+          );
+          opacity: 0.85;
+        }
+
+        .filtro-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          padding: 20px 24px 22px;
+          flex: 1;
+          min-width: 0;
+          transition: background 0.3s ease;
+        }
+
+        .filtro-wrapper:hover {
+          background: rgba(212, 175, 55, 0.04);
+        }
+
+        .filtro-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .filtro-icon {
+          color: #d4af37;
+          flex-shrink: 0;
+          opacity: 0.85;
+        }
+
+        .filtro-label {
+          font-weight: 600;
+          color: #5a4a3a;
+          font-size: 11.5px;
+          letter-spacing: 1.2px;
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+
+        /* ===== SELECT WRAPPER ===== */
+        .select-wrapper {
+          position: relative;
+        }
+
+        .filtro-select {
+          width: 100%;
+          padding: 12px 40px 12px 14px;
+          border: 1.5px solid #e8dfd4;
+          border-radius: 10px;
+          font-size: 14px;
+          font-weight: 500;
+          font-family: inherit;
+          background-color: #fff;
+          color: #333;
+          cursor: pointer;
+          outline: none;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          appearance: none;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+        }
+
+        .select-chevron {
+          position: absolute;
+          right: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #c0a86e;
+          pointer-events: none;
+          transition: all 0.3s ease;
+        }
+
+        .filtro-select:hover {
+          border-color: #d4af37;
+          box-shadow: 0 2px 8px rgba(212, 175, 55, 0.12);
+        }
+
+        .filtro-select:hover + .select-chevron {
+          color: #d4af37;
+        }
+
+        .filtro-select:focus {
+          border-color: #d4af37;
+          box-shadow:
+            0 0 0 3px rgba(212, 175, 55, 0.1),
+            0 2px 8px rgba(212, 175, 55, 0.12);
+        }
+
+        .filtro-select:focus + .select-chevron {
+          color: #d4af37;
+          transform: translateY(-50%) rotate(180deg);
+        }
+
+        .filtro-select option {
+          padding: 12px;
+          color: #333;
+          background-color: white;
+          font-weight: 400;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+          .filtros-container {
+            grid-template-columns: 1fr 1fr;
+          }
+
+          .filtro-wrapper {
+            padding: 16px 20px 18px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .filtros-container {
+            grid-template-columns: 1fr;
+            margin: 20px 0 30px;
+            border-radius: 12px;
+          }
+
+          .filtros-container::before {
+            height: 2.5px;
+          }
+
+          .filtro-wrapper {
+            padding: 14px 16px 16px;
+          }
+
+          .filtro-select {
+            padding: 11px 36px 11px 12px;
+            font-size: 13.5px;
+            border-radius: 8px;
+          }
+
+          .filtro-label {
+            font-size: 10.5px;
+            letter-spacing: 1px;
+          }
+        }
+      </style>
 
       <!-- Grid de Productos -->
       <div class="productos-grid" style="margin: 40px 0;">
@@ -191,195 +555,80 @@ import PublicLayout from "../../layouts/PublicLayout.astro";
     </div>
   </section>
 
-  <script src="/js/productos.js?v=10" is:inline></script>
-  
-  <script is:inline>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Esperar a que todo esté listo
-      setTimeout(function() {
-        const botones = document.querySelectorAll('.filtros-productos .filtro-btn');
-        botones.forEach(btn => {
-          btn.addEventListener('click', function() {
-            const cat = this.textContent.trim();
-            console.log('Categoría clickeada:', cat);
-            cargarSubcats(cat);
-          });
-        });
-      }, 500);
-    });
-    
-    let subcatActual = null;
-    
-    async function cargarSubcats(categoria) {
-      console.log('Cargando subcategorías para:', categoria);
-      const container = document.getElementById('filtro-subcategoria-container');
-      container.innerHTML = '';
-      
-      if (categoria === 'Todos' || categoria === 'Ofertas' || categoria === 'Relojes' || categoria === 'Medallas') {
-        console.log('Sin subcategorías para esta categoría');
-        return;
-      }
-      
-      // Esperar supabase
-      if (!window.supabaseClient) {
-        console.log('Esperando Supabase...');
-        await new Promise(r => setTimeout(r, 1000));
-      }
-      
-      if (!window.supabaseClient) {
-        console.error('Supabase no disponible');
-        return;
-      }
-      
-      console.log('Consultando subcategorias...');
-      const { data, error } = await window.supabaseClient
-        .from('subcategorias')
-        .select('*')
-        .ilike('categoria', categoria);
-      
-      console.log('Resultado:', data, error);
-      
-      if (error) {
-        console.error('Error:', error);
-        return;
-      }
-      
-      if (!data || data.length === 0) {
-        console.log('No hay subcategorías');
-        return;
-      }
-      
-      // Botón Ver Todos
-      const btnAll = document.createElement('button');
-      btnAll.innerText = 'Ver Todos';
-      btnAll.className = 'subcat-btn-todos';
-      btnAll.style = 'padding:8px 18px;border:2px solid #d4af37;background:#d4af37;color:#1a1a1a;border-radius:20px;cursor:pointer;font-weight:600;margin:5px;';
-      btnAll.onclick = () => filtrarSubcat(categoria, null, container);
-      container.appendChild(btnAll);
-      
-      // Botones subcategorías
-      data.forEach(s => {
-        const btn = document.createElement('button');
-        btn.innerText = s.nombre;
-        btn.className = 'subcat-btn';
-        btn.dataset.id = s.id;
-        btn.style = 'padding:8px 18px;border:2px solid #ccc;background:#fff;color:#333;border-radius:20px;cursor:pointer;font-weight:500;margin:5px;';
-        btn.onclick = () => filtrarSubcat(categoria, s.id, container);
-        container.appendChild(btn);
-      });
-      
-      console.log('Botones creados:', data.length + 1);
-    }
-    
-    function filtrarSubcat(cat, subcatId, container) {
-      subcatActual = subcatId;
-      
-      // Resetear todos los botones a blanco
-      container.querySelectorAll('button').forEach(b => {
-        b.style.background = '#fff';
-        b.style.borderColor = '#ccc';
-        b.style.color = '#333';
-        b.style.fontWeight = '500';
-      });
-      
-      // Poner en dorado el seleccionado
-      if (!subcatId) {
-        // "Ver Todos" - es el primero
-        const btnTodos = container.querySelector('.subcat-btn-todos');
-        if (btnTodos) {
-          btnTodos.style.background = '#d4af37';
-          btnTodos.style.borderColor = '#d4af37';
-          btnTodos.style.color = '#1a1a1a';
-          btnTodos.style.fontWeight = '600';
-        }
-      } else {
-        // Buscar por dataset.id
-        const btnSel = container.querySelector(`button[data-id="${subcatId}"]`);
-        if (btnSel) {
-          btnSel.style.background = '#d4af37';
-          btnSel.style.borderColor = '#d4af37';
-          btnSel.style.color = '#1a1a1a';
-          btnSel.style.fontWeight = '600';
-        }
-      }
-      
-      // Filtrar productos
-      let prods = allProductosPage.filter(p => p.categoria === cat && p.stock > 0);
-      if (subcatId) {
-        prods = prods.filter(p => p.subcategoria_id === subcatId);
-      }
-      mostrarProductos(prods);
-    }
+  <script src="/js/productos.js?v=11" is:inline></script>
 
+  <script is:inline>
     // Funciones para modal de recuperación
-    window.abrirModalRecuperacion = function(e) {
+    window.abrirModalRecuperacion = function (e) {
       e.preventDefault();
-      document.getElementById('login-modal').style.display = 'none';
-      document.getElementById('recuperacion-modal').style.display = 'flex';
+      document.getElementById("login-modal").style.display = "none";
+      document.getElementById("recuperacion-modal").style.display = "flex";
     };
 
-    window.cerrarModalRecuperacion = function() {
-      document.getElementById('recuperacion-modal').style.display = 'none';
-      document.getElementById('login-modal').style.display = 'flex';
-      const form = document.getElementById('form-recuperacion');
+    window.cerrarModalRecuperacion = function () {
+      document.getElementById("recuperacion-modal").style.display = "none";
+      document.getElementById("login-modal").style.display = "flex";
+      const form = document.getElementById("form-recuperacion");
       if (form) form.reset();
-      const msg = document.getElementById('recuperacion-message');
-      if (msg) msg.textContent = '';
+      const msg = document.getElementById("recuperacion-message");
+      if (msg) msg.textContent = "";
     };
 
     // Manejar envío de recuperación
-    const formRecuperacion = document.getElementById('form-recuperacion');
-    console.log('📋 form-recuperacion encontrado:', !!formRecuperacion);
-    
+    const formRecuperacion = document.getElementById("form-recuperacion");
+    console.log("📋 form-recuperacion encontrado:", !!formRecuperacion);
+
     if (formRecuperacion) {
-      formRecuperacion.addEventListener('submit', async (e) => {
+      formRecuperacion.addEventListener("submit", async (e) => {
         e.preventDefault();
-        console.log('📨 Enviando recuperación de contraseña...');
-        
-        const email = document.getElementById('recuperacion-email').value.trim();
-        const messageDiv = document.getElementById('recuperacion-message');
-        const btnSubmit = document.getElementById('btn-recuperacion-submit');
+        console.log("📨 Enviando recuperación de contraseña...");
+
+        const email = document
+          .getElementById("recuperacion-email")
+          .value.trim();
+        const messageDiv = document.getElementById("recuperacion-message");
+        const btnSubmit = document.getElementById("btn-recuperacion-submit");
 
         btnSubmit.disabled = true;
-        btnSubmit.textContent = 'Enviando...';
+        btnSubmit.textContent = "Enviando...";
 
         try {
-          console.log('🔗 Llamando API con email:', email);
-          const response = await fetch('/api/request-password-reset', {
-            method: 'POST',
+          console.log("🔗 Llamando API con email:", email);
+          const response = await fetch("/api/request-password-reset", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({ email }),
           });
 
-          console.log('✅ Response status:', response.status);
+          console.log("✅ Response status:", response.status);
           const data = await response.json();
-          console.log('📦 Response data:', data);
+          console.log("📦 Response data:", data);
 
           if (!response.ok) {
-            throw new Error(data.error || 'Error al solicitar reset');
+            throw new Error(data.error || "Error al solicitar reset");
           }
 
-					messageDiv.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline; margin-right: 8px; vertical-align: middle; color: #28a745;"><polyline points="20 6 9 17 4 12"></polyline></svg>Enlace enviado a tu correo. Revisa tu bandeja de entrada.';
-          messageDiv.className = 'message success';
+          messageDiv.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline; margin-right: 8px; vertical-align: middle; color: #28a745;"><polyline points="20 6 9 17 4 12"></polyline></svg>Enlace enviado a tu correo. Revisa tu bandeja de entrada.';
+          messageDiv.className = "message success";
           formRecuperacion.reset();
 
           setTimeout(() => {
             window.cerrarModalRecuperacion();
           }, 2000);
-
         } catch (err) {
-          console.error('❌ Error:', err.message);
-          messageDiv.textContent = err.message || 'Error desconocido';
-          messageDiv.className = 'message error';
+          console.error("❌ Error:", err.message);
+          messageDiv.textContent = err.message || "Error desconocido";
+          messageDiv.className = "message error";
         } finally {
           btnSubmit.disabled = false;
-          btnSubmit.textContent = 'Enviar Enlace';
+          btnSubmit.textContent = "Enviar Enlace";
         }
       });
     } else {
-      console.error('❌ form-recuperacion NO encontrado');
+      console.error("❌ form-recuperacion NO encontrado");
     }
   </script>
 </PublicLayout>
