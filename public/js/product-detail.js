@@ -381,24 +381,24 @@ function decreaseQuantity() {
 
 // Agregar al carrito
 async function agregarAlCarritoDetalle() {
-    if (!currentProduct) return;
+    if (!currentProduct) return false;
 
     const productId = currentProduct.id;
     if (!productId) {
         console.error('[agregarAlCarritoDetalle] productId no disponible');
-        return;
+        return false;
     }
 
     // Validar talla si es anillo
     if (currentProduct.categoria === 'Anillos' && availableSizes.length > 0 && !selectedSize) {
         abrirModalValidarTalla();
-        return;
+        return false;
     }
 
     const quantity = parseInt(document.getElementById('quantity').value);
 
-    // Validar stock con el servidor
-    validarYAgregarAlCarritoDetalle(quantity);
+    // Validar stock con el servidor y ESPERAR a que termine
+    return await validarYAgregarAlCarritoDetalle(quantity);
 }
 
 // Función para validar stock y agregar al carrito desde product-detail
@@ -434,7 +434,7 @@ async function validarYAgregarAlCarritoDetalle(quantity) {
             // Actualizar inmediatamente el stock en la página
             actualizarStockDisponibleEnPagina();
 
-            return;
+            return false;
         }
 
         // Stock validado, agregar al carrito local
@@ -510,16 +510,23 @@ async function validarYAgregarAlCarritoDetalle(quantity) {
             selectedSize = null;
         }
 
+        return true;  // ← Devolver true si fue exitoso
+
     } catch (error) {
         console.error('[validarYAgregarAlCarritoDetalle] Error:', error);
         notify.error('Error al validar stock. Intenta nuevamente', 'Error de validación', 4000);
+        return false;  // ← Devolver false si hay error
     }
 }
 
-// Comprar ahora
+// Comprar ahora - Agregar al carrito y redirigir al carrito
 async function comprarAhora() {
-    await agregarAlCarritoDetalle();
-    window.location.href = '/carrito';
+    const agregadoExitosamente = await agregarAlCarritoDetalle();
+    
+    // Solo redirigir si se agregó exitosamente al carrito
+    if (agregadoExitosamente) {
+        window.location.href = '/carrito';
+    }
 }
 
 // Cargar productos relacionados

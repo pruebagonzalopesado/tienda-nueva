@@ -1,16 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY || import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
-
-const supabase = createClient(supabaseUrl, supabaseKey, {
-    auth: {
-        persistSession: false,
-        autoRefreshToken: false
-    }
-});
-
 /**
  * Endpoint para agregar a carrito con validación de stock en TIEMPO REAL
  * Lee el stock directamente de la BD cada vez
@@ -18,6 +8,29 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
  */
 export const POST: APIRoute = async ({ request }) => {
     try {
+        // Validar credenciales DENTRO del endpoint
+        const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+        const supabaseKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY || import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+
+        if (!supabaseUrl || !supabaseKey) {
+            console.error('❌ VARIABLES NO CONFIGURADAS EN SERVIDOR');
+            return new Response(JSON.stringify({ 
+                success: false, 
+                error: 'Variables de entorno no configuradas en servidor',
+                stockDisponible: 0
+            }), {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        const supabase = createClient(supabaseUrl, supabaseKey, {
+            auth: {
+                persistSession: false,
+                autoRefreshToken: false
+            }
+        });
+
         const { productId, cantidad } = await request.json();
 
         // Validar datos

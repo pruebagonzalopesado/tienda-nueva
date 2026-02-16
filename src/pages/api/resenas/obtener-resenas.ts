@@ -1,8 +1,21 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 export const GET: APIRoute = async ({ request }) => {
   try {
+    // Validar credenciales DENTRO del endpoint
+    const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+    const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('❌ VARIABLES NO CONFIGURADAS EN SERVIDOR');
+      return new Response(
+        JSON.stringify({ error: 'Variables de entorno no configuradas en servidor' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
     const url = new URL(request.url);
     const productId = url.searchParams.get('product_id');
 
