@@ -22,18 +22,67 @@
 			>
 		</div>
 		<nav class="nav" id="nav-menu">
-			<div class="nav-logo">
-				<img src="/images/logo.png" alt="Joyería Galiana" width="150" height="50" />
+			<div class="nav-top-bar">
+				<div class="nav-logo">
+					<img
+						src="/images/logo.png"
+						alt="Joyería Galiana"
+						width="150"
+						height="50"
+					/>
+				</div>
+				<button
+					class="nav-close-btn"
+					id="nav-close-btn"
+					onclick="closeMobileMenu()"
+					aria-label="Cerrar menú"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="22"
+						height="22"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<line x1="18" y1="6" x2="6" y2="18"></line>
+						<line x1="6" y1="6" x2="18" y2="18"></line>
+					</svg>
+				</button>
 			</div>
-			<div id="nav-user-email" class="nav-user-email" style="display: none; padding: 10px 20px; text-align: center; color: #d4af37; font-size: 0.9rem; border-bottom: 1px solid rgba(212, 175, 55, 0.2); width: 100%; box-sizing: border-box; margin: 0;"></div>
+			<div
+				id="nav-user-email"
+				class="nav-user-email"
+				style="display: none; padding: 10px 20px; text-align: center; color: #d4af37; font-size: 0.9rem; border-bottom: 1px solid rgba(212, 175, 55, 0.2); width: 100%; box-sizing: border-box; margin: 0;"
+			>
+			</div>
 			<ul>
-				<li><a href="/#inicio" onclick="closeMobileMenu()">Inicio</a></li>
-				<li><a href="/productos" onclick="closeMobileMenu()">Productos</a></li>
-				<li><a href="/#categorias" onclick="closeMobileMenu()">Categorías</a></li>
-				<li><a href="/#sobre-nosotros" onclick="closeMobileMenu()">Sobre Nosotros</a></li>
-				<li><a href="/#contacto" onclick="closeMobileMenu()">Contacto</a></li>
+				<li>
+					<a href="/#inicio" onclick="closeMobileMenu()">Inicio</a>
+				</li>
+				<li>
+					<a href="/productos" onclick="closeMobileMenu()"
+						>Productos</a>
+				</li>
+				<li>
+					<a href="/#categorias" onclick="closeMobileMenu()"
+						>Categorías</a>
+				</li>
+				<li>
+					<a href="/#sobre-nosotros" onclick="closeMobileMenu()"
+						>Sobre Nosotros</a>
+				</li>
+				<li>
+					<a href="/#contacto" onclick="closeMobileMenu()"
+						>Contacto</a>
+				</li>
 				<li id="auth-button">
-					<a href="#" id="auth-link" onclick="closeMobileMenu()">Iniciar Sesión</a>
+					<a href="#" id="auth-link" onclick="closeMobileMenu()"
+						>Iniciar Sesión</a
+					>
 				</li>
 			</ul>
 		</nav>
@@ -64,101 +113,104 @@
 				<span id="cart-count">0</span>
 			</div>
 		</div>
-		
 	</div>
 </header>
 
 <script>
 	// Función para cerrar el menú
-	window.closeMobileMenu = function() {
-		const hamburger = document.getElementById('hamburger');
-		const nav = document.getElementById('nav-menu');
-		const overlay = document.getElementById('nav-overlay');
-		
-		if (hamburger) hamburger.classList.remove('active');
-		if (nav) nav.classList.remove('active');
-		if (overlay) overlay.classList.remove('active');
-		document.body.style.overflow = '';
+	window.closeMobileMenu = function () {
+		const hamburger = document.getElementById("hamburger");
+		const nav = document.getElementById("nav-menu");
+		const overlay = document.getElementById("nav-overlay");
+
+		if (hamburger) hamburger.classList.remove("active");
+		if (nav) nav.classList.remove("active");
+		if (overlay) overlay.classList.remove("active");
+		document.body.style.overflow = "";
 	};
 
 	// Función para toggle del menú
-	window.toggleMobileMenu = function() {
-		const hamburger = document.getElementById('hamburger');
-		const nav = document.getElementById('nav-menu');
-		let overlay = document.getElementById('nav-overlay');
-		
+	window.toggleMobileMenu = function () {
+		const hamburger = document.getElementById("hamburger");
+		const nav = document.getElementById("nav-menu");
+		let overlay = document.getElementById("nav-overlay");
+
 		if (!hamburger || !nav) return;
-		
-		hamburger.classList.toggle('active');
-		nav.classList.toggle('active');
-		
+
+		hamburger.classList.toggle("active");
+		nav.classList.toggle("active");
+
 		// Congelar/descongelar página
-		if (nav.classList.contains('active')) {
-			document.body.style.overflow = 'hidden';
+		if (nav.classList.contains("active")) {
+			document.body.style.overflow = "hidden";
 		} else {
-			document.body.style.overflow = '';
+			document.body.style.overflow = "";
 		}
-		
+
 		if (!overlay) {
-			overlay = document.createElement('div');
-			overlay.id = 'nav-overlay';
-			overlay.className = 'nav-overlay';
+			overlay = document.createElement("div");
+			overlay.id = "nav-overlay";
+			overlay.className = "nav-overlay";
 			document.body.appendChild(overlay);
 			setupOverlay(overlay);
 		}
-		
-		overlay.classList.toggle('active');
+
+		overlay.classList.toggle("active");
 	};
 
 	function setupOverlay(overlay) {
 		// Solo cerrar si el click es exactamente en el overlay, no en elementos dentro
-		overlay.addEventListener('click', function(e) {
-			if (e.target === overlay) {
-				console.log('Overlay clicked - closing menu');
-				window.closeMobileMenu();
-			}
-		}, false);
+		overlay.addEventListener(
+			"click",
+			function (e) {
+				if (e.target === overlay) {
+					console.log("Overlay clicked - closing menu");
+					window.closeMobileMenu();
+				}
+			},
+			false,
+		);
 	}
 
 	// Ejecutar al cargar
-	document.addEventListener('DOMContentLoaded', function() {
-		console.log('Header DOMContentLoaded');
-		
+	document.addEventListener("DOMContentLoaded", function () {
+		console.log("Header DOMContentLoaded");
+
 		// Crear overlay
-		let overlay = document.getElementById('nav-overlay');
+		let overlay = document.getElementById("nav-overlay");
 		if (!overlay) {
-			overlay = document.createElement('div');
-			overlay.id = 'nav-overlay';
-			overlay.className = 'nav-overlay';
+			overlay = document.createElement("div");
+			overlay.id = "nav-overlay";
+			overlay.className = "nav-overlay";
 			document.body.appendChild(overlay);
 			setupOverlay(overlay);
 		}
 
 		// Auth link handler
-		const authLink = document.getElementById('auth-link');
+		const authLink = document.getElementById("auth-link");
 		if (authLink) {
-			authLink.addEventListener('click', function(e) {
+			authLink.addEventListener("click", function (e) {
 				e.preventDefault();
 				window.closeMobileMenu();
-				
-				const currentUser = localStorage.getItem('currentUser');
+
+				const currentUser = localStorage.getItem("currentUser");
 				let isAdmin = false;
-				
+
 				if (currentUser) {
 					try {
 						const userData = JSON.parse(currentUser);
-						isAdmin = userData.rol === 'admin';
-					} catch(err) {}
+						isAdmin = userData.rol === "admin";
+					} catch (err) {}
 				}
-				
+
 				if (!isAdmin && window.currentUserData) {
-					isAdmin = window.currentUserData.rol === 'admin';
+					isAdmin = window.currentUserData.rol === "admin";
 				}
-				
+
 				if (isAdmin) {
-					window.location.href = '/admin-panel.html';
+					window.location.href = "/admin-panel.html";
 				} else {
-					window.location.href = '/admin-login.html';
+					window.location.href = "/admin-login.html";
 				}
 			});
 		}

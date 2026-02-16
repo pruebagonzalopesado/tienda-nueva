@@ -2144,25 +2144,56 @@ a[href^="sms:"] {
         transform: translateX(0);
     }
 
-    .nav-logo {
-        padding: 15px 20px !important;
-        margin: 0 !important;
-        border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+    .nav-top-bar {
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
+        padding: 12px 15px 12px 20px !important;
+        margin: 0 !important;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.2);
         flex-shrink: 0;
         width: 100%;
         box-sizing: border-box;
     }
 
+    .nav-top-bar .nav-logo {
+        padding: 0 !important;
+        margin: 0 !important;
+        border-bottom: none;
+        width: auto;
+    }
+
+    .nav-top-bar .nav-logo img,
     .nav-logo img {
-        height: 70px;
+        height: 50px;
         width: auto;
         display: block;
         padding: 0 !important;
         margin: 0 !important;
         flex-shrink: 0;
+    }
+
+    /* Botón de cerrar (X) dentro del menú */
+    .nav-close-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(212, 175, 55, 0.15);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        border-radius: 8px;
+        width: 36px;
+        height: 36px;
+        cursor: pointer;
+        color: #d4af37;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+        padding: 0;
+    }
+
+    .nav-close-btn:hover,
+    .nav-close-btn:active {
+        background: rgba(212, 175, 55, 0.3);
+        transform: scale(1.05);
     }
 
     .nav ul {
@@ -2198,13 +2229,16 @@ a[href^="sms:"] {
     .nav-overlay {
         position: fixed;
         top: 0;
-        left: 70%;
+        left: 0;
         right: 0;
         bottom: 0;
-        background: transparent;
+        background: rgba(0, 0, 0, 0.5);
         display: none;
         z-index: 998;
         cursor: pointer;
+        transition: opacity 0.3s ease;
+        -webkit-backdrop-filter: blur(2px);
+        backdrop-filter: blur(2px);
     }
 
     .nav-overlay.active {
