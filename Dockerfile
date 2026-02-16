@@ -27,6 +27,10 @@ RUN npm run build
 # Exponer puertos
 EXPOSE 4321
 
+# Escuchar en todas las interfaces (necesario para Docker + reverse proxy)
+ENV HOST=0.0.0.0
+ENV PORT=4321
+
 # Start con manejo de señales
 STOPSIGNAL SIGTERM
 CMD ["node", "--no-warnings=ExperimentalWarning", "dist/server/entry.mjs"]
