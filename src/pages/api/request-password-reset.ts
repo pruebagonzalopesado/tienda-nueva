@@ -28,8 +28,8 @@ export const POST: APIRoute = async ({ request }) => {
 
     console.log('[request-password-reset] Solicitando reset para:', email);
 
-    // Construir URL correcta para Vercel - siempre usar Vercel
-    const redirectUrl = 'https://tiendagaliana3.vercel.app/reset-password';
+    // Construir URL correcta
+    const redirectUrl = 'https://galiana.victoriafp.online/reset-password';
 
     console.log('[request-password-reset] URL de redirección:', redirectUrl);
 
