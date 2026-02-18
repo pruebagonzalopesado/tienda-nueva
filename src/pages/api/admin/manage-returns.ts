@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../../lib/supabase';
+import { supabase, supabaseAdmin } from '../../../lib/supabase';
 import { sendEmail } from '../../../lib/brevo';
 import Stripe from 'stripe';
 import { generateRefundInvoicePDF, obtenerDatosProducto } from '../../../lib/invoice-generator';
@@ -21,8 +21,8 @@ export const POST: APIRoute = async (context) => {
     // Por ahora asumimos que si llega a este endpoint, es admin
 
     if (action === 'listar') {
-      // Listar todas las devoluciones pendientes
-      const { data: devoluciones, error } = await supabase
+      // Listar todas las devoluciones pendientes (usando admin client para saltarse RLS)
+      const { data: devoluciones, error } = await supabaseAdmin
         .from('devoluciones')
         .select(`
           *,
@@ -62,8 +62,8 @@ export const POST: APIRoute = async (context) => {
         );
       }
 
-      // Obtener la devolución
-      const { data: devolucion, error: fetchError } = await supabase
+      // Obtener la devolución (usando admin client para saltarse RLS)
+      const { data: devolucion, error: fetchError } = await supabaseAdmin
         .from('devoluciones')
         .select(`
           *,
@@ -170,8 +170,8 @@ export const POST: APIRoute = async (context) => {
         console.warn('[manage-returns] ⚠️ Error al procesar reembolso de Stripe:', refundError);
       }
 
-      // PASO 2: Actualizar estado de devolución a 'confirmada'
-      const { error: updateError } = await supabase
+      // PASO 2: Actualizar estado de devolución a 'confirmada' (usando admin client para saltarse RLS)
+      const { error: updateError } = await supabaseAdmin
         .from('devoluciones')
         .update({
           estado: 'confirmada',
@@ -306,8 +306,8 @@ export const POST: APIRoute = async (context) => {
         );
       }
 
-      // Obtener la devolución
-      const { data: devolucion, error: fetchError } = await supabase
+      // Obtener la devolución (usando admin client para saltarse RLS)
+      const { data: devolucion, error: fetchError } = await supabaseAdmin
         .from('devoluciones')
         .select('*')
         .eq('id', devolucionId)
@@ -324,8 +324,8 @@ export const POST: APIRoute = async (context) => {
         );
       }
 
-      // Actualizar estado de devolución a 'rechazada' con motivo
-      const { error: updateError } = await supabase
+      // Actualizar estado de devolución a 'rechazada' con motivo (usando admin client para saltarse RLS)
+      const { error: updateError } = await supabaseAdmin
         .from('devoluciones')
         .update({
           estado: 'rechazada',
