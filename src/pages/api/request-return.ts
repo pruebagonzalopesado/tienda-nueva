@@ -47,6 +47,28 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
+    if (motivo.length > 5000) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: 'El motivo no puede exceder 5000 caracteres'
+        }),
+        { status: 400 }
+      );
+    }
+
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: 'Formato de email inválido'
+        }),
+        { status: 400 }
+      );
+    }
+
     // Validar que cada item tenga los datos necesarios
     for (const item of itemsDevueltos) {
       if (!item.nombre || typeof item.cantidad !== 'number' || typeof item.precio !== 'number') {
@@ -236,7 +258,7 @@ export const POST: APIRoute = async (context) => {
 
           <div style="background: #f9f9f9; padding: 16px; border-left: 4px solid #d4af37; margin: 24px 0; border-radius: 4px;">
             <p style="color: #333; margin: 0; font-weight: bold; margin-bottom: 8px;">Motivo de devolución:</p>
-            <p style="color: #666; margin: 0; line-height: 1.6;">"${motivo}"</p>
+            <p style="color: #666; margin: 0; line-height: 1.6;">"${motivo.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')}"</p>
           </div>
           
           <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 16px; margin: 24px 0; border-radius: 4px;">

@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 
-const SUPABASE_URL = 'https://tvzvuotqdtwmssxfnyqc.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_-XIdhOUa5OOaLbF45xNgzg_72CYzEw3';
+const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
 export const POST: APIRoute = async ({ request }) => {
   try {

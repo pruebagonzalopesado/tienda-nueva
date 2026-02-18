@@ -1,8 +1,12 @@
 import type { APIRoute } from 'astro';
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../lib/supabase';
 import { sendEmail } from '../../lib/brevo';
 import { generateInvoicePDF, obtenerDatosProducto } from '../../lib/invoice-generator';
+import { isDev, sanitizeForLog } from '../../lib/debug';
+
+// Helpers de seguridad
+const EMAIL_RE = /^[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -11,24 +15,12 @@ export const POST: APIRoute = async ({ request }) => {
     if (!stripeKey) {
       console.error('[create-order] STRIPE_SECRET_KEY no encontrada');
       return new Response(
-        JSON.stringify({ error: 'Stripe no configurado' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('[create-order] Supabase no configurado');
-      return new Response(
-        JSON.stringify({ error: 'Supabase no configurado' }),
+        JSON.stringify({ error: 'Servicio de pago no disponible' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
     const stripe = new Stripe(stripeKey);
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
     // Obtener datos de la solicitud
     const data = await request.json();
@@ -48,19 +40,36 @@ export const POST: APIRoute = async ({ request }) => {
       items,
     } = data;
 
-    console.log('[create-order] >>> Creando orden');
-    console.log('[create-order]     - Usuario ID: ' + (userId || 'null'));
-    console.log('[create-order]     - Payment Intent ID: ' + paymentIntentId);
-    console.log('[create-order]     - Nombre: ' + nombre);
-    console.log('[create-order]     - Email: ' + email);
-    console.log('[create-order]     - Total: €' + total);
-    console.log('[create-order]     - Items: ' + items.length);
+    if (isDev) {
+      console.log('[create-order] >>> Creando orden');
+      console.log('[create-order]     - Usuario ID: ' + (userId || 'null'));
+      console.log('[create-order]     - Payment Intent ID: ' + sanitizeForLog(paymentIntentId || ''));
+      console.log('[create-order]     - Email: ' + sanitizeForLog(email || ''));
+      console.log('[create-order]     - Total: €' + total);
+      console.log('[create-order]     - Items: ' + items?.length);
+    }
 
     // Validar datos requeridos
     if (!nombre || !email || !direccion || !ciudad || !total) {
       console.error('[create-order] Datos incompletos');
       return new Response(
         JSON.stringify({ error: 'Datos incompletos requeridos' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validar formato de email
+    if (!EMAIL_RE.test(email)) {
+      return new Response(
+        JSON.stringify({ error: 'Formato de email inválido' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validar items
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'No hay productos en el pedido' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -91,7 +100,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (dbError) {
       console.error('[create-order] Error en DB:', dbError);
       return new Response(
-        JSON.stringify({ error: 'Error al crear la orden: ' + dbError.message }),
+        JSON.stringify({ error: 'Error al crear la orden. Por favor intenta de nuevo.' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -354,24 +363,24 @@ export const POST: APIRoute = async ({ request }) => {
         status: 201,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
         },
       }
     );
   } catch (error: any) {
     console.error('[create-order] ❌ Error:', error.message);
-    console.error('[create-order] Stack:', error.stack);
+    if (isDev) {
+      console.error('[create-order] Stack:', error.stack);
+    }
 
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: 'Error al procesar el pedido. Por favor intenta de nuevo.',
       }),
       {
         status: 400,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
         },
       }
     );

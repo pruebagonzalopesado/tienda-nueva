@@ -4,51 +4,56 @@ import { supabase } from '../../lib/supabase';
 import { sendPaymentSuccessEmail } from '../../lib/brevo';
 import { generateInvoicePDF, obtenerDatosProducto } from '../../lib/invoice-generator';
 
+import { isDev } from '../../lib/debug';
+
 const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY);
 const webhookSecret = import.meta.env.STRIPE_WEBHOOK_SECRET;
 
 export const POST: APIRoute = async ({ request }) => {
-  console.log('🔔 WEBHOOK STRIPE - Solicitud recibida');
+  if (isDev) console.log('🔔 WEBHOOK STRIPE - Solicitud recibida');
   const body = await request.text();
   const sig = request.headers.get('stripe-signature');
 
-  console.log('🔑 Stripe signature:', sig ? 'presente' : 'FALTA');
-  console.log('🔐 Webhook secret configurado:', webhookSecret ? 'SÍ' : 'NO');
+  if (isDev) {
+    console.log('🔑 Stripe signature:', sig ? 'presente' : 'FALTA');
+    console.log('🔐 Webhook secret configurado:', webhookSecret ? 'SÍ' : 'NO');
+  }
 
   let event;
 
   try {
     event = stripe.webhooks.constructEvent(body, sig!, webhookSecret!);
-    console.log('✅ Firma verificada correctamente');
-    console.log('📨 Tipo de evento:', event.type);
+    if (isDev) {
+      console.log('✅ Firma verificada correctamente');
+      console.log('📨 Tipo de evento:', event.type);
+    }
   } catch (err: any) {
-    console.error('❌ Error de verificación de firma:', err.message);
-    console.error('Headers recibidos:', {
-      'stripe-signature': sig,
-      'content-type': request.headers.get('content-type')
-    });
-    return new Response(JSON.stringify({ error: 'Webhook signature verification failed', details: err.message }), { status: 400 });
+    console.error('❌ Error de verificación de firma webhook');
+    if (isDev) {
+      console.error('Detalles:', err.message);
+    }
+    return new Response(JSON.stringify({ error: 'Webhook signature verification failed' }), { status: 400 });
   }
 
   try {
     switch (event.type) {
       case 'checkout.session.completed':
-        console.log('🛒 Procesando: checkout.session.completed');
+        if (isDev) console.log('🛒 Procesando: checkout.session.completed');
         await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
         break;
       case 'payment_intent.succeeded':
-        console.log('💳 Procesando: payment_intent.succeeded');
-        console.log('Payment intent succeeded:', event.data.object);
+        if (isDev) console.log('💳 Procesando: payment_intent.succeeded');
         break;
       default:
-        console.log('⚠️ Evento no manejado:', event.type);
+        if (isDev) console.log('⚠️ Evento no manejado:', event.type);
     }
 
-    console.log('✅ Webhook procesado exitosamente');
+    if (isDev) console.log('✅ Webhook procesado exitosamente');
     return new Response(JSON.stringify({ received: true }), { status: 200 });
   } catch (error: any) {
-    console.error('❌ Error procesando webhook:', error);
-    return new Response(JSON.stringify({ error: 'Webhook processing failed', details: error.message }), { status: 500 });
+    console.error('❌ Error procesando webhook');
+    if (isDev) console.error('Detalles:', error.message);
+    return new Response(JSON.stringify({ error: 'Webhook processing failed' }), { status: 500 });
   }
 };
 
@@ -78,14 +83,14 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     const customerName = expandedSession.customer_details?.name;
     const amount = expandedSession.amount_total || 0;
 
-    // Log para depuración
-    console.log('=== WEBHOOK CHECKOUT SESSION ===');
-    console.log('Session ID:', session.id);
-    console.log('Customer Email (from customer_email):', expandedSession.customer_email);
-    console.log('Customer Email (from customer_details):', expandedSession.customer_details?.email);
-    console.log('Customer Email (final):', customerEmail);
-    console.log('Customer Name:', customerName);
-    console.log('Amount:', amount);
+    // Log para depuración (solo en desarrollo)
+    if (isDev) {
+      console.log('=== WEBHOOK CHECKOUT SESSION ===');
+      console.log('Session ID:', session.id);
+      console.log('Customer Email (final):', customerEmail);
+      console.log('Customer Name:', customerName);
+      console.log('Amount:', amount);
+    }
 
     // Obtener metadata del pedido
     const metadata = expandedSession.metadata || {};

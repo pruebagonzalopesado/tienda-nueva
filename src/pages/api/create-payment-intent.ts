@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 import Stripe from 'stripe';
 
+const isDev = import.meta.env.DEV;
+
 export const POST: APIRoute = async ({ request }) => {
   try {
     const stripeKey = import.meta.env.STRIPE_SECRET_KEY;
@@ -26,10 +28,10 @@ export const POST: APIRoute = async ({ request }) => {
     const data = await request.json();
     const { amount, email, nombre, currency = 'eur', metadata = {} } = data;
 
-    console.log('[create-payment-intent] >>> Creando Payment Intent');
-    console.log('[create-payment-intent]     - Monto: €' + amount);
-    console.log('[create-payment-intent]     - Email: ' + email);
-    console.log('[create-payment-intent]     - Nombre: ' + nombre);
+    if (isDev) {
+      console.log('[create-payment-intent] >>> Creando Payment Intent');
+      console.log('[create-payment-intent]     - Monto: €' + amount);
+    }
 
     if (!amount || !email || !nombre) {
       console.error('[create-payment-intent] Datos incompletos');
@@ -56,7 +58,7 @@ export const POST: APIRoute = async ({ request }) => {
       },
     });
 
-    console.log('[create-payment-intent] ✅ Payment Intent creado:', paymentIntent.id);
+    if (isDev) console.log('[create-payment-intent] ✅ Payment Intent creado:', paymentIntent.id);
 
     return new Response(
       JSON.stringify({
@@ -70,7 +72,6 @@ export const POST: APIRoute = async ({ request }) => {
         status: 200, 
         headers: { 
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
         } 
       }
     );
@@ -80,13 +81,12 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: isDev ? error.message : 'Error al procesar el pago.',
       }),
       { 
         status: 400, 
         headers: { 
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
         } 
       }
     );

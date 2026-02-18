@@ -35,7 +35,9 @@ interface DatosFactura {
  * Genera un PDF de factura con el logo, datos del cliente y productos
  */
 export async function generateInvoicePDF(datos: DatosFactura): Promise<Buffer> {
-  return new Promise(async (resolve, reject) => {
+  const TIMEOUT_MS = 10000;
+  
+  const pdfPromise = new Promise<Buffer>(async (resolve, reject) => {
     try {
       const doc = new PDFDocument({
         size: 'A4',
@@ -267,6 +269,13 @@ export async function generateInvoicePDF(datos: DatosFactura): Promise<Buffer> {
       reject(error);
     }
   });
+  
+  // Agregar timeout para evitar cuelgues de PDF
+  const timeoutPromise = new Promise<Buffer>((_, reject) => {
+    setTimeout(() => reject(new Error('PDF generation timeout after ' + TIMEOUT_MS + 'ms')), TIMEOUT_MS);
+  });
+  
+  return Promise.race([pdfPromise, timeoutPromise]);
 }
 
 /**

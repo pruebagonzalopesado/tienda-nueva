@@ -1,17 +1,29 @@
 import type { APIRoute } from 'astro';
 import Stripe from 'stripe';
+import { isDev } from '../../lib/debug';
+
+
+// Dominios permitidos para redirección de Stripe
+const ALLOWED_ORIGINS = [
+  'http://localhost:4321',
+  'http://localhost:4322',
+  'http://localhost:3000',
+  // Agregar aquí el dominio de producción, ej:
+  // 'https://joyeriagaliana.com',
+  // 'https://www.joyeriagaliana.com',
+];
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     // Las variables privadas se acceden con import.meta.env en Astro
     const stripeKey = import.meta.env.STRIPE_SECRET_KEY;
     
-    console.log('[create-checkout] STRIPE_SECRET_KEY length:', stripeKey?.length);
-    console.log('[create-checkout] STRIPE_SECRET_KEY prefix:', stripeKey?.substring(0, 15));
+    if (isDev) {
+      console.log('[create-checkout] STRIPE_SECRET_KEY configurada:', !!stripeKey);
+    }
     
     if (!stripeKey) {
       console.error('STRIPE_SECRET_KEY no encontrada');
-      console.error('process.env:', Object.keys(process.env).filter(k => k.includes('STRIPE')));
       return new Response(
         JSON.stringify({ error: 'Stripe no configurado' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
@@ -31,8 +43,9 @@ export const POST: APIRoute = async ({ request }) => {
     const data = await request.json();
     const { items, datosCliente, descuento, descuentoId, usuarioId } = data;
     
-    console.log('[create-checkout] Datos recibidos:', { items, datosCliente, descuento, descuentoId, usuarioId });
-    console.log('[create-checkout] items?.length:', items?.length);
+    if (isDev) {
+      console.log('[create-checkout] items?.length:', items?.length);
+    }
 
     // Validar datos
     if (!items || items.length === 0) {
@@ -63,22 +76,14 @@ export const POST: APIRoute = async ({ request }) => {
       
       // Procesar imagen: codificar espacios sin afectar la URL base
       let imagenUrl: string[] = [];
-      console.log('[create-checkout] Procesando item:', item.nombre);
-      console.log('[create-checkout] item.imagen:', item.imagen);
-      console.log('[create-checkout] tipo de imagen:', typeof item.imagen);
       
       if (item.imagen && typeof item.imagen === 'string' && item.imagen.startsWith('http')) {
         try {
-          // Usar encodeURI para codificar caracteres especiales (espacios, etc)
-          // pero mantener la estructura de URL intacta
           const encodedUrl = encodeURI(item.imagen);
           imagenUrl = [encodedUrl];
-          console.log('[create-checkout] ✅ Imagen codificada:', encodedUrl.substring(0, 100));
         } catch (e) {
-          console.log('[create-checkout] ❌ Error codificando imagen:', e);
+          if (isDev) console.log('[create-checkout] ❌ Error codificando imagen:', e);
         }
-      } else {
-        console.log('[create-checkout] ⚠️ No se procesó imagen - condición no cumplida');
       }
       
       return {
@@ -110,26 +115,40 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    // Crear sesión de Checkout
-    let origin = request.headers.get('origin') || 'http://localhost:4322';
-    
-    // Limpiar origin si tiene / al final
+    // Crear sesión de Checkout - validar origin
+    let origin = request.headers.get('origin') || '';
     origin = origin.replace(/\/$/, '');
     
-    // Asegurar que origin es válido
-    if (!origin.startsWith('http://') && !origin.startsWith('https://')) {
-      origin = 'http://localhost:4322';
+    // Validar que el origin es uno de los permitidos
+    if (!ALLOWED_ORIGINS.includes(origin)) {
+      const prodOrigin = ALLOWED_ORIGINS.find(o => o.startsWith('https://'));
+      if (!prodOrigin) {
+        // En desarrollo, si no hay dominio https, usar localhost como fallback
+        if (isDev) {
+          const localhost = ALLOWED_ORIGINS.find(o => o.includes('localhost'));
+          origin = localhost || ALLOWED_ORIGINS[0] || 'http://localhost:4321';
+          if (isDev) console.log('[create-checkout] ⚠️ Origin no válido, usando fallback desarrollo:', origin);
+        } else {
+          console.error('[create-checkout] No hay dominio de producción en ALLOWED_ORIGINS. Rechazando solicitud.');
+          return new Response(
+            JSON.stringify({ error: 'Origen de solicitud inválido' }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+      } else {
+        origin = prodOrigin;
+      }
     }
     
-    console.log('[create-checkout] origin:', origin);
-    console.log('[create-checkout] origin cleaned:', origin);
+    if (isDev) console.log('[create-checkout] origin:', origin);
 
     const successUrl = `${origin}/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${origin}/pago`;
     
-    console.log('[create-checkout] success_url:', successUrl);
-    console.log('[create-checkout] cancel_url:', cancelUrl);
-    console.log('[create-checkout] lineItems:', JSON.stringify(lineItems, null, 2));
+    if (isDev) {
+      console.log('[create-checkout] success_url:', successUrl);
+      console.log('[create-checkout] cancel_url:', cancelUrl);
+    }
 
     // Crear cupón si hay descuento
     let couponId = null;
@@ -181,17 +200,13 @@ export const POST: APIRoute = async ({ request }) => {
       sessionConfig.discounts = [{ coupon: couponId }];
     }
 
-    console.log('[create-checkout] Creando sesión con config:', JSON.stringify({
-      line_items_count: lineItems.length,
-      has_email: !!datosCliente?.email,
-      has_coupon: !!couponId,
-      success_url: successUrl,
-      cancel_url: cancelUrl
-    }));
+    if (isDev) {
+      console.log('[create-checkout] Creando sesión - items:', lineItems.length, 'coupon:', !!couponId);
+    }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
 
-    console.log('[create-checkout] ✅ Sesión creada:', session.id, 'URL:', session.url);
+    if (isDev) console.log('[create-checkout] ✅ Sesión creada:', session.id);
 
     return new Response(
       JSON.stringify({
@@ -202,9 +217,9 @@ export const POST: APIRoute = async ({ request }) => {
     );
   } catch (error: any) {
     console.error('[create-checkout] ❌ Error:', error.message);
-    console.error('[create-checkout] Full error:', error);
+    if (isDev) console.error('[create-checkout] Full error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: isDev ? error.message : 'Error al procesar el pago. Inténtalo de nuevo.' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
