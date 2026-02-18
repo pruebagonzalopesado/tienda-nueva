@@ -8,9 +8,7 @@ const ALLOWED_ORIGINS = [
   'http://localhost:4321',
   'http://localhost:4322',
   'http://localhost:3000',
-  // Agregar aquí el dominio de producción, ej:
-  // 'https://joyeriagaliana.com',
-  // 'https://www.joyeriagaliana.com',
+  'https://galiana.victoriafp.online',
 ];
 
 export const POST: APIRoute = async ({ request }) => {
