@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout
+Disallow: /pago
+Disallow: /pago-exitoso
+Disallow: /mis-compras
+Disallow: /carrito
+Disallow: /reset-password
+
+Sitemap: https://galiana.victoriafp.online/sitemap.xml
