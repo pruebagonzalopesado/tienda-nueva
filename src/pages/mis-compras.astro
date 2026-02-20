@@ -1458,11 +1458,11 @@ Astro.response.headers.set('Expires', '0');
                     return;
                 }
 
-                const usuarioId = session.user.id;
+                const usuarioEmail = session.user.email;
                 const { data: pedidos, error: dbError } = await supabase
                     .from('pedidos')
                     .select('*')
-                    .eq('usuario_id', usuarioId)
+                    .eq('email', usuarioEmail)
                     .order('fecha_creacion', { ascending: false });
 
                 if (dbError) {

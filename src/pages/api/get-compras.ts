@@ -28,13 +28,13 @@ export async function POST({ request }) {
             });
         }
 
-        console.log('[get-compras] Usuario autenticado:', user.id);
+        console.log('[get-compras] Usuario autenticado:', user.email);
 
-        // Obtener pedidos del usuario
+        // Obtener pedidos del usuario por email
         const { data: pedidos, error: dbError } = await supabase
             .from('pedidos')
             .select('*')
-            .eq('usuario_id', user.id)
+            .eq('email', user.email)
             .order('fecha_creacion', { ascending: false });
 
         if (dbError) {

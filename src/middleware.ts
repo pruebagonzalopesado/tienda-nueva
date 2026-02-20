@@ -32,11 +32,11 @@ export async function onRequest(context, next: MiddlewareNext) {
   if (!STATIC_RE.test(pathname)) {
     response.headers.set('Content-Security-Policy', 
       "default-src 'self'; " +
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://cdn.jsdelivr.net; " +
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
       "font-src 'self' https://fonts.gstatic.com; " +
       "img-src 'self' data: blob: https://*.supabase.co https://*.stripe.com https://res.cloudinary.com; " +
-      "connect-src 'self' https://*.supabase.co https://api.stripe.com https://api.brevo.com https://api.cloudinary.com; " +
+      "connect-src 'self' https://*.supabase.co https://api.stripe.com https://api.brevo.com https://api.cloudinary.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
       "frame-src https://js.stripe.com https://hooks.stripe.com;"
     );
   }
