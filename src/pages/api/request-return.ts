@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../lib/supabase';
+import { supabase, supabaseAdmin } from '../../lib/supabase';
 import { sendEmail } from '../../lib/brevo';
 import { generateRefundInvoicePDF, obtenerDatosProducto } from '../../lib/invoice-generator';
 
@@ -95,7 +95,7 @@ export const POST: APIRoute = async (context) => {
 
     // PASO 1: Verificar si ya existe una devolución activa
     const pedidoIdInt = parseInt(String(pedidoId));
-    const { data: existingReturns, error: checkError } = await supabase
+    const { data: existingReturns, error: checkError } = await supabaseAdmin
       .from('devoluciones')
       .select('id')
       .eq('pedido_id', pedidoIdInt)
@@ -112,7 +112,7 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
-    const { error: updatePedidoError } = await supabase
+    const { error: updatePedidoError } = await supabaseAdmin
       .from('pedidos')
       .update({
         estado: 'devolucion_proceso'
@@ -131,7 +131,7 @@ export const POST: APIRoute = async (context) => {
     }
 
     // PASO 2: Crear registro en tabla de devoluciones con items específicos
-    const { data: devolucion, error: insertDevError } = await supabase
+    const { data: devolucion, error: insertDevError } = await supabaseAdmin
       .from('devoluciones')
       .insert({
         pedido_id: pedidoIdInt,
@@ -159,7 +159,7 @@ export const POST: APIRoute = async (context) => {
     console.log('[request-return] ✅ Devolución registrada con ID:', devolucion?.id);
 
     // PASO 3: Obtener datos del pedido
-    const { data: pedido, error: pedidoError } = await supabase
+    const { data: pedido, error: pedidoError } = await supabaseAdmin
       .from('pedidos')
       .select('*')
       .eq('id', pedidoIdInt)
